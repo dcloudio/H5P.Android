@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- dip（value）=(int) (px（value）/1.5 + 0.5)  15 = (int) (22/3 + 0.5) -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dcloud_dialog_rootview"
+    android:layout_width="match_parent"
+    android:layout_height="300dp"
+    android:background="@drawable/dcloud_dialog_shape_bg"
+    android:paddingLeft="7.8dp"
+    android:paddingRight="7.8dp"
+    android:paddingTop="0dp" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="110dp"
+        android:background="@drawable/dcloud_dialog_shape"
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="65dp"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="0dp"
+            android:orientation="horizontal"
+            android:padding="0dp" >
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                
+                android:paddingRight="0dp" >
+
+                <ImageView
+                    android:id="@+id/dcloud_dialog_icon"
+                    android:layout_width="40.5dp"
+                    android:layout_height="40.5dp"
+                    android:layout_margin="12.5dp" />
+
+                <TextView
+                    android:id="@+id/dcloud_dialog_title"
+                    android:layout_marginTop="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                   	android:layout_alignParentTop="true"
+                   	android:paddingTop="-4dp"
+                    android:layout_toRightOf="@id/dcloud_dialog_icon"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:textColor="#202020"
+                    android:textSize="17dp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/dcloud_dialog_msg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/dcloud_dialog_title"
+                    android:layout_toRightOf="@id/dcloud_dialog_icon"
+                    android:ellipsize="end"
+                    android:paddingRight="0dp"
+                    android:singleLine="true"
+                    android:textColor="#737373"
+                    android:textSize="15dp" />
+            </RelativeLayout>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginRight="0dp"
+            android:background="#D2D2D2"
+            android:layout_marginLeft="60dp" >
+        </TextView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:orientation="horizontal"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp" >
+
+            <com.dcloud.android.widget.TextViewButton
+                android:id="@+id/dcloud_dialog_btn1"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:layout_margin="3dp"
+                android:singleLine="true"
+                android:textColor="#737373"
+                android:textSize="14dp" />
+
+            <com.dcloud.android.widget.TextViewButton
+                android:id="@+id/dcloud_dialog_btn2"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:layout_margin="3dp"
+                android:singleLine="true"
+                android:textColor="#737373"
+                android:textSize="14dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

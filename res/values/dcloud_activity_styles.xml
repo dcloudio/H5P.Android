@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+     <style name="DCloudTheme" parent="@style/DeviceDefault.Light" >
+         <item name="android:windowFullscreen">true</item>
+         <!--<item name="android:windowIsTranslucent">true</item>-->
+     </style>
+    
+     <style name="DeviceDefault.Light" parent="@android:style/Theme.DeviceDefault.Light" >
+        <item name="android:windowNoTitle">true</item>
+         <item name="android:windowBackground">@color/ime_background</item>
+    </style>
+    
+     <style name="DeviceDefault" parent="@android:style/Theme.DeviceDefault" >
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+      <item name="android:windowBackground">@color/ime_background</item>
+    </style>
+    
+    <style name="TranslucentTheme" parent="@android:style/Theme.DeviceDefault.Light">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@null</item>
+    </style>
+
+    <style name="OpenStreamAppTransferActivityTheme">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@null</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+
+
+</resources>

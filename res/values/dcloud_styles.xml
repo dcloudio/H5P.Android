@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="dcloud_anim_dialog_window_in_out" mce_bogus="1" parent="android:Animation">
+        <item name="android:windowEnterAnimation">@anim/dcloud_slide_in_from_top</item>
+        <item name="android:windowExitAnimation">@anim/dcloud_slide_out_to_top</item>
+    </style>
+
+    <style name="dcloud_defalut_dialog">
+        <item name="android:windowBackground">@color/image_pick_title_btn_normal</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:layout_gravity">top</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:layout_width">match_parent</item>
+    </style>
+
+    <style name="featureLossDialog" parent="@android:style/Theme.Holo.Dialog">
+        <item name="android:windowBackground">@color/image_pick_title_btn_normal</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:layout_width">match_parent</item>
+    </style>
+
+    <!-- 5.0系统一下使用的弹窗主题， 5.0以上使用会全透明 慎用! -->
+    <style name="streamDelete19Dialog" parent="@android:style/Theme.DeviceDefault.Light.Dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowIsFloating">true</item>
+    </style>
+    <!-- 状态栏通知 -->
+    <style name="NotificationText" parent="android:TextAppearance.StatusBar.EventContent">
+        <item name="android:textColor">#bb000000</item>
+        <item name="android:textSize">13dp</item>
+    </style>
+
+    <style name="NotificationTitle" parent="android:TextAppearance.StatusBar.EventContent.Title">
+        <item name="android:textColor">#bb000000</item>
+    </style>
+
+    <color name="image_pick_title_btn_pressed">#f4f4f4</color>
+    <color name="image_pick_title_btn_normal">#00000000</color>
+    <color name="ime_background">#cccccc</color>
+
+</resources>

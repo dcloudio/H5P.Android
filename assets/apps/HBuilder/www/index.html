@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+	<meta name="HandheldFriendly" content="true"/>
+	<meta name="MobileOptimized" content="320"/>
+    <title>Hello HBuilder</title>
+    <script type="text/javascript">
+//取消浏览器的所有事件，使得active的样式在手机上正常生效
+document.addEventListener('touchstart',function(){
+    return false;
+},true);
+// 禁用上下文菜单
+document.oncontextmenu=function(){
+	return false;
+};
+// Add Html5Plus's plusready event listener.
+document.addEventListener("plusready", function () {
+	// Android处理返回键
+	plus.ui.getSelfWindow().addEventListener( "back", function(){
+		if ( confirm("确认退出？") ) {
+			plus.runtime.quit();
+		}
+	}, false );
+}, false );
+    </script>
+    <style>
+*{
+	-webkit-user-select:none;
+	-ms-touch-select:none;
+}
+html,body {
+	margin:0;
+	padding:0;
+	width:100%;
+	height:100%;
+	text-align:center;
+	-webkit-touch-callout:none;
+	-webkit-tap-highlight-color:rgba(0,0,0,0);
+	-webkit-text-size-adjust:none;
+}
+.title{
+	font-size:1.5em;text-align:left;color:#FFCC33;font-weight:bold;
+	margin:0 8%;
+}
+.subtitle{
+	font-size:1.1em;text-align:left;color:#666;
+	margin:.3em 8%;
+}
+ul{
+	padding:0 0 0 1em;text-align:left;font-size:1em;color:#999;
+	margin:1em 8%;
+}
+li{
+	margin:.5em;
+}
+.waring{
+	display:inline;
+	color:#F00;
+}
+.waring:active{
+	color:#F0F;
+}
+@media only screen and (min-width: 640px) {
+.title{
+	margin:0 15%;
+}
+.subtitle{
+	margin:.3em 15%;
+}
+ul{
+	margin:1em 15%;
+}
+}
+@media only screen and (min-width: 1024px) {
+.title{
+	margin:0 25%;
+}
+.subtitle{
+	margin:.3em 25%;
+}
+ul{
+	margin:1em 25%;
+}
+}
+    </style>
+</head>
+<body onselectstart="return false;">
+	<div style="width:100%;height:10%;"></div>
+	<img src="img/logo.png"/>
+	<br/><br/>
+	<div class="title">HBuilder真机运行</div>
+	<div class="subtitle">保存即更新，边改代码边看手机运行效果</div>
+	<ul>
+		<li>启动HBuilder，选中要运行的“移动App”应用;</li>
+		<li>将手机连接到电脑，HBuilder会自动检测连接到电脑上的设备;</li>
+		<li>在HBuilder菜单栏的“运行”->“手机运行”中选择要真机运行的目标设备；</li>
+		<li>HBuilder修改代码保存后，手机界面自动刷新。</li>
+	</ul>
+	<br/>
+	<div style="font-size:1.2em">无法同步应用参考<div class="waring" onclick="plus.runtime.openURL('http://ask.dcloud.net.cn/article/97#synchronous')">常见故障排除</div></div>
+	
+	<br/><br/>
+</body>
+</html>
