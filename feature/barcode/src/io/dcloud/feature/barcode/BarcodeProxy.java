@@ -125,7 +125,7 @@ public class BarcodeProxy implements ISysEventListener {
 			Result result = CaptureActivityHandler.decode(map);
 			if(result != null){
 				String message = "{type:'%s',message:'%s',file:'%s'}";
-				 message = String.format(message, result.getBarcodeFormat().toString(),result.getText(),path); 
+				 message = String.format(message, result.getBarcodeFormat().toString(),JSONUtil.toJSONableString(result.getText()),path);
 				 JSUtil.execCallback(pWebViewImpl, callbackId, message, JSUtil.OK, true, false);
 			}else{
 				String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BARCODE_ERROR,DOMException.MSG_BARCODE);

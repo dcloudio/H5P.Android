@@ -18,8 +18,6 @@ import android.view.View;
 import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.mapapi.model.LatLngBounds;
-import com.baidu.mapapi.overlayutil.DrivingRouteOverlay;
-import com.baidu.mapapi.overlayutil.WalkingRouteOverlay;
 import com.baidu.mapapi.search.core.PoiInfo;
 import com.baidu.mapapi.search.core.RouteNode;
 import com.baidu.mapapi.search.core.SearchResult;
@@ -27,13 +25,17 @@ import com.baidu.mapapi.search.poi.OnGetPoiSearchResultListener;
 import com.baidu.mapapi.search.poi.PoiBoundSearchOption;
 import com.baidu.mapapi.search.poi.PoiCitySearchOption;
 import com.baidu.mapapi.search.poi.PoiDetailResult;
+import com.baidu.mapapi.search.poi.PoiIndoorResult;
 import com.baidu.mapapi.search.poi.PoiNearbySearchOption;
 import com.baidu.mapapi.search.poi.PoiResult;
 import com.baidu.mapapi.search.poi.PoiSearch;
+import com.baidu.mapapi.search.route.BikingRouteResult;
 import com.baidu.mapapi.search.route.DrivingRoutePlanOption;
 import com.baidu.mapapi.search.route.DrivingRoutePlanOption.DrivingPolicy;
 import com.baidu.mapapi.search.route.DrivingRouteLine;
 import com.baidu.mapapi.search.route.DrivingRouteResult;
+import com.baidu.mapapi.search.route.IndoorRouteResult;
+import com.baidu.mapapi.search.route.MassTransitRouteResult;
 import com.baidu.mapapi.search.route.OnGetRoutePlanResultListener;
 import com.baidu.mapapi.search.route.PlanNode;
 import com.baidu.mapapi.search.route.RoutePlanSearch;
@@ -95,8 +97,7 @@ public class MapSearch implements OnGetRoutePlanResultListener, OnGetPoiSearchRe
 	
 	/**
 	 * Description: 构造函数 
-	 * @param pFrameView
-	 * @param pJsId 
+	 * @param pIWebview
 	 *
 	 * <pre><p>ModifiedLog:</p>
 	 * Log ID: 1.0 (Log编号 依次递增)
@@ -203,7 +204,7 @@ public class MapSearch implements OnGetRoutePlanResultListener, OnGetPoiSearchRe
 	/**
 	 * 
 	 * Description:设置驾车线路
-	 * @param policy
+	 * @param pPolicy
 	 * @return
 	 *
 	 * <pre><p>ModifiedLog:</p>
@@ -253,10 +254,10 @@ public class MapSearch implements OnGetRoutePlanResultListener, OnGetPoiSearchRe
 	/**
 	 * 
 	 * Description:用于驾车路线搜索（start,end为point点)
-	 * @param start
-	 * @param startCity
-	 * @param end
-	 * @param endCity
+	 * @param pStart
+	 * @param pStartCity
+	 * @param pEnd
+	 * @param pEndCity
 	 *
 	 * <pre><p>ModifiedLog:</p>
 	 * Log ID: 1.0 (Log编号 依次递增)
@@ -299,8 +300,7 @@ public class MapSearch implements OnGetRoutePlanResultListener, OnGetPoiSearchRe
 	/**
 	 * 
 	 * @param searchType [onPoiSearchComplete|onRouteSearchComplete]
-	 * @param pScript 
-	 * @param pJsVar
+	 * @param pScript
 	 */
 	private void onSearchComplete(int searchType,String pScript){
 		if(searchType == POISEARCH_TYPE){
@@ -315,7 +315,6 @@ public class MapSearch implements OnGetRoutePlanResultListener, OnGetPoiSearchRe
 	 * Description:创建CMap.Point对象
 	 * @param pPoint
 	 * @param pName
-	 * @param pRet
 	 * @return
 	 *
 	 * <pre><p>ModifiedLog:</p>
@@ -644,7 +643,17 @@ public class MapSearch implements OnGetRoutePlanResultListener, OnGetPoiSearchRe
         }
 	}
 
-	@Override
+    @Override
+    public void onGetIndoorRouteResult(IndoorRouteResult indoorRouteResult) {
+
+    }
+
+    @Override
+    public void onGetBikingRouteResult(BikingRouteResult bikingRouteResult) {
+
+    }
+
+    @Override
 	public void onGetTransitRouteResult(TransitRouteResult result) {
 		// TODO Auto-generated method stub
 		if (result == null || result.error != SearchResult.ERRORNO.NO_ERROR) {
@@ -662,7 +671,12 @@ public class MapSearch implements OnGetRoutePlanResultListener, OnGetPoiSearchRe
 		}
 	}
 
-	@Override
+    @Override
+    public void onGetMassTransitRouteResult(MassTransitRouteResult massTransitRouteResult) {
+
+    }
+
+    @Override
 	public void onGetWalkingRouteResult(WalkingRouteResult result) {
 		// TODO Auto-generated method stub
 		if (result == null || result.error != SearchResult.ERRORNO.NO_ERROR) {
@@ -691,6 +705,7 @@ public class MapSearch implements OnGetRoutePlanResultListener, OnGetPoiSearchRe
 		newJS_SearchRouteResult_Obj(srrJSName, js);
 		MapJsUtil.assignJsVar(js, srrJSName, "__state__", state);
 		MapJsUtil.assignJsVar(js, srrJSName, "__type__", type);
+		MapJsUtil.assignJsVar(js, srrJSName, "__msg__", msg);
 		onSearchComplete(ROUTESEARCH_TYPE, MapJsUtil.wrapJsEvalString(js.toString(), srrJSName));
 	}
 
@@ -700,7 +715,12 @@ public class MapSearch implements OnGetRoutePlanResultListener, OnGetPoiSearchRe
 		
 	}
 
-	@Override
+    @Override
+    public void onGetPoiIndoorResult(PoiIndoorResult poiIndoorResult) {
+
+    }
+
+    @Override
 	public void onGetPoiResult(PoiResult result) {
 		// TODO Auto-generated method stub
 		if (result == null

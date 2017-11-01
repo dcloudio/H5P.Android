@@ -9,18 +9,20 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.webkit.URLUtil;
 
+import com.sina.weibo.sdk.WbSdk;
 import com.sina.weibo.sdk.api.ImageObject;
 import com.sina.weibo.sdk.api.TextObject;
-import com.sina.weibo.sdk.api.share.BaseResponse;
+import com.sina.weibo.sdk.api.WeiboMultiMessage;
+import com.sina.weibo.sdk.auth.AccessTokenKeeper;
 import com.sina.weibo.sdk.auth.AuthInfo;
 import com.sina.weibo.sdk.auth.Oauth2AccessToken;
-import com.sina.weibo.sdk.auth.WeiboAuthListener;
+import com.sina.weibo.sdk.auth.WbAuthListener;
+import com.sina.weibo.sdk.auth.WbConnectErrorMessage;
 import com.sina.weibo.sdk.auth.sso.SsoHandler;
-import com.sina.weibo.sdk.constant.WBConstants;
-import com.sina.weibo.sdk.exception.WeiboException;
-import com.sina.weibo.sdk.net.RequestListener;
-import com.sina.weibo.sdk.openapi.LogoutAPI;
-import com.sina.weibo.sdk.openapi.StatusesAPI;
+import com.sina.weibo.sdk.share.WbShareHandler;
+import com.sina.weibo.sdk.share.WbShareTransActivity;
+import com.sina.weibo.sdk.web.WebRequestType;
+import com.sina.weibo.sdk.web.param.ShareWebViewRequestParam;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,8 +30,8 @@ import org.json.JSONObject;
 
 import java.net.URL;
 
-import io.dcloud.common.DHInterface.FeatureMessageDispatcher;
 import io.dcloud.common.DHInterface.IApp;
+import io.dcloud.common.DHInterface.ISysEventDispatch;
 import io.dcloud.common.DHInterface.ISysEventListener;
 import io.dcloud.common.DHInterface.ISysEventListener.SysEventType;
 import io.dcloud.common.DHInterface.IWebview;
@@ -41,10 +43,10 @@ import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.BaseInfo;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
+import io.dcloud.common.util.NetTool;
 import io.dcloud.common.util.PdrUtil;
-import io.dcloud.share.AbsWebviewClient;
+import io.dcloud.common.util.ThreadPool;
 import io.dcloud.share.IFShareApi;
-import io.dcloud.share.ShareAuthorizeView;
 
 
 /**
@@ -52,15 +54,6 @@ import io.dcloud.share.ShareAuthorizeView;
  * Description:新浪微博API管理者
  * </p>
  *
- * @author cuidengfeng Email:cuidengfeng@dcloud.io
- * @version 1.0
- * @Date 2013-5-27 下午4:22:56 created.
- * <p/>
- * <pre>
- * <p>ModifiedLog:</p>
- * Log ID: 1.0 (Log编号 依次递增)
- * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2013-5-27 下午4:22:56
- * </pre>
  */
 public class SinaWeiboApiManager implements IFShareApi {
     private static final String PACKAGENAME = "com.sina.weibo";
@@ -74,19 +67,7 @@ public class SinaWeiboApiManager implements IFShareApi {
      * 中配置的相同或是在这个域名下的
      */
     private static String REDIRECT_URL;
-    /**
-     * Scope 是 OAuth2.0 授权机制中 authorize 接口的一个参数。通过 Scope，平台将开放更多的微博
-     * 核心功能给开发者，同时也加强用户隐私保护，提升了用户体验，用户在新 OAuth2.0 授权页中有权利
-     * 选择赋予应用的功能。
-     * <p/>
-     * 我们通过新浪微博开放平台-->管理中心-->我的应用-->接口管理处，能看到我们目前已有哪些接口的
-     * 使用权限，高级权限需要进行申请。
-     * <p/>
-     * 目前 Scope 支持传入多个 Scope 权限，用逗号分隔。
-     * <p/>
-     * 有关哪些 OpenAPI 需要权限申请，请查看：http://open.weibo.com/wiki/%E5%BE%AE%E5%8D%9AAPI
-     * 关于 Scope 概念及注意事项，请查看：http://open.weibo.com/wiki/Scope
-     */
+
     private static String SCOPE = "email,direct_messages_read,direct_messages_write,"
             + "friendships_groups_read,friendships_groups_write,statuses_to_me_read,"
             + "follow_app_official_microblog";
@@ -97,18 +78,11 @@ public class SinaWeiboApiManager implements IFShareApi {
     public static final String KEY_APPKEY = "appkey";
     public static final String KEY_REDIRECT_URI = "redirect_uri";
 
-    private static final String TAG = "SinaWeiboApiManager";
-
     private Oauth2AccessToken mAccessToken;
 
     /**
      * Description:初始化json对象
      *
-     * @throws JSONException <pre>
-     *                       <p>ModifiedLog:</p>
-     *                       Log ID: 1.0 (Log编号 依次递增)
-     *                       Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2013-5-28 下午12:32:16
-     *                       </pre>
      */
     private void initJsonObject(Context context) throws JSONException {
         if (mAccessToken == null) {
@@ -131,24 +105,14 @@ public class SinaWeiboApiManager implements IFShareApi {
     }
 
     public void initData() {
-/*        APP_KEY = AndroidResources.getMetaValue("SINA_APPKEY").substring(1);
-        REDIRECT_URL = AndroidResources.getMetaValue("SINA_REDIRECT_URI");*/
         if (!TextUtils.isEmpty(AndroidResources.getMetaValue("SINA_APPKEY"))){
             APP_KEY = AndroidResources.getMetaValue("SINA_APPKEY").substring(1);
         }
         REDIRECT_URL = AndroidResources.getMetaValue("SINA_REDIRECT_URI");
-//		APP_KEY = "3721101999";
-//		REDIRECT_URL= "http://d.m3w.cn/helloh5p/";
     }
 
     /**
      * Description:获取json对象的字符串
-     *
-     * @return <pre>
-     * <p>ModifiedLog:</p>
-     * Log ID: 1.0 (Log编号 依次递增)
-     * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2013-5-28 下午12:32:31
-     * </pre>
      */
     @Override
     public String getJsonObject(IWebview pWebViewImpl) {
@@ -167,47 +131,106 @@ public class SinaWeiboApiManager implements IFShareApi {
         return SINAWEIBO_ID;
     }
 
-    class MyRequestListener implements RequestListener {
-        IWebview mWebViewImpl = null;
 
-        MyRequestListener(IWebview pWebViewImpl) {
-            mWebViewImpl = pWebViewImpl;
-        }
-
-        @Override
-        public void onComplete(String arg0) {
-            OnSendEnd(true, -1, null);
-        }
-
-        public void OnSendEnd(boolean suc, int errorCode, String msg) {
-            if (SEND_CALLBACKID != null) {
-                if (suc) {
-                    JSUtil.execCallback(mWebViewImpl, SEND_CALLBACKID, "", 1, false, false);
-                } else {
-                    String errorMsg = String.format(DOMException.JSON_ERROR_INFO, errorCode, msg);
-                    JSUtil.execCallback(mWebViewImpl, SEND_CALLBACKID, errorMsg, JSUtil.ERROR, true, false);
-                }
-                SEND_CALLBACKID = null;
-            }
-        }
-
-        @Override
-        public void onWeiboException(WeiboException arg0) {
-            if (arg0 != null) {
-                arg0.printStackTrace();
-                OnSendEnd(false, DOMException.CODE_BUSINESS_INTERNAL_ERROR, DOMException.toString(arg0.getMessage(), "Share新浪分享", arg0.getMessage(), mLink));
-            }
-        }
-    };
     public static final String SHARE_CANEL_ERROR = "64001";
     public static final String SHARE_AUTHOR_ERROR = "64002";
     public static final String SHARE_CONTENT_ERROR = "64003";
     private String SEND_CALLBACKID = null;
-    private String SEND_MSG = null;
     private boolean hasSinaAppInstalled = false;
     private String mInterface = "auto";
-    private MyRequestListener mRequestListener;
 
+
+
+    public void OnSendEnd(IWebview pWebViewImpl,boolean suc, int errorCode, String msg) {
+        if (SEND_CALLBACKID != null) {
+            if (suc) {
+                JSUtil.execCallback(pWebViewImpl, SEND_CALLBACKID, "", 1, false, false);
+            } else {
+                String errorMsg = String.format(DOMException.JSON_ERROR_INFO, errorCode, msg);
+                JSUtil.execCallback(pWebViewImpl, SEND_CALLBACKID, errorMsg, JSUtil.ERROR, true, false);
+            }
+            SEND_CALLBACKID = null;
+        }
+    }
+    private WbShareHandler shareHandler;
+    /**
+     *  供原生代码分享调用
+     * @param activity
+     * @param pShareMsg
+     */
+    public void send(final Activity activity, final String pShareMsg) {
+
+        initConfig();
+        if (mAccessToken == null) {
+            mAccessToken = AccessTokenKeeper.readAccessToken(activity);
+        }
+        if (mAccessToken == null||!mAccessToken.isSessionValid()) {
+            final Runnable runnable=new Runnable() {
+                @Override
+                public void run() {
+                    send(activity,pShareMsg);
+                }
+            };
+            authorize(activity,new WbAuthListener(){
+                @Override
+                public void onSuccess(Oauth2AccessToken oauth2AccessToken) {
+                    mAccessToken = oauth2AccessToken;
+                    if (mAccessToken.isSessionValid()) {
+                        // 保存 Token 到 SharedPreferences
+                        AccessTokenKeeper.writeAccessToken(activity, mAccessToken);
+                    }
+                    runnable.run();
+                }
+                @Override
+                public void cancel() {}
+                @Override
+                public void onFailure(WbConnectErrorMessage wbConnectErrorMessage) {}
+            });
+            return;
+        }
+        hasSinaAppInstalled = PlatformUtil.hasAppInstalled(activity, PACKAGENAME);
+        shareHandler = new WbShareHandler(activity);
+        WbSdk.install(activity, new AuthInfo(activity, APP_KEY, REDIRECT_URL, SCOPE));
+        shareHandler.registerApp();
+
+        JSONObject _msg;
+        String file;
+        try {
+            _msg = new JSONObject(pShareMsg);
+            if (_msg != null) {
+                mInterface = _msg.optString("interface");
+                JSONArray _pictures = _msg.optJSONArray("pictures");
+                String _content = _msg.optString("content");
+                file = JSONUtil.getString(_pictures, 0);
+                if (URLUtil.isNetworkUrl(file)) {// TODO: 2016/10/12 根据5+runtime文档添加网络图片分享不支持的逻辑
+                    return;
+                }
+                if ("slient".equals(mInterface)) {//interface=slient
+                    startWebShare(activity,getWeiboMultiMessage(pShareMsg));
+                } else if ("editable".equals(mInterface)) {//interface=editable
+                    if (hasSinaAppInstalled) {
+                        if (TextUtils.isEmpty(_content)){// TODO: 2016/10/12 分享新浪微博客户端时，文本内容不能为空，否则进程阻塞，分享不会回调。
+                            return;
+                        }
+                        shareHandler.shareMessage(getWeiboMultiMessage(pShareMsg),true);
+                    } else {
+                        //未安装新浪微博客户端，触发回调
+                    }
+                } else {//interface=auto
+                    if (hasSinaAppInstalled) {
+                        if (TextUtils.isEmpty(_content)){// TODO: 2016/10/12 分享新浪微博客户端时，文本内容不能为空，否则进程阻塞，分享不会回调。
+                            return;
+                        }
+                        shareHandler.shareMessage(getWeiboMultiMessage(pShareMsg),true);
+                    } else {
+                        startWebShare(activity,getWeiboMultiMessage(pShareMsg));
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
     /**
      * 新浪微博分享消息逻辑
      * plus.share.ShareMessage
@@ -221,11 +244,48 @@ public class SinaWeiboApiManager implements IFShareApi {
      * @param pShareMsg
      */
     @Override
-    public void send(IWebview pWebViewImpl, String pCallbackId, String pShareMsg) {
+    public void send(final  IWebview pWebViewImpl, String pCallbackId, String pShareMsg) {
+        if (mAccessToken == null) {
+            mAccessToken = AccessTokenKeeper.readAccessToken(pWebViewImpl.getActivity());
+        }
+
         SEND_CALLBACKID = pCallbackId;
-        mRequestListener = new MyRequestListener(pWebViewImpl);
+        if (mAccessToken == null||!mAccessToken.isSessionValid()) {
+            OnSendEnd(pWebViewImpl,false,DOMException.CODE_AUTHORIZE_FAILED,DOMException.MSG_AUTHORIZE_FAILED);
+            return;
+        }
         hasSinaAppInstalled = PlatformUtil.hasAppInstalled(pWebViewImpl.getActivity(), PACKAGENAME);
-        JSONObject _msg = null;
+        final IApp app = pWebViewImpl.obtainApp();
+        shareHandler = new WbShareHandler(pWebViewImpl.getActivity());
+        WbSdk.install(pWebViewImpl.getActivity(), new AuthInfo(pWebViewImpl.getActivity(), APP_KEY, REDIRECT_URL, SCOPE));
+        shareHandler.registerApp();
+        pWebViewImpl.obtainApp().registerSysEventListener(new ISysEventListener() {
+            @Override
+            public boolean onExecute(SysEventType pEventType, Object pArgs) {
+                Logger.e("ian","onExecute");
+                if (!PdrUtil.isEmpty(pArgs)){
+                    JSONObject myjson=JSONUtil.createJSONObject((String)pArgs);
+                    Logger.e("ian",myjson.toString());
+                    if (PdrUtil.isEquals("0",myjson.optString("_weibo_resp_errcode"))){
+                        OnSendEnd(pWebViewImpl,true,-1,null);
+                    }else if(PdrUtil.isEquals("1",myjson.optString("_weibo_resp_errcode"))){
+                        String msg =  DOMException.MSG_USER_CANCEL;
+                        OnSendEnd(pWebViewImpl,false,DOMException.CODE_USER_CANCEL,msg);
+                    }else{
+                        String msg =  myjson.optString("_weibo_resp_errstr");
+                        int code=Integer.valueOf(myjson.optString("_weibo_resp_errcode"));
+                        OnSendEnd(pWebViewImpl,true,code,msg);
+                    }
+
+                }
+                if (app != null) {
+                    app.unregisterSysEventListener(this, SysEventType.onNewIntent);
+                }
+                return false;
+            }
+        }, SysEventType.onNewIntent);
+
+        JSONObject _msg;
         String file;
         try {
             _msg = new JSONObject(pShareMsg);
@@ -235,127 +295,44 @@ public class SinaWeiboApiManager implements IFShareApi {
                 String _content = _msg.optString("content");
                 file = JSONUtil.getString(_pictures, 0);
                 if (URLUtil.isNetworkUrl(file)) {// TODO: 2016/10/12 根据5+runtime文档添加网络图片分享不支持的逻辑
-                    mRequestListener.OnSendEnd(false, DOMException.CODE_SHARE_SEND_ERROR, DOMException.MSG_SHARE_SEND_PIC_ROUTE_ERROR);
+                    OnSendEnd(pWebViewImpl,false, DOMException.CODE_SHARE_SEND_ERROR, DOMException.MSG_SHARE_SEND_PIC_ROUTE_ERROR);
                     return;
                 }
                 if ("slient".equals(mInterface)) {//interface=slient
-                    slientShare(pWebViewImpl, pCallbackId, pShareMsg);
+                    startWebShare(pWebViewImpl.getActivity(),getWeiboMultiMessage(pWebViewImpl,pShareMsg));
                 } else if ("editable".equals(mInterface)) {//interface=editable
                     if (hasSinaAppInstalled) {
                         if (TextUtils.isEmpty(_content)){// TODO: 2016/10/12 分享新浪微博客户端时，文本内容不能为空，否则进程阻塞，分享不会回调。
-                            mRequestListener.OnSendEnd(false, DOMException.CODE_SHARE_SEND_ERROR, DOMException.MSG_SHARE_SEND_CONTENT_EMPTY_ERROR);
+                            OnSendEnd(pWebViewImpl,false, DOMException.CODE_SHARE_SEND_ERROR, DOMException.MSG_SHARE_SEND_CONTENT_EMPTY_ERROR);
                             return;
                         }
-                        gotoSinaClientShare(pWebViewImpl, pCallbackId, pShareMsg);
+                        shareHandler.shareMessage(getWeiboMultiMessage(pWebViewImpl,pShareMsg),true);
                     } else {
                         //未安装新浪微博客户端，触发回调
-                        mRequestListener.OnSendEnd(false, DOMException.CODE_CLIENT_UNINSTALLED, DOMException.MSG_CLIENT_UNINSTALLED);
+                        OnSendEnd(pWebViewImpl,false, DOMException.CODE_CLIENT_UNINSTALLED, DOMException.MSG_CLIENT_UNINSTALLED);
                     }
                 } else {//interface=auto
                     if (hasSinaAppInstalled) {
                         if (TextUtils.isEmpty(_content)){// TODO: 2016/10/12 分享新浪微博客户端时，文本内容不能为空，否则进程阻塞，分享不会回调。
-                            mRequestListener.OnSendEnd(false, DOMException.CODE_SHARE_SEND_ERROR, DOMException.MSG_SHARE_SEND_CONTENT_EMPTY_ERROR);
+                            OnSendEnd(pWebViewImpl,false, DOMException.CODE_SHARE_SEND_ERROR, DOMException.MSG_SHARE_SEND_CONTENT_EMPTY_ERROR);
                             return;
                         }
-                        gotoSinaClientShare(pWebViewImpl, pCallbackId, pShareMsg);
+                        shareHandler.shareMessage(getWeiboMultiMessage(pWebViewImpl,pShareMsg),true);
                     } else {
-                        slientShare(pWebViewImpl, pCallbackId, pShareMsg);
+                        startWebShare(pWebViewImpl.getActivity(),getWeiboMultiMessage(pWebViewImpl,pShareMsg));
                     }
                 }
             }
         } catch (JSONException e) {
             e.printStackTrace();
-            mRequestListener.OnSendEnd(false, DOMException.CODE_SHARE_SEND_ERROR, SHARE_CONTENT_ERROR);
-        }
-    }
-
-    /**
-     * 注册微博客户端分享消息回调，并进行分享
-     *
-     * @param pWebViewImpl
-     * @param pCallbackId
-     * @param pShareMsg
-     */
-    private void gotoSinaClientShare(IWebview pWebViewImpl, String pCallbackId, String pShareMsg) {
-        FeatureMessageDispatcher.registerListener(messageListener);
-        registerSendCallbackMsg(new Object[]{pWebViewImpl, pCallbackId});
-        startSinaCallbackActivity(pWebViewImpl, pShareMsg);
-    }
-
-    FeatureMessageDispatcher.MessageListener messageListener = new FeatureMessageDispatcher.MessageListener() {
-        @Override
-        public void onReceiver(Object msg) {
-            if (msg instanceof BaseResponse) {
-                executeSendCallbackMsg((BaseResponse) msg);
-                FeatureMessageDispatcher.unregisterListener(messageListener);
-            }
-        }
-    };
-    Object[] sendCallbackMsg = null;
-
-    /**
-     * 保存webview和callbackid组成的数组
-     *
-     * @param args
-     */
-    private void registerSendCallbackMsg(Object[] args) {
-        sendCallbackMsg = args;
-    }
-
-    /**
-     * 收到新浪微博客户端返回的回调消息处理
-     *
-     * @param resp
-     */
-    void executeSendCallbackMsg(BaseResponse resp) {
-        if (sendCallbackMsg != null) {
-            IWebview pWebViewImpl = (IWebview) sendCallbackMsg[0];
-            String pCallbackId = (String) sendCallbackMsg[1];
-            if (resp != null) {
-                onSendCallBack(pWebViewImpl, pCallbackId, resp);
-            }
-        }
-    }
-
-    /**
-     * 处理回调返回的消息
-     *
-     * @param pWebViewImpl
-     * @param pCallbackId
-     * @param resp
-     */
-    private void onSendCallBack(final IWebview pWebViewImpl,
-                                final String pCallbackId, BaseResponse resp) {
-        if (resp.errCode == WBConstants.ErrorCode.ERR_OK) {
-            JSUtil.execCallback(pWebViewImpl, SEND_CALLBACKID, "", JSUtil.OK, false, false);
-        } else if (resp.errCode == WBConstants.ErrorCode.ERR_CANCEL) {
-            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_USER_CANCEL, DOMException.MSG_USER_CANCEL);
-            JSUtil.execCallback(pWebViewImpl, pCallbackId, msg, JSUtil.ERROR, true, false);
-        } else {
-            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_INTERNAL_ERROR, DOMException.toString(resp.errCode, "新浪微博分享", resp.errMsg, mLink));
-            JSUtil.execCallback(pWebViewImpl, pCallbackId, msg, JSUtil.ERROR, true, false);
+            OnSendEnd(pWebViewImpl,false, DOMException.CODE_SHARE_SEND_ERROR, SHARE_CONTENT_ERROR);
         }
 
-    }
 
-    /**
-     * 进入新浪微博客户端编辑界面后分享
-     *
-     * @param pShareMsg
-     */
-    private void startSinaCallbackActivity(IWebview pWebViewImpl, String pShareMsg) {
-        Intent i = new Intent();
-        i.putExtra(KEY_APPKEY,APP_KEY);
-        i.setClassName(mActivity, mActivity.getPackageName()+".SinaCallbackActivity");
-        ImageObject imageObject = getImageObject(pWebViewImpl, pShareMsg);
-        i.putExtra("imageObject", imageObject);
-        TextObject textObject = getTextObj(pShareMsg);
-        i.putExtra("textObject", textObject);
-        mActivity.startActivity(i);
-    }
 
+    }
     /**
-     * 获取分享界面所需图片大小不超过32k
+     * 创建图片消息对象。大小不超过32k
      *
      * @param pWebViewImpl
      * @param pShareMsg
@@ -385,8 +362,27 @@ public class SinaWeiboApiManager implements IFShareApi {
                     Bitmap bitmap = BitmapFactory.decodeFile(file);
                     imageObject.setImageObject(bitmap);
                 }
-            } else {
-                return null;
+            }
+            JSONArray thumbs = _msg.optJSONArray("thumbs");
+            String thumb = JSONUtil.getString(thumbs, 0);
+            if (thumbs != null && thumbs.length() > 0 && !PdrUtil.isEmpty(thumbs.getString(0))) {
+                if (BaseInfo.isQihooLifeHelper(pWebViewImpl.getContext()) && URLUtil.isNetworkUrl(thumb)) {
+                    final String f_url = thumb;
+                    new Thread() {
+                        public void run() {
+                            try {
+                                Bitmap bitmap = BitmapFactory.decodeStream(new URL(f_url).openStream());
+                                imageObject.setImageObject(bitmap);
+                            } catch (Exception e) {
+
+                            }
+                        }
+                    }.start();
+                } else {
+                    thumb = pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(), thumb);
+                    Bitmap bitmap = BitmapFactory.decodeFile(thumb);
+                    imageObject.setThumbImage(bitmap);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -404,12 +400,13 @@ public class SinaWeiboApiManager implements IFShareApi {
         try {
             JSONObject _msg = new JSONObject(pShareMsg);
             String _content = _msg.optString("content");
+            String _title = _msg.optString("title");
             String href = JSONUtil.getString(_msg, "href");
-            if (!TextUtils.isEmpty(href) && PdrUtil.isNetPath(href)) {
-                _content += href;
-            }
             TextObject textObject = new TextObject();
             textObject.text = _content;
+            textObject.title=_title;
+            textObject.description="desciptiondesciptiondesciption";
+            textObject.actionUrl=href;
             return textObject;
         } catch (Exception e) {
             e.printStackTrace();
@@ -418,105 +415,78 @@ public class SinaWeiboApiManager implements IFShareApi {
     }
 
     /**
-     * 不进入新浪微博客户端，直接分享
-     *
-     * @param pWebViewImpl
-     * @param pCallbackId
-     * @param pShareMsg
+     * 授权回收接口，帮助开发者主动取消用户的授权。
      */
-    private void slientShare(IWebview pWebViewImpl, String pCallbackId, String pShareMsg) {
-        if (mAccessToken != null && mAccessToken.isSessionValid()) {//判断token是否过期
-            Context context = pWebViewImpl.getActivity();
-            final StatusesAPI api = new StatusesAPI(context, APP_KEY, mAccessToken);
-            try {
-                JSONObject _msg = new JSONObject(pShareMsg);
-                String _content = _msg.optString("content");
-                String href = JSONUtil.getString(_msg, "href");
-                if (!TextUtils.isEmpty(href) && PdrUtil.isNetPath(href)) {
-                    _content += href;
-                }
-                JSONArray _pictures = _msg.optJSONArray("pictures");
-                JSONObject geoJSON = JSONUtil.getJSONObject(_msg, "geo");
-                final String lat = JSONUtil.getString(geoJSON, "latitude");
-                final String lon = JSONUtil.getString(geoJSON, "longitude");
-                String file = JSONUtil.getString(_pictures, 0);
-                if (_pictures != null && _pictures.length() > 0 && !PdrUtil.isEmpty(_pictures.getString(0))) {
-                    if (BaseInfo.isQihooLifeHelper(pWebViewImpl.getContext()) && URLUtil.isNetworkUrl(file)) {
-                        final String f_content = _content;
-                        final String f_url = file;
-                        new Thread() {
-                            public void run() {
-                                try {
-                                    Bitmap bmp = BitmapFactory.decodeStream(new URL(f_url).openStream());
-                                    api.upload(f_content, bmp, lat, lon, mRequestListener);
-                                } catch (Exception e) {
-                                    mRequestListener.OnSendEnd(false, DOMException.CODE_SHARE_SEND_ERROR, SHARE_CONTENT_ERROR);
-                                }
-                            }
-                        }.start();
-                    } else {
-                        file = pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(), file);
-                        Bitmap bitmap = BitmapFactory.decodeFile(file);
-                        api.upload(_content, bitmap, lat, lon, mRequestListener);
-                    }
+    private static final String URL_REVOKE_OAUTH = "https://api.weibo.com/oauth2/revokeoauth2";
 
-                } else {
-                    api.update(_content, lat, lon, mRequestListener);
-                }
-            } catch (JSONException e) {
-                mRequestListener.OnSendEnd(false, DOMException.CODE_SHARE_SEND_ERROR, SHARE_CONTENT_ERROR);
-            }
-        } else {
-            mRequestListener.OnSendEnd(false, DOMException.CODE_SHARE_SEND_ERROR, "token expiry");
-        }
-    }
-
+    /**
+     * 新浪微博取消授权
+     * @param pWebViewImpl
+     */
     @Override
-    public void forbid(IWebview pWebViewImpl) {
-        Context context = pWebViewImpl.getActivity();
-        LogoutAPI logoutAPI = new LogoutAPI(context, APP_KEY, mAccessToken);
-        logoutAPI.logout(new RequestListener() {
-
-            @Override
-            public void onWeiboException(WeiboException arg0) {
-
-            }
-
-            @Override
-            public void onComplete(String arg0) {
-
-            }
-        });
-        AccessTokenKeeper.clear(pWebViewImpl.getActivity());
-        mAccessToken = null;
+    public void forbid(  IWebview pWebViewImpl) {
+        final Context context = pWebViewImpl.getActivity();
+        ThreadPool.self().addThreadTask(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mAccessToken == null) {
+                            mAccessToken = AccessTokenKeeper.readAccessToken(context);
+                        }
+                        if (!PdrUtil.isEmpty(mAccessToken.getToken())) {
+                            Logger.e("ian","forbid  mAccessToken.getToken()=="+mAccessToken.getToken());
+                            StringBuffer buffer = new StringBuffer();
+                            buffer.append("access_token=" + mAccessToken.getToken());
+                            byte[] resultByte =NetTool.httpPost(URL_REVOKE_OAUTH, buffer.toString(), null);
+                            String resultStr = new String(resultByte);
+                            Logger.e("ian", "logout resultStr==" + resultStr);
+                            AccessTokenKeeper.clear(context);
+                            mAccessToken = null;
+                        }
+                    }
+                });
     }
 
     String tAuthorizeCallbackId = null;
+    /**
+     * 注意：SsoHandler 仅当 SDK 支持 SSO 时有效
+     */
+    private SsoHandler mSsoHandler;
 
+    /**
+     * 新浪微博授权
+     * @param pWebViewImpl
+     * @param pCallbackId
+     * @param options
+     */
     @Override
     public void authorize(IWebview pWebViewImpl, String pCallbackId,String options) {
+
+        if (mAccessToken == null) {
+            mAccessToken = AccessTokenKeeper.readAccessToken(pWebViewImpl.getActivity());
+        }
         if (mAccessToken != null && mAccessToken.isSessionValid()) {//目前的token还有效
             JSUtil.execCallback(pWebViewImpl, pCallbackId, getJsonObject(pWebViewImpl), JSUtil.OK, true, false);
             return;
         }
+        WbSdk.install(pWebViewImpl.getActivity(), new AuthInfo(pWebViewImpl.getActivity(), APP_KEY, REDIRECT_URL, SCOPE));
+
         JSONObject jsonOptions=JSONUtil.createJSONObject(options);
         if(jsonOptions != null){
             APP_KEY = jsonOptions.optString(KEY_APPKEY, APP_KEY);
             REDIRECT_URL = jsonOptions.optString(KEY_REDIRECT_URI, REDIRECT_URL);
-            Logger.e(TAG, "authorize: appkey"+APP_KEY );
-            Logger.e(TAG, "authorize: REDIRECT_URL"+REDIRECT_URL );
         }
         if( TextUtils.isEmpty(APP_KEY)||TextUtils.isEmpty(REDIRECT_URL)) {
             String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
             JSUtil.execCallback(pWebViewImpl, pCallbackId, msg, JSUtil.ERROR, true, false);
             return;
         }
-        Context context = pWebViewImpl.getActivity();
         tAuthorizeCallbackId = pCallbackId;
-        AuthInfo mWeibo = new AuthInfo(context, APP_KEY, REDIRECT_URL, SCOPE);
-//		mWeibo.anthorize(new AuthDialogListener(pWebViewImpl));//网页授权
-        final SsoHandler mSsoHandler = new SsoHandler(pWebViewImpl.getActivity(), mWeibo);
-        final IApp app = pWebViewImpl.obtainFrameView().obtainApp();
+        if (mSsoHandler == null) {
+            mSsoHandler = new SsoHandler(pWebViewImpl.getActivity());
+        }
+
+        final IApp app = pWebViewImpl.obtainApp();
         app.registerSysEventListener(new ISysEventListener() {
             @Override
             public boolean onExecute(SysEventType pEventType, Object pArgs) {
@@ -526,18 +496,56 @@ public class SinaWeiboApiManager implements IFShareApi {
                 Intent data = (Intent) _args[2];
                 app.unregisterSysEventListener(this, SysEventType.onActivityResult);
                 if (mSsoHandler != null) {
-                    mSsoHandler.authorizeCallBack(requestCode, resultCode, data);//调用此方法后才能触发onCancel事件
+                    mSsoHandler.authorizeCallBack(requestCode, resultCode, data);
                 }
                 return false;
             }
         }, SysEventType.onActivityResult);
-        mSsoHandler.authorize(new AuthDialogListener(pWebViewImpl));//sso授权,没有客户端自动跳转到网页授权
+        mSsoHandler.authorize(new SelfWbAuthListener(pWebViewImpl));
     }
 
+    /**
+     * 新浪微博授权
+     * @param wbAuthListener
+     */
+    public void authorize(final Activity activity, WbAuthListener wbAuthListener) {
+        if (mAccessToken == null) {
+            mAccessToken = AccessTokenKeeper.readAccessToken(activity);
+        }
+        if (mAccessToken != null && mAccessToken.isSessionValid()) {//目前的token还有效
+            return;
+        }
+        WbSdk.install(activity, new AuthInfo(activity, APP_KEY, REDIRECT_URL, SCOPE));
+        if (mSsoHandler == null) {
+            mSsoHandler = new SsoHandler(activity);
+        }
+        if(activity instanceof ISysEventDispatch){
+            ((ISysEventDispatch)activity).registerSysEventListener(new ISysEventListener() {
+                @Override
+                public boolean onExecute(SysEventType pEventType, Object pArgs) {
+                    Object[] _args = (Object[]) pArgs;
+                    int requestCode = (Integer) _args[0];
+                    int resultCode = (Integer) _args[1];
+                    Intent data = (Intent) _args[2];
+                    ((ISysEventDispatch)activity).unRegisterSysEventListener(this,SysEventType.onActivityResult);
+                    if (mSsoHandler != null) {
+                        mSsoHandler.authorizeCallBack(requestCode, resultCode, data);
+                    }
+                    return false;
+                }
+            },SysEventType.onActivityResult);
+        }
+        mSsoHandler.authorize(wbAuthListener);
+    }
 
-    class AuthDialogListener implements WeiboAuthListener {
+    /**
+     * 新浪微博登陆授权回调接口
+     */
+    private class SelfWbAuthListener implements com.sina.weibo.sdk.auth.WbAuthListener {
         IWebview mWebview = null;
-
+        SelfWbAuthListener(IWebview webview) {
+            mWebview = webview;
+        }
         private void OnAuthorizeEnd(boolean suc, int errorCode, String msg) {
             if (tAuthorizeCallbackId != null) {
                 if (suc) {
@@ -549,114 +557,81 @@ public class SinaWeiboApiManager implements IFShareApi {
                 tAuthorizeCallbackId = null;
             }
         }
-
-        AuthDialogListener(IWebview webview) {
-            mWebview = webview;
-        }
-
         @Override
-        public void onComplete(Bundle values) {
-            mAccessToken = Oauth2AccessToken.parseAccessToken(values);
+        public void onSuccess(Oauth2AccessToken token) {
+            mAccessToken = token;
             if (mAccessToken.isSessionValid()) {
+                // 保存 Token 到 SharedPreferences
+                Logger.e("ian","authorize onSuccess mAccessToken.getToken()=="+mAccessToken.getToken());
                 AccessTokenKeeper.writeAccessToken(mWebview.getActivity(), mAccessToken);
+                OnAuthorizeEnd(true, -1, null);
             }
-            OnAuthorizeEnd(true, -1, null);
         }
-
         @Override
-        public void onCancel() {
+        public void cancel() {
             OnAuthorizeEnd(false, DOMException.CODE_USER_CANCEL, DOMException.toString(DOMException.MSG_USER_CANCEL));
         }
 
         @Override
-        public void onWeiboException(WeiboException e) {
-            OnAuthorizeEnd(false, DOMException.CODE_BUSINESS_INTERNAL_ERROR, DOMException.toString(e.getLocalizedMessage(), "Share新浪分享", e.getLocalizedMessage(), mLink));
+        public void onFailure(WbConnectErrorMessage errorMessage) {
+            OnAuthorizeEnd(false, DOMException.CODE_BUSINESS_INTERNAL_ERROR, DOMException.toString(errorMessage.getErrorCode(), "Share新浪分享", errorMessage.getErrorMessage(), mLink));
         }
-
-    }
-
-    public static AbsWebviewClient getWebviewClient(ShareAuthorizeView pView) {
-        return new SinaWebviewClient(pView);
-    }
-
-    /**
-     * 供原生代码分享调用
-     *
-     * @param activity
-     * @param msg
-     */
-    public void send(final Activity activity, final String msg) {
-        try {
-            initData();
-            initJsonObject(activity);
-            if (mAccessToken != null && mAccessToken.isSessionValid()) {//判断token是否过期
-                shareSina(activity, msg);
-            } else {
-                AuthInfo mWeibo = new AuthInfo(activity, APP_KEY, REDIRECT_URL, SCOPE);
-                SsoHandler mSsoHandler = new SsoHandler(activity, mWeibo);
-                mSsoHandler.authorize(new WeiboAuthListener() {
-
-                    @Override
-                    public void onWeiboException(WeiboException arg0) {
-                        // TODO Auto-generated method stub
-
-                    }
-
-                    @Override
-                    public void onComplete(Bundle values) {
-                        // TODO Auto-generated method stub
-                        mAccessToken = Oauth2AccessToken.parseAccessToken(values);
-                        if (mAccessToken.isSessionValid()) {
-                            AccessTokenKeeper.writeAccessToken(activity, mAccessToken);
-                        }
-                        shareSina(activity, msg);
-                    }
-
-                    @Override
-                    public void onCancel() {
-                        // TODO Auto-generated method stub
-
-                    }
-                });
-            }
-        } catch (JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
-    private void shareSina(Activity activity, String msg) {
-        try {
-            JSONObject msgJs = new JSONObject(msg);
-            String content = msgJs.getString("content");
-            String href = msgJs.getString("href");
-            String thumbs = msgJs.getString("thumbs");
-            Bitmap thumb = BitmapFactory.decodeFile(thumbs);
-            StatusesAPI api = new StatusesAPI(activity, APP_KEY, mAccessToken);
-            api.upload(content + href, thumb, null, null, new RequestListener() {
-
-                @Override
-                public void onWeiboException(WeiboException arg0) {
-                    // TODO Auto-generated method stub
-
-                }
-
-                @Override
-                public void onComplete(String arg0) {
-                    // TODO Auto-generated method stub
-
-                }
-            });
-        } catch (Exception e) {
-
-        }
-
     }
 
     @Override
     public void dispose() {
         mActivity = null;
-        messageListener = null;
-        mRequestListener = null;
+    }
+
+    /**
+     * 启动网页分享
+     * @param activity
+     * @param message
+     */
+    public  void startWebShare(Activity activity,WeiboMultiMessage message) {
+        Intent webIntent = new Intent(activity, WbShareTransActivity.class);
+        String appPackage = activity.getPackageName();
+        ShareWebViewRequestParam webParam = new ShareWebViewRequestParam(WbSdk.getAuthInfo(), WebRequestType.SHARE, "", 1, "微博分享", (String)null, activity);
+        webParam.setContext(activity);
+        webParam.setHashKey("");
+        webParam.setPackageName(appPackage);
+        Oauth2AccessToken token = AccessTokenKeeper.readAccessToken(activity);
+        if(token != null && !TextUtils.isEmpty(token.getToken())) {
+            Logger.e("ian","startWebShare token.getToken()=="+token.getToken());
+            webParam.setToken(token.getToken());
+        }
+        webParam.setMultiMessage(message);
+        Bundle bundle = new Bundle();
+        webParam.fillBundle(bundle);
+        webIntent.putExtras(bundle);
+        webIntent.putExtra("startFlag", 0);
+        webIntent.putExtra("startActivity", activity.getClass().getName());
+        webIntent.putExtra("startAction", "com.sina.weibo.sdk.action.ACTION_WEIBO_ACTIVITY");
+        webIntent.putExtra("gotoActivity", "com.sina.weibo.sdk.web.WeiboSdkWebActivity");
+        activity.startActivity(webIntent);
+    }
+
+    /**
+     * 获取分享消息
+     * @param message
+     * @return
+     */
+    public  WeiboMultiMessage getWeiboMultiMessage(String message) {
+        WeiboMultiMessage weiboMessage = new WeiboMultiMessage();
+        weiboMessage.textObject = getTextObj(message);
+        return weiboMessage;
+    }
+
+    /**
+     * 获取分享消息
+     * @param pWebViewImpl
+     * @param message
+     * @return
+     */
+    public  WeiboMultiMessage getWeiboMultiMessage(IWebview pWebViewImpl,String message) {
+        WeiboMultiMessage weiboMessage = new WeiboMultiMessage();
+        weiboMessage.textObject = getTextObj(message);
+        weiboMessage.imageObject = getImageObject( pWebViewImpl,message);
+        return weiboMessage;
     }
 }

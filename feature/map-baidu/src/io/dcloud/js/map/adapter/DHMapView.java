@@ -4,6 +4,7 @@ import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.util.DeviceInfo;
 import io.dcloud.common.util.BaseInfo;
 import io.dcloud.common.util.ErrorDialogUtil;
+import io.dcloud.common.util.PdrUtil;
 import io.dcloud.js.map.IFMapDispose;
 import io.dcloud.js.map.MapInitImpl;
 import io.dcloud.js.map.MapJsUtil;
@@ -105,7 +106,7 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
 
 	/**
 	 * 注销KEY广播监听
-	 * @param pWebView
+	 *
 	 */
 //	public void unReceiver(IWebview pWebView) {
 //		pWebView.getActivity().unregisterReceiver(mReceiver);
@@ -168,9 +169,14 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
 		try {
 			if (mLocClient != null) {
 				mLocClient.unRegisterLocationListener(myListener);
-				mMapView.onDestroy();
 			}
-		} catch(Exception e) {
+            //clearOverlays();
+            if (!PdrUtil.isEmpty(mMapView)) {
+                //mMapView.setVisibility(View.GONE);//释放资源并不会关闭地图不显示，所以释放之前使之隐藏
+                mMapView.onDestroy();
+                mMapView = null;
+            }
+        } catch(Exception e) {
 			//e.printStackTrace();
 		}
 	}
@@ -228,7 +234,7 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
 	/**
 	 * 
 	 * Description:添加图层对象
-	 * @param pMarker
+	 * @param pOverlay
 	 *
 	 * <pre><p>ModifiedLog:</p>
 	 * Log ID: 1.0 (Log编号 依次递增)
@@ -254,7 +260,7 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
 	/**
 	 * 
 	 * Description:删除覆盖物对象
-	 * @param pMarker
+	 * @param pOverlay
 	 *
 	 * <pre><p>ModifiedLog:</p>
 	 * Log ID: 1.0 (Log编号 依次递增)
@@ -480,7 +486,12 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
         		mLocClient.stop();
         	}*/
         }
-        
+
+        @Override
+        public void onConnectHotSpotMessage(String s, int i) {
+
+        }
+
         public void onReceivePoi(BDLocation poiLocation) {
             if (poiLocation == null){
                 return ;

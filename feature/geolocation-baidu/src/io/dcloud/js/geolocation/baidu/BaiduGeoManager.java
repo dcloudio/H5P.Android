@@ -1,24 +1,5 @@
 package io.dcloud.js.geolocation.baidu;
 
-import io.dcloud.common.DHInterface.IEventCallback;
-import io.dcloud.common.DHInterface.IWebview;
-import io.dcloud.common.adapter.ui.AdaFrameView;
-import io.dcloud.common.adapter.util.AndroidResources;
-import io.dcloud.common.adapter.util.Logger;
-import io.dcloud.common.adapter.util.SP;
-import io.dcloud.common.constant.DOMException;
-import io.dcloud.common.constant.StringConst;
-import io.dcloud.common.util.JSUtil;
-import io.dcloud.common.util.PdrUtil;
-import io.dcloud.js.geolocation.GeoManagerBase;
-
-import java.text.ParsePosition;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 
@@ -28,25 +9,61 @@ import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.location.LocationClientOption.LocationMode;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import io.dcloud.common.DHInterface.FeatureMessageDispatcher;
+import io.dcloud.common.DHInterface.IEventCallback;
+import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.common.adapter.ui.AdaFrameView;
+import io.dcloud.common.adapter.util.AndroidResources;
+import io.dcloud.common.adapter.util.Logger;
+import io.dcloud.common.adapter.util.SP;
+import io.dcloud.common.constant.DOMException;
+import io.dcloud.common.constant.StringConst;
+import io.dcloud.common.util.JSUtil;
+import io.dcloud.common.util.NetTool;
+import io.dcloud.common.util.PdrUtil;
+import io.dcloud.js.geolocation.GeoManagerBase;
+
 public class BaiduGeoManager extends GeoManagerBase{
 
 
-	public static String Tag = "BaiduGeoManager";
-	LocationClient mGetCLocationClient = null;
-	LocationClientOption mGetCLocationClientOption = null;
-	LocationClient mWatchLocationClient = null;
-	LocationClientOption mWatchLocationClientOption = null;
-	/**是否存在百度key*/
+    public static final String TAG = BaiduGeoManager.class.getSimpleName();
+    /**是否存在百度key*/
 	boolean hasAppkey = false;
 	// 是否解析完整地理信息
 	boolean isGeocode = true;
+    boolean isStreamApp = false;
+    static BaiduGeoManager mInstance;
 
-	boolean isStreamApp = false;
-	public BaiduGeoManager(Context pContext) {
+    LocationClient mClient = null;
+    LocationClientOption mOption = null;
+    HashMap<String, LocationClient> mContinuousMap = new HashMap<String, LocationClient>();
+    HashMap<String, LocationClient> mSingleTimeMap = new HashMap<String, LocationClient>();
+
+
+
+    public BaiduGeoManager(Context pContext) {
 		super(pContext);
 		hasAppkey = !PdrUtil.isEmpty(AndroidResources.getMetaValue("com.baidu.lbsapi.API_KEY"));
 	}
 
+    public static BaiduGeoManager getInstance(Context pContext) {
+        pContext = pContext.getApplicationContext();
+        if (mInstance != null) {
+            return mInstance;
+        } else {
+            mInstance = new BaiduGeoManager(pContext);
+        }
+        return mInstance;
+    }
 	public String execute(IWebview pWebViewImpl, String pActionName,
 						  String[] pJsArgs) {
 		String result = "";
@@ -65,26 +82,25 @@ public class BaiduGeoManager extends GeoManagerBase{
 					interval = 1000;
 				}
 			}
-			if (pActionName.equals("getCurrentPosition")) {
+			if (pActionName.startsWith("getCurrentPosition")) {
 				isGeocode = Boolean.parseBoolean(pJsArgs[5]);
 				boolean _enableHighAccuracy = Boolean.parseBoolean(pJsArgs[1]);
-
 				boolean isNotWgs84 = !PdrUtil.isEquals("wgs84", pJsArgs[3]);
 				if(/*PdrUtil.isEquals("baidu", pJsArgs[4]) &&*/ isNotWgs84){
-					getCurrentLocation(pWebViewImpl, pJsArgs[0], _enableHighAccuracy, timeout, pJsArgs[3]);
+                    startLocating(pWebViewImpl, pJsArgs[0], null, _enableHighAccuracy, timeout, -1, pActionName.endsWith("DLGEO"),pJsArgs[3],false);
 				}else{
 					String _json = String.format(DOMException.JSON_ERROR_INFO,DOMException.CODE_GEOLOCATION_PROVIDER_ERROR,isNotWgs84 ? DOMException.MSG_GEOLOCATION_PROVIDER_ERROR : "only support gcj02|bd09|bd09ll");
 					JSUtil.execCallback(pWebViewImpl, pJsArgs[0], _json, JSUtil.ERROR, true, false);
 				}
 			}
-			else if (pActionName.equals("watchPosition")) {
+			else if (pActionName.startsWith("watchPosition")) {
 				isGeocode = Boolean.parseBoolean(pJsArgs[5]);
 				boolean _enableHighAccuracy = Boolean.parseBoolean(pJsArgs[2]);
 				pWebViewImpl.obtainFrameView().addFrameViewListener(new IEventCallback() {
 					@Override
 					public Object onCallBack(String pEventType, Object pArgs) {
 						if((PdrUtil.isEquals(pEventType, StringConst.EVENTS_WINDOW_CLOSE) || PdrUtil.isEquals(pEventType, StringConst.EVENTS_CLOSE)) && pArgs instanceof IWebview){
-							stop();
+                            stopContinuousLocating();
 							((AdaFrameView)((IWebview)pArgs).obtainFrameView()).removeFrameViewListener(this);
 						}
 						return null;
@@ -92,78 +108,116 @@ public class BaiduGeoManager extends GeoManagerBase{
 				});
 				boolean isNotWgs84 = !PdrUtil.isEquals("wgs84", pJsArgs[3]);
 				if(/*PdrUtil.isEquals("baidu", pJsArgs[4]) &&*/ isNotWgs84){
-					watch(pWebViewImpl, pJsArgs[0], pJsArgs[1], _enableHighAccuracy, pJsArgs[3], timeout, interval);
+                    startLocating(pWebViewImpl, pJsArgs[0], pJsArgs[1], _enableHighAccuracy, timeout, interval, pActionName.endsWith("DLGEO"), pJsArgs[3],true);
 				}else{
 					String _json = String.format(DOMException.JSON_ERROR_INFO,DOMException.CODE_GEOLOCATION_PROVIDER_ERROR,isNotWgs84 ? DOMException.MSG_GEOLOCATION_PROVIDER_ERROR : "only support gcj02|bd09|bd09ll");
 					JSUtil.execCallback(pWebViewImpl, pJsArgs[0], _json, JSUtil.ERROR, true, false);
 				}
 			}
-			else if (pActionName.equals("clearWatch")) {
-				if(keySet.contains(pJsArgs[0])){
-					keySet.remove(pJsArgs[0]);
-					stop();
-				}
+			else if (pActionName.startsWith("clearWatch")) {
+                keySet.remove(pJsArgs[0]);
+                mContinuousMap.remove(pJsArgs[0]).stop();
 			}
 			return result;
 		} catch (Exception e) {
+            Logger.e(TAG,"e.getMessage()=="+e.getMessage());
 			return result;
 		}
 	}
-	private int mUseCount = 0;
-	private void count(int i){
-		mUseCount += i;
-	}
-	String mGetCurrentLocationCoordsType = null;
-	String mCoordsType = null;
-	BDLocationListener mWatchBDLocationListenerImpl = new BDLocationListener(){
-		@Override
-		public void onReceiveLocation(BDLocation pLoc) {
-					JSONObject _json = null;
-			if(watchWebview != null && watchCallbackId != null){
-				_json = makeJSON(pLoc,mCoordsType);
-				if (_json == null) {
-					geoDataError(watchWebview, watchCallbackId);
-				} else {
-					//处于监听状态
-					JSUtil.execCallback(watchWebview, watchCallbackId, _json, JSUtil.OK, true);
-				}
-			}
-		}
 
-	};
+    public void startLocating(final IWebview pWebViewImpl, final String pCallbackId, final String key, boolean enableHighAccuracy, int timeOut, int intervals, final boolean isDLGeo, final String coordsType, final boolean continuous) {
+        if (hasAppkey) {
+            mClient = new LocationClient(pWebViewImpl.getContext());
+            mOption = new LocationClientOption();
+            if (PdrUtil.isEmpty(key)) {
+                //0，即仅定位一次
+                mOption.setScanSpan(0);
+                mSingleTimeMap.put(pCallbackId, mClient);
+            } else {
+                mOption.setScanSpan(intervals);
+                mOption.setLocationNotify(true);
+                //可选，默认false，设置是否当GPS有效时按照1S/1次频率输出GPS结果
+                keySet.add(key);
+                mContinuousMap.put(key, mClient);
+            }
+            if (NetTool.isNetworkAvailable(mContext)) {
+                if (enableHighAccuracy) {
+                    mOption.setLocationMode(LocationMode.Hight_Accuracy);//4.1以上支持
+                } else {
+                    mOption.setLocationMode(LocationMode.Battery_Saving);
+                }
+                mOption.setTimeOut(timeOut);
+            }else{
+                mOption.setLocationMode(LocationMode.Device_Sensors);
+                if (Integer.MAX_VALUE==timeOut) {
+                    mOption.setTimeOut(3000);
+                }else{
+                    mOption.setTimeOut(timeOut);
+                }
+            }
+            mOption.setIsNeedAddress(isGeocode);
+            mOption.setCoorType(getCoorType(coordsType));
+            mClient.setLocOption(mOption);
+            mClient.registerLocationListener(new BDLocationListener() {
+                @Override
+                public void onConnectHotSpotMessage(String s, int i) {
 
-	BDLocationListener mGetCBDLocationListenerImpl = new BDLocationListener(){
-		@Override
-		public void onReceiveLocation(BDLocation pLoc) {
-			JSONObject _json = null;
-			if(mGetCurrentLocation){
-				_json = makeJSON(pLoc,mGetCurrentLocationCoordsType);
-				if (_json == null) {
-					geoDataError(mGetCurrentLocationWebview, mGetCurrentLocationCallbackId);
-				} else {
-					//获取当前位置
-					Logger.d(Tag,"_json=" + _json);
-					JSUtil.execCallback(mGetCurrentLocationWebview, mGetCurrentLocationCallbackId, _json, JSUtil.OK, false);
-				}
-				mGetCurrentLocation = false;
-				mGetCurrentLocationWebview = null;
-				mGetCurrentLocationCallbackId = null;
-				mGetCLocationClient.unRegisterLocationListener(this);
-				mGetCLocationClientOption.setOpenGps(false);
-				mGetCLocationClient.stop();
-			}
-		}
+                }
 
-	};
-	private  void start(){
-		synchronized(mWatchLocationClient){
-			if(!mWatchLocationClient.isStarted() && mUseCount == 0){
-				mWatchLocationClient.registerLocationListener(mWatchBDLocationListenerImpl);
-				mWatchLocationClient.start();
-			}
-		}
-		count(1);
-	}
+                @Override
+                public void onReceiveLocation(BDLocation bdLocation) {
+					if(bdLocation.getAddress() != null){
+						FeatureMessageDispatcher.dispatchMessage("record_address",bdLocation.getAddress() != null ? bdLocation.getAddress().address : null);
+					}
+                    Logger.e(TAG,"onReceiveLocation bdLocation=="+bdLocation.toString());
+                    callBack2Front(pWebViewImpl, pCallbackId,bdLocation, getCoorType(coordsType),isDLGeo,continuous);
+                }
+            });
+            mClient.start();
+        } else {
+            String _json = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_GEOLOCATION_HASNT_BAIDU_APPKEY, DOMException.MSG_GEOLOCATION_HASNT_AMAP_KEY);
+            JSUtil.execCallback(pWebViewImpl, pCallbackId, _json, JSUtil.ERROR, true, false);
+        }
+
+    }
+    /**
+     *关闭页面时，停止持续定位
+     */
+    private void stopContinuousLocating() {
+        for (Map.Entry<String, LocationClient> entry : mContinuousMap.entrySet()) {
+            System.out.println("key= " + entry.getKey() + " and value= " + entry.getValue());
+            if (!PdrUtil.isEmpty(entry.getValue())) {
+                entry.getValue().stop();
+            }
+        }
+    }
+
+
+
+    private void callBack2Front(IWebview mWebview , String mCallbackId,BDLocation location,String CoordsType,boolean isDLGeo,boolean continuous) {
+        if (!continuous) {//非持续定位，得到定位结果后，停止
+            if(!PdrUtil.isEmpty(mSingleTimeMap.get(mCallbackId))){
+                mSingleTimeMap.get(mCallbackId).stop();
+            }
+        }
+        JSONObject _json;
+        _json = makeJSON(location,CoordsType);
+        if (_json == null) {
+            geoDataError(mWebview, mCallbackId,isDLGeo,continuous);
+        } else {
+            //处于监听状态
+            callback(mWebview, mCallbackId, _json.toString(), JSUtil.OK, true,isDLGeo,continuous);
+        }
+    }
+
+    public void callback(IWebview webview, String callId, String json, int code, boolean isJson, boolean isDLGeo,boolean continuous) {
+        if (isDLGeo) {
+            JSUtil.execGEOCallback(webview, callId, json, code, isJson,continuous);
+        } else {
+            JSUtil.execCallback(webview, callId, json, code, isJson,continuous);
+        }
+    }
+
 
 	private JSONObject makeJSON(BDLocation pLoc,String coordsType){
 		JSONObject json = null;
@@ -207,120 +261,31 @@ public class BaiduGeoManager extends GeoManagerBase{
 		return json;
 	}
 
-	/**
-	 *
-	 * Description:结束定位
-	 * @param key 定位监听器ID
-	 *
-	 * <pre><p>ModifiedLog:</p>
-	 * Log ID: 1.0 (Log编号 依次递增)
-	 * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2013-4-12 上午11:43:08</pre>
-	 */
-	public void stop() {
-		count(-1);
-		if(mUseCount <= 0){
-			watchWebview = null;
-			watchCallbackId = null;
-			mWatchLocationClient.unRegisterLocationListener(mWatchBDLocationListenerImpl);
-			mWatchLocationClientOption.setOpenGps(false);
-			if(mWatchLocationClient.isStarted()){
-				mWatchLocationClient.stop();
-			}
-			mUseCount = 0;
-		}
-		Logger.d(Tag, "stop mUseCount=" + mUseCount);
-	}
-
-
-	boolean mGetCurrentLocation = false;
-	String mGetCurrentLocationCallbackId = null;
-	IWebview mGetCurrentLocationWebview = null;
-	public void getCurrentLocation(IWebview pWebViewImpl, String pCallbackId, boolean enableHighAccuracy, int timeout, String coordsType) {
-		if(hasAppkey){
-			if (mGetCLocationClient == null) {
-				mGetCLocationClient = new LocationClient(pWebViewImpl.getContext());
-			}
-			mGetCLocationClientOption = new LocationClientOption();
-			mGetCLocationClientOption.setOpenGps(true);
-			mGetCLocationClientOption.setIsNeedAddress(isGeocode);
-			//0，即仅定位一次
-			mGetCLocationClientOption.setScanSpan(0);
-			mGetCLocationClientOption.setTimeOut(timeout);
-			mGetCurrentLocationCallbackId = pCallbackId;
-			mGetCurrentLocationWebview = pWebViewImpl;
-			mGetCurrentLocationCoordsType = getCoorType(coordsType);
-			mGetCLocationClientOption.setCoorType(mGetCurrentLocationCoordsType);
-			mGetCLocationClient.setLocOption(mGetCLocationClientOption);
-			mGetCurrentLocation = true;
-			mGetCLocationClient.registerLocationListener(mGetCBDLocationListenerImpl);
-			mGetCLocationClient.start();
-		}else{
-			String _json = String.format(DOMException.JSON_ERROR_INFO,DOMException.CODE_GEOLOCATION_HASNT_BAIDU_APPKEY,DOMException.MSG_GEOLOCATION_HASNT_BAIDU_APKEY);
-			JSUtil.execCallback(pWebViewImpl, pCallbackId, _json, JSUtil.ERROR, true, false);
-		}
-
-	}
 	private String getCoorType(String coorType){
 		//gcj02 bd09 bd09ll wgs84
-		if(PdrUtil.isEquals(coorType, "gcj02")){
-			return "gcj02";
+		if(PdrUtil.isEquals(coorType, "bd09ll")){
+			return "bd09ll";
 		}else if(PdrUtil.isEquals(coorType, "bd09")){
 			return "bd09";
 		}else{
-			return "bd09ll";
+			return "gcj02";
 		}
-	}
-
-	IWebview watchWebview = null;
-	String watchCallbackId = null;
-	/**
-	 *
-	 * Description:开启定位
-	 * @param pWebViewImpl WEBVIEW对象
-	 * @param pCallbackId 回调方法ID
-	 * @param key 定位监听者ID
-	 * @param enableHighAccuracy 是否是高精度（目前没用到）
-	 * @param coordsType TODO
-	 * @return
-	 *
-	 * <pre><p>ModifiedLog:</p>
-	 * Log ID: 1.0 (Log编号 依次递增)
-	 * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2013-4-12 上午11:42:50</pre>
-	 */
-	public String watch(IWebview pWebViewImpl, String pCallbackId, String key, boolean enableHighAccuracy, String coordsType, int timeOut, int intervals) {
-		if(hasAppkey){
-			if(mWatchLocationClient==null){
-				mWatchLocationClient = new LocationClient(pWebViewImpl.getContext());
-			}
-			mWatchLocationClientOption = new LocationClientOption();
-			mWatchLocationClientOption.setOpenGps(true);
-			mWatchLocationClientOption.setScanSpan(intervals);
-			mWatchLocationClientOption.setIsNeedAddress(isGeocode);
-			mWatchLocationClientOption.setTimeOut(timeOut);
-			watchWebview = pWebViewImpl;
-			watchCallbackId = pCallbackId;
-			if(enableHighAccuracy){
-				mWatchLocationClientOption.setLocationMode(LocationMode.Hight_Accuracy);//4.1以上支持
-			}else{
-				mWatchLocationClientOption.setLocationMode(LocationMode.Device_Sensors);
-			}
-			mCoordsType = getCoorType(coordsType);
-			mWatchLocationClientOption.setCoorType(mCoordsType);
-			mWatchLocationClient.setLocOption(mWatchLocationClientOption);
-			start();
-			keySet.add(key);
-		}else{
-			String _json = String.format(DOMException.JSON_ERROR_INFO,DOMException.CODE_GEOLOCATION_HASNT_BAIDU_APPKEY,DOMException.MSG_GEOLOCATION_HASNT_BAIDU_APKEY);
-			JSUtil.execCallback(pWebViewImpl, pCallbackId, _json, JSUtil.ERROR, true, false);
-		}
-
-		return key;
 	}
 
 	@Override
 	public void onDestroy() {
-		mWatchLocationClientOption.setIgnoreKillProcess(false);//设置是否退出定位进程
-		mWatchLocationClient.setLocOption(null);
+        for (Map.Entry<String, LocationClient> entry : mContinuousMap.entrySet()) {
+            if (!PdrUtil.isEmpty(entry.getValue())) {
+                entry.getValue().stop();
+            }
+        }
+        mContinuousMap.clear();
+        for (Map.Entry<String, LocationClient> entry : mSingleTimeMap.entrySet()) {
+            if (!PdrUtil.isEmpty(entry.getValue())) {
+                entry.getValue().stop();
+            }
+        }
+        mSingleTimeMap.clear();
 	}
 
 	/**如果为5+应用 进行定位数据存储*/
@@ -347,9 +312,13 @@ public class BaiduGeoManager extends GeoManagerBase{
 	}
 
 
-	private void geoDataError(IWebview pWebViewImpl, String pCallbackId) {
+	private void geoDataError(IWebview pWebViewImpl, String pCallbackId,boolean isDLGeo,boolean continuous) {
 		String err = String.format(DOMException.JSON_ERROR_INFO, 40, "定位异常");
-		JSUtil.execCallback(pWebViewImpl, pCallbackId, err, JSUtil.ERROR, true, false);
+        if (isDLGeo) {
+            JSUtil.execGEOCallback(pWebViewImpl, pCallbackId, err, JSUtil.ERROR, true,continuous);
+        } else {
+            JSUtil.execCallback(pWebViewImpl, pCallbackId, err, JSUtil.ERROR, true,continuous);
+        }
 	}
 
 }

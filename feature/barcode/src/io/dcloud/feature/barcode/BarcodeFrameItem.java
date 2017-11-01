@@ -386,7 +386,11 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 		if (!hasSurface) {
 			hasSurface = true;
 			if(!isCancelScan){
-				initCamera(holder);
+				try {
+					initCamera(holder);
+				} catch (Exception e){
+					e.printStackTrace();
+				}
 			}
 		}
 	}

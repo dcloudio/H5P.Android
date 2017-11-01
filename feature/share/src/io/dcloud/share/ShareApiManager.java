@@ -214,7 +214,7 @@ public class ShareApiManager {
         if(null != mShareApis){
             for(Map.Entry<String, IFShareApi> entry:mShareApis.entrySet()){
                 entry.getValue().dispose();
-                mShareApis.remove(entry.getKey());
+                //mShareApis.remove(entry.getKey());//java.util.ConcurrentModificationException
             }
         }
         //mShareApis = null;
@@ -222,13 +222,19 @@ public class ShareApiManager {
         if(null != mAuthorizeViews){
             for(Map.Entry<String, ShareAuthorizeView> entry:mAuthorizeViews.entrySet()){
                 entry.getValue().dispose();
-                mAuthorizeViews.remove(entry.getKey());
+                //mAuthorizeViews.remove(entry.getKey());//java.util.ConcurrentModificationException
             }
         }
         //mAuthorizeViews = null;
 
         if(null != mShareApiNames){
             mShareApiNames.clear();
+        }
+        if(null != mShareApis){
+            mShareApis.clear();
+        }
+        if(null != mAuthorizeViews){
+            mAuthorizeViews.clear();
         }
         //mShareApiNames = null;
     }

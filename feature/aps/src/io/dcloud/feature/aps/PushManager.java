@@ -3,6 +3,7 @@ package io.dcloud.feature.aps;
 import io.dcloud.common.DHInterface.BaseFeature;
 import io.dcloud.common.DHInterface.BaseFeature.BaseModule;
 import io.dcloud.common.DHInterface.IEventCallback;
+import io.dcloud.common.DHInterface.ISysEventListener;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.ui.AdaFrameItem;
 import io.dcloud.common.adapter.ui.AdaFrameView;
@@ -17,9 +18,12 @@ import java.util.HashMap;
 import java.util.Set;
 
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 
 /**
  * <p>
@@ -55,6 +59,7 @@ class PushManager {
 	/** 未被通知到js层的消息集合，需要添加了receive listener时立即执行 */
 	protected ArrayList<PushMessage> mNeedExecMessages_receive;
 
+	private AbsPushService mBaseAbsPushService = null;
 	APSFeatureImpl apsFeatureImpl;
 	/**
 	 * 
@@ -110,12 +115,38 @@ class PushManager {
 
 		String _ret = null;
 		String _appId = pWebViewImpl.obtainFrameView().obtainApp().obtainAppId();
-		Context _context = pWebViewImpl.getActivity();
+		final Context _context = pWebViewImpl.getActivity();
 		ArrayList<BaseModule> list = baseFeature.loadModules();
 		AbsPushService channel = null;
 		boolean isStreamBase = BaseInfo.isStreamApp(_context);
 		if(!list.isEmpty()){
 			channel = (AbsPushService)baseFeature.loadModules().get(0);
+		}else{
+			if(mBaseAbsPushService == null){
+				mBaseAbsPushService = new AbsPushService() {
+					@Override
+					public JSONObject toJSONObject() throws JSONException {
+						return super.toJSONObject();
+					}
+				};
+				IntentFilter mFilter = new IntentFilter();
+				mFilter.addAction(APSFeatureImpl.CLILK_NOTIFICATION);
+				mFilter.addAction(APSFeatureImpl.CLEAR_NOTIFICATION);
+				mFilter.addAction(APSFeatureImpl.REMOVE_NOTIFICATION);
+				mFilter.addAction(APSFeatureImpl.CREATE_NOTIFICATION);
+				final NotificationReceiver mNotificationReceiver = new NotificationReceiver();
+				_context.registerReceiver(mNotificationReceiver,mFilter);
+				pWebViewImpl.obtainApp().registerSysEventListener(new ISysEventListener() {
+					@Override
+					public boolean onExecute(SysEventType pEventType, Object pArgs) {
+						if(pEventType == ISysEventListener.SysEventType.onWebAppStop){
+							_context.unregisterReceiver(mNotificationReceiver);
+						}
+						return false;
+					}
+				}, ISysEventListener.SysEventType.onWebAppStop);
+			}
+			channel = mBaseAbsPushService;
 		}
 		if (pActionName.equals("getClientInfo")) {
 			if(channel != null){

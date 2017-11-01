@@ -53,7 +53,7 @@ public class WeiXinPay extends AbsPaymentChannel implements ISysEventListener{
 		super.init(context);
 		id = "wxpay";
 		description = "微信";
-		serviceReady = PlatformUtil.hasAppInstalled(mContext, PNAME_MM);
+		serviceReady = PlatformUtil.isAppInstalled(mContext, PNAME_MM);
 		APPID = AndroidResources.getMetaValue("WX_APPID");
 		api = WXAPIFactory.createWXAPI(context, APPID);
 		api.registerApp(APPID);
@@ -66,7 +66,7 @@ public class WeiXinPay extends AbsPaymentChannel implements ISysEventListener{
 		if(!hasFullConfigData()){
 			mListener.onError(DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
 			return true;
-		}else if(!PlatformUtil.hasAppInstalled(mContext, PNAME_MM)){
+		}else if(!PlatformUtil.isAppInstalled(mContext, PNAME_MM)){
 			mListener.onError(DOMException.CODE_CLIENT_UNINSTALLED, DOMException.toString(DOMException.MSG_CLIENT_UNINSTALLED));
 			return true;
 		}
@@ -88,7 +88,7 @@ public class WeiXinPay extends AbsPaymentChannel implements ISysEventListener{
 	@Override
 	public boolean onExecute(SysEventType pEventType, Object pArgs) {
 		if(pEventType == SysEventType.onResume){
-			serviceReady = PlatformUtil.hasAppInstalled(mContext, PNAME_MM);
+			serviceReady = PlatformUtil.isAppInstalled(mContext, PNAME_MM);
 			isInstallingService = false;
 			mWebview.obtainApp().unregisterSysEventListener(this, SysEventType.onResume);
 			if(serviceReady){//安装成功后
@@ -141,7 +141,7 @@ public class WeiXinPay extends AbsPaymentChannel implements ISysEventListener{
 		if(hasGeneralError()){
 			return;
 		}
-		if(!PlatformUtil.hasAppInstalled(mContext, PNAME_MM)){//没有安装微信时候，执行支付错误回调
+		if(!PlatformUtil.isAppInstalled(mContext, PNAME_MM)){//没有安装微信时候，执行支付错误回调
 			if(isInstallingService){//正在安装微信支付服务，记录订单信息，等待安装完毕自动请求支付
 				statement = pStatement;
 			}else{

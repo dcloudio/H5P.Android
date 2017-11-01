@@ -37,8 +37,7 @@ class JsMapView extends JsMapObject implements IFMapDispose{
 	
 	/**
 	 * Description: 构造函数 
-	 * @param id
-	 * @param jsId 
+	 * @param pWebViewImpl
 	 *
 	 * <pre><p>ModifiedLog:</p>
 	 * Log ID: 1.0 (Log编号 依次递增)
@@ -122,7 +121,7 @@ class JsMapView extends JsMapObject implements IFMapDispose{
 
 	/**
 	 * Description:设置显现层的mapview
-	 * @param _mapView
+	 * @param pMapFrameItem
 	 *
 	 * <pre><p>ModifiedLog:</p>
 	 * Log ID: 1.0 (Log编号 依次递增)

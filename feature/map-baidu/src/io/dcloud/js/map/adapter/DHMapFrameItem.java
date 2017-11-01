@@ -9,6 +9,7 @@ import io.dcloud.common.adapter.util.DeviceInfo;
 import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.adapter.util.ViewRect;
 import io.dcloud.common.util.JSONUtil;
+import io.dcloud.common.util.PdrUtil;
 import io.dcloud.js.map.IFMapDispose;
 import io.dcloud.js.map.JsMapObject;
 import io.dcloud.js.map.MapJsUtil;
@@ -284,7 +285,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 	/**
 	 * 
 	 * Description:添加图层对象
-	 * @param Overly
+	 * @param pMapOverlay
 	 *
 	 * <pre><p>ModifiedLog:</p>
 	 * Log ID: 1.0 (Log编号 依次递增)
@@ -542,9 +543,15 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 	}
 	@Override
 	public void dispose() {
-		mMapView.dispose();
-		mMapView.mAutoPopFromStack = false;
-	}
+        if (!PdrUtil.isEmpty(mMapView)) {
+            mMapView.clearOverlays();
+            mMapView.setVisible(false);
+            mMapView.dispose();
+            mWebview.removeFrameItem(DHMapFrameItem.this);
+            mMapView.mAutoPopFromStack = false;
+            //mMapView = null;
+        }
+    }
 
 	static final String GET_USER_LOCATION_TEMPLATE = "{state:%s,point:%s}" ;
 	static final String PLUS_MAPS_POINT_TEMPLATE = "new plus.maps.Point(%s,%s)";

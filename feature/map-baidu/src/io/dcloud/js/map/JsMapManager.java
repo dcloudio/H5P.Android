@@ -90,6 +90,19 @@ public class JsMapManager {
 	public JsMapObject getJsObject(String pId){
 		return mJsMapObjects.get(pId);
 	}
+    /**
+     *
+     * Description:删除Js对应Java对象
+     * @param pId
+     * @return
+     *
+     * <pre><p>ModifiedLog:</p>
+     * Log ID: 1.0 (Log编号 依次递增)
+     * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2012-11-9 上午9:44:55</pre>
+     */
+    public JsMapObject removeJsObject(String pId){
+        return mJsMapObjects.remove(pId);
+    }
 	/**
 	 * 
 	 * Description:通过JSON对象转换为mappoin

@@ -192,7 +192,7 @@ public class WeiXinOAuthService extends BaseOAuthService {
             return;
         }
         //未安装客户端提示
-        if (!PlatformUtil.hasAppInstalled(pWebViewImpl.getContext(), "com.tencent.mm")) {
+        if (!PlatformUtil.isAppInstalled(pWebViewImpl.getContext(), "com.tencent.mm")) {
             String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_CLIENT_UNINSTALLED, DOMException.toString(DOMException.MSG_CLIENT_UNINSTALLED));
             JSUtil.execCallback(pWebViewImpl, mLoginCallbackId, msg, JSUtil.ERROR, true, false);
             return;

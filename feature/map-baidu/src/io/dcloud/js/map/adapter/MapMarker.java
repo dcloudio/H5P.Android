@@ -7,7 +7,9 @@ import org.json.JSONException;
 
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.util.CanvasHelper;
+import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.adapter.util.PlatformUtil;
+import io.dcloud.common.util.PdrUtil;
 import io.dcloud.js.map.MapJsUtil;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -16,7 +18,6 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.Log;
 import android.view.Gravity;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -90,8 +91,8 @@ public class MapMarker {
 	int mMangTop = -10;
 	/**
 	 * Description: 构造函数 
-	 * @param pFrameView
-	 * @param pJsId 
+	 * @param pMapPoint
+	 * @param webview
 	 *
 	 * <pre><p>ModifiedLog:</p>
 	 * Log ID: 1.0 (Log编号 依次递增)
@@ -206,7 +207,7 @@ public class MapMarker {
 		return mIcon;
 	}
 	/**
-	 * @param mIcon the mIcon to set
+	 * @param pIcon the mIcon to set
 	 */
 	public void setIcon(String pIcon) {
 		this.mIcon = pIcon;
@@ -221,7 +222,7 @@ public class MapMarker {
 		return mLabel;
 	}
 	/**
-	 * @param mLabel the mLabel to set
+	 * @param pLabel the mLabel to set
 	 */
 	public void setLabel(String pLabel) {
 		this.mLabel = pLabel;
@@ -238,7 +239,7 @@ public class MapMarker {
 		return mMapPoint;
 	}
 	/**
-	 * @param mMapPoint the mMapPoint to set
+	 * @param pMapPoint the mMapPoint to set
 	 */
 	public void setMapPoint(MapPoint pMapPoint) {
 		this.mMapPoint = pMapPoint;
@@ -309,27 +310,32 @@ public class MapMarker {
 		BitmapDescriptor _ret = null;
 		if(path != null){
 			String iconPath = mIWebview.obtainFrameView().obtainApp().convert2AbsFullPath(mIWebview.obtainFullUrl(), path);
+            Logger.e("MapMarker","iconPath"+iconPath);
 			if (!TextUtils.isEmpty(mLabel) && isText) {
 				LinearLayout layout = new LinearLayout(mIWebview.getActivity());
 				layout.setOrientation(LinearLayout.VERTICAL);
 				layout.setGravity(Gravity.CENTER_VERTICAL);
 				ImageView imageView = new ImageView(mIWebview.getActivity());
 				Bitmap bitmap = CanvasHelper.getBitmap(iconPath);
-				imageView.setImageBitmap(bitmap);
-				TextView textView = new TextView(mIWebview.getActivity());
-				textView.setTextColor(Color.BLACK);
-				textView.setText(mLabel);
-				textView.setTextSize(12);
-				layout.addView(imageView);
-				layout.addView(textView);
-				mMangTop = -bitmap.getHeight()-20;
-				_ret = BitmapDescriptorFactory.fromView(layout);
-				bitmap.recycle();
+                if (!PdrUtil.isEmpty(bitmap)) {
+                    imageView.setImageBitmap(bitmap);
+                    TextView textView = new TextView(mIWebview.getActivity());
+                    textView.setTextColor(Color.BLACK);
+                    textView.setText(mLabel);
+                    textView.setTextSize(12);
+                    layout.addView(imageView);
+                    layout.addView(textView);
+                    mMangTop = -bitmap.getHeight()-20;
+                    _ret = BitmapDescriptorFactory.fromView(layout);
+                    bitmap.recycle();
+                }
 			} else {
 				Bitmap bitmap = CanvasHelper.getBitmap(iconPath);
-				_ret = BitmapDescriptorFactory.fromBitmap(bitmap);
-				mMangTop = -bitmap.getHeight();
-				bitmap.recycle();
+                if (!PdrUtil.isEmpty(bitmap)) {
+                    _ret = BitmapDescriptorFactory.fromBitmap(bitmap);
+                    mMangTop = -bitmap.getHeight();
+                    bitmap.recycle();
+                }
 			}
 		}
 		return _ret;

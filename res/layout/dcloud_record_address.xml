@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="46dp"
+    android:background="@drawable/dcloud_record_border"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/dcloud_record_arrows"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true">
+
+        <ImageView
+            android:padding="2dp"
+            android:id="@+id/dcloud_record_arrow_left"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"
+            android:layout_marginRight="4dp"
+            android:layout_marginLeft="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/dcloud_left_arrow"></ImageView>
+
+        <View
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/dcloud_record_view_line"></View>
+
+        <ImageView
+            android:id="@+id/dcloud_record_arrow_right"
+            android:padding="2dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"
+            android:layout_marginRight="4dp"
+            android:layout_marginLeft="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/dcloud_right_arrow"></ImageView>
+    </LinearLayout>
+
+    <HorizontalScrollView
+        android:id="@+id/dcloud_record_scroll_view"
+        android:layout_toLeftOf="@id/dcloud_record_arrows"
+        android:layout_alignParentLeft="true"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_gravity="center_vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:drawableLeft="@drawable/dcloud_assistan_loc"
+                android:id="@+id/dcloud_record_address_view_1"
+                android:drawablePadding="5dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="12dp"
+                android:textSize="15sp"
+                android:gravity="center"
+                android:layout_gravity="center"
+                android:textColor="#0b0b0b"
+                android:text="当前地址"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <View
+                android:id="@+id/dcloud_record_line_1"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/dcloud_record_view_line"></View>
+
+            <TextView
+                android:id="@+id/dcloud_record_address_view_2"
+                android:layout_marginRight="15dp"
+                android:layout_marginLeft="15dp"
+                android:textSize="15sp"
+                android:layout_gravity="center"
+                android:textColor="#0b0b0b"
+                android:text="家庭地址"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <View
+                android:id="@+id/dcloud_record_line_2"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:textSize="15sp"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/dcloud_record_view_line"></View>
+
+            <TextView
+                android:id="@+id/dcloud_record_address_view_3"
+                android:textSize="15sp"
+                android:layout_marginRight="15dp"
+                android:layout_marginLeft="15dp"
+                android:layout_gravity="center"
+                android:textColor="#0b0b0b"
+                android:text="单位地址"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+    </HorizontalScrollView>
+</RelativeLayout>

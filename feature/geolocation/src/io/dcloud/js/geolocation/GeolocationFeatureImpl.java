@@ -1,6 +1,7 @@
 package io.dcloud.js.geolocation;
 
 import io.dcloud.common.DHInterface.AbsMgr;
+import io.dcloud.common.DHInterface.FeatureMessageDispatcher;
 import io.dcloud.common.DHInterface.IFeature;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.util.PermissionUtil;
@@ -26,18 +27,22 @@ public class GeolocationFeatureImpl implements IFeature {
     @Override
     public String execute(final IWebview pWebViewImpl, final String pActionName,
                           final String[] pJsArgs) {
-        PermissionUtil.usePermission(pWebViewImpl.getActivity(),pWebViewImpl.obtainApp().isStreamApp(),PermissionUtil.PMS_LOCATION , new PermissionUtil.StreamPermissionRequest(pWebViewImpl.obtainApp()) {
-            @Override
-            public void onGranted(String streamPerName) {
-                mGeoBroker.execute(pWebViewImpl, pActionName, pJsArgs);
-            }
+        if(FeatureMessageDispatcher.contains("record_address")){//辅助输入获取位置啥不进行流权限检测
+            mGeoBroker.execute(pWebViewImpl, pActionName, pJsArgs);
+        }else {
+            PermissionUtil.usePermission(pWebViewImpl.getActivity(), pWebViewImpl.obtainApp().isStreamApp(), PermissionUtil.PMS_LOCATION, new PermissionUtil.StreamPermissionRequest(pWebViewImpl.obtainApp()) {
+                @Override
+                public void onGranted(String streamPerName) {
+                    mGeoBroker.execute(pWebViewImpl, pActionName, pJsArgs);
+                }
 
-            @Override
-            public void onDenied(String streamPerName) {
-                String _json = DOMException.toJSON(DOMException.CODE_GEOLOCATION_PERMISSION_ERROR,DOMException.MSG_GEOLOCATION_PERMISSION_ERROR);
-                JSUtil.execCallback(pWebViewImpl, pJsArgs[0], _json, JSUtil.ERROR, true, false);
-            }
-        });
+                @Override
+                public void onDenied(String streamPerName) {
+                    String _json = DOMException.toJSON(DOMException.CODE_GEOLOCATION_PERMISSION_ERROR, DOMException.MSG_GEOLOCATION_PERMISSION_ERROR);
+                    JSUtil.execCallback(pWebViewImpl, pJsArgs[0], _json, JSUtil.ERROR, true, false);
+                }
+            });
+        }
         return null;
     }
 

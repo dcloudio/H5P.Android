@@ -127,8 +127,8 @@ public class QQOAuthService extends BaseOAuthService {
 						int resultCode = (Integer) _args[1];
 						Intent data = (Intent) _args[2];
 						if (pEventType == SysEventType.onActivityResult) {
-							if (requestCode == Constants.REQUEST_API) {
-								if (resultCode == Constants.RESULT_LOGIN) {
+							if (requestCode == Constants.REQUEST_LOGIN) {
+								if (resultCode == Constants.ACTIVITY_OK) {
 									mTencent.handleLoginData(data, mIUiListener);
 								}
 							}

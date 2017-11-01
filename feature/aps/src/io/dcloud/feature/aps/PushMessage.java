@@ -1,13 +1,20 @@
 package io.dcloud.feature.aps;
 
-import io.dcloud.common.DHInterface.IReflectAble;
-import io.dcloud.common.adapter.util.PlatformUtil;
+import android.os.Bundle;
+import android.text.TextUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.os.Bundle;
-import android.text.TextUtils;
+import java.io.IOException;
+
+import io.dcloud.common.DHInterface.IApp;
+import io.dcloud.common.DHInterface.IReflectAble;
+import io.dcloud.common.adapter.io.DHFile;
+import io.dcloud.common.adapter.util.DeviceInfo;
+import io.dcloud.common.adapter.util.PlatformUtil;
+import io.dcloud.common.util.BaseInfo;
+import io.dcloud.common.util.PdrUtil;
 
 /**
  * <p>
@@ -66,7 +73,10 @@ public class PushMessage implements IReflectAble{
 	 * 通知的ID
 	 */
 	public int nID;
+	/**显示图标*/
+	public String mIconPath = null;
 
+	public boolean mIsStreamApp = false;
 	/**
 	 * Description: 构造函数
 	 *
@@ -75,14 +85,27 @@ public class PushMessage implements IReflectAble{
 	 * Log ID: 1.0 (Log编号 依次递增)
 	 * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2013-3-14 下午5:45:42
 	 * </pre>
-	 * @param defaultName TODO
+	 * @param defaultAppid TODO
 	 * @param defaultTitle TODO
 	 */
-	public PushMessage(String pJsonMsg, String defaultAppid, String defaultTitle) {
+	public PushMessage(String pJsonMsg, String defaultAppid,String defaultTitle) {
+		init(pJsonMsg,null,defaultAppid,defaultTitle);
+	}
+
+	public PushMessage(String pJsonMsg, IApp app) {
+		String defaultAppid = app != null ? app.obtainAppId() : null;
+		String defaultTitle = app != null ? app.obtainAppName() : null;
+		init(pJsonMsg,app,defaultAppid,defaultTitle);
+	}
+
+	private void init(String pJsonMsg, IApp app, String defaultAppid,String defaultTitle){
+		mIsStreamApp = app != null ? app.isStreamApp() : mIsStreamApp;
 		mUUID = getMessageUUID();
-		parseJson(pJsonMsg, defaultAppid, defaultTitle);
+		parseJson(pJsonMsg, app,defaultAppid, defaultTitle);
 		setNotificationID();
 	}
+
+
 
 	public PushMessage(Bundle bundle){
 		parse(bundle);
@@ -131,16 +154,15 @@ public class PushMessage implements IReflectAble{
 	 * 
 	 * Description:解析js层传入的message对象
 	 * @param pJsonMsg
-	 * @param defaultAppid TODO
-	 * @param defaultTitle TODO
-	 * 
+	 * @param app TODO
+	 *
 	 * @throws JSONException
 	 * <p>ModifiedLog:</p>
 	 * Log ID: 1.0 (Log编号 依次递增)
 	 * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2013-3-21 下午4:57:46
 	 * </pre>
 	 */
-	private void parseJson(String pJsonMsg, String defaultAppid, String defaultTitle){
+	private void parseJson(String pJsonMsg, IApp app, String defaultAppid,String defaultTitle){
 		//{"appid":"H5BCD03E4","title":"Hell5","content":"翘起","payload":"asdadf","options":{}}  正常json
 		//{"Payload":"LocalMSG","message":"2015-12-17 19:53:14: 欢迎使用Html5 Plus创建本地消息！","__UUID__":null,"options":{"cover":false}} aps.js原因导致不正规
 		JSONObject _json = null;
@@ -201,6 +223,9 @@ public class PushMessage implements IReflectAble{
 				t_appid = defaultAppid;
 			}
 			mMessageAppid = t_appid;
+            if (_option != null) {
+                mIconPath = app != null ? app.convert2AbsFullPath(_option.optString("icon")) : convert2AbsFullPath(_option.optString("icon"), mMessageAppid);
+            }
 		}else{
 			needCreateNotifcation = false;
 			mContent = pJsonMsg;
@@ -208,6 +233,56 @@ public class PushMessage implements IReflectAble{
 			mTitle = defaultTitle;
 		}
 	}
+    public String convert2AbsFullPath(String pSrcPath,String mAppid) {
+        try {//pSrcPath路径为真实存在路径则不进行修改，直接返回原值
+            if (!PdrUtil.isEmpty(pSrcPath) && DHFile.isExist(pSrcPath)) return pSrcPath;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        int p;
+        if (PdrUtil.isEmpty(pSrcPath)) {
+            return pSrcPath;
+        }
+        if ((p = pSrcPath.indexOf("?")) > 0) {
+            pSrcPath = pSrcPath.substring(0, p);
+        }
+        if (pSrcPath.startsWith(BaseInfo.REL_PUBLIC_DOCUMENTS_DIR + "/")) {    //		_documents/
+            pSrcPath = BaseInfo.sDocumentFullPath + pSrcPath.substring((BaseInfo.REL_PUBLIC_DOCUMENTS_DIR + "/").length());
+        } else if (pSrcPath.startsWith(BaseInfo.REL_PUBLIC_DOCUMENTS_DIR)) {    //		_documents
+            pSrcPath = BaseInfo.sDocumentFullPath + pSrcPath.substring(BaseInfo.REL_PUBLIC_DOCUMENTS_DIR.length());
+        } else if (pSrcPath.startsWith(BaseInfo.REL_PRIVATE_DOC_DIR + "/")) {    //		_doc/
+            pSrcPath = BaseInfo.sBaseFsAppsPath + mAppid + "/" + BaseInfo.REAL_PRIVATE_DOC_DIR + pSrcPath.substring((BaseInfo.REL_PRIVATE_DOC_DIR + "/").length());
+        } else if (pSrcPath.startsWith(BaseInfo.REL_PRIVATE_DOC_DIR)) {    //		_doc
+            pSrcPath = BaseInfo.sBaseFsAppsPath + mAppid + "/" + BaseInfo.REAL_PRIVATE_DOC_DIR + pSrcPath.substring(BaseInfo.REL_PRIVATE_DOC_DIR.length());
+        } else if (pSrcPath.startsWith(BaseInfo.REL_PUBLIC_DOWNLOADS_DIR + "/")) {        //		_downloads/
+            pSrcPath = BaseInfo.sDownloadFullPath + pSrcPath.substring((BaseInfo.REL_PUBLIC_DOWNLOADS_DIR + "/").length());
+        } else if (pSrcPath.startsWith(BaseInfo.REL_PUBLIC_DOWNLOADS_DIR)) {        //		_downloads
+            pSrcPath = BaseInfo.sDownloadFullPath + pSrcPath.substring(BaseInfo.REL_PUBLIC_DOWNLOADS_DIR.length());
+        } else if (pSrcPath.startsWith(BaseInfo.REL_PRIVATE_WWW_DIR + "/")) {        //		_www/
+            pSrcPath = BaseInfo.sCacheFsAppsPath + mAppid + "/www/" + pSrcPath.substring((BaseInfo.REL_PRIVATE_WWW_DIR + "/").length());
+            try {
+                if(!DHFile.isExist(pSrcPath)){
+                    pSrcPath = BaseInfo.sBaseResAppsPath + mAppid + "/" + BaseInfo.APP_WWW_FS_DIR + pSrcPath.substring((BaseInfo.REL_PRIVATE_WWW_DIR + "/").length());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else if (pSrcPath.startsWith(BaseInfo.REL_PRIVATE_WWW_DIR)) {
+            pSrcPath = BaseInfo.sCacheFsAppsPath + mAppid + "/www/" + pSrcPath.substring(BaseInfo.REL_PRIVATE_WWW_DIR.length());
+            try {
+                if(!DHFile.isExist(pSrcPath)){
+                    pSrcPath = BaseInfo.sBaseResAppsPath + mAppid + "/" + BaseInfo.APP_WWW_FS_DIR + pSrcPath.substring(BaseInfo.REL_PRIVATE_WWW_DIR.length());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else if (pSrcPath.startsWith("file://")) {
+            pSrcPath = pSrcPath.substring("file://".length());
+        } else if (pSrcPath.startsWith(DeviceInfo.sDeviceRootDir)) {
+            return pSrcPath;
+        }
+        return pSrcPath;
+    }
 
 	public void parse(Bundle b){
 		this.mTitle = b.getString("title");
@@ -218,6 +293,8 @@ public class PushMessage implements IReflectAble{
 		this.mMessageAppid = b.getString("appid");
 		this.mUUID = b.getString("uuid");
 		this.mPayload = b.getString("payload");
+		this.mIconPath = b.getString("icon");
+		this.mIsStreamApp = b.getBoolean("isstreamapp");
 	}
 	
 	public Bundle toBundle(){
@@ -230,6 +307,8 @@ public class PushMessage implements IReflectAble{
 		b.putString("appid", this.mMessageAppid);
 		b.putString("uuid", this.mUUID);
 		b.putString("payload", this.mPayload);
+		b.putString("icon", this.mIconPath);
+		b.putBoolean("isstreamapp", this.mIsStreamApp);
 		return b;
 	}
 

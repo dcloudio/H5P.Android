@@ -1,14 +1,5 @@
 package io.dcloud.feature.aps;
 
-import io.dcloud.common.adapter.util.Logger;
-import io.dcloud.common.constant.IntentConst;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -16,8 +7,26 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.text.TextUtils;
+
+import com.nostra13.dcloudimageloader.core.ImageLoader;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import io.dcloud.RInformation;
+import io.dcloud.common.adapter.io.DHFile;
+import io.dcloud.common.adapter.util.Logger;
+import io.dcloud.common.constant.DataInterface;
+import io.dcloud.common.constant.IntentConst;
 
 /**
  * <p>
@@ -52,25 +61,72 @@ public class NotificationReceiver extends BroadcastReceiver {
 			String message = intent.getStringExtra("content");
 			int nId = intent.getIntExtra("nId", 0);
 			long when = intent.getLongExtra("when", 0);
-//			String appid = intent.getStringExtra("appid");
-//			String uuid = intent.getStringExtra("uuid");
+			String appid = intent.getStringExtra("appid");
+			String icon = intent.getStringExtra("icon");
 			String sound = intent.getStringExtra("sound");
+			boolean isstreamapp = intent.getBooleanExtra("isstreamapp",false);
 			Intent i = new Intent(APSFeatureImpl.CLILK_NOTIFICATION);
 //			Bundle b = new Bundle(intent.getExtras());
 			i.putExtras(intent.getExtras());
 			// 创建一个Notification
-			Notification notification = new Notification();
-			notification.icon = context.getApplicationInfo().icon;
-			// 添加声音提示
-			if("system".equals(sound)){
-				notification.defaults = Notification.DEFAULT_SOUND;
-			}
-			notification.flags = Notification.FLAG_AUTO_CANCEL;
-			notification.when = when;
-			// PendingIntent
+			Notification notification ;
+//			// PendingIntent
 			PendingIntent contentIntent = PendingIntent.getBroadcast(context, nId, i, PendingIntent.FLAG_ONE_SHOT);
-			notification.setLatestEventInfo(context, title, message, contentIntent);
-			_notificationManager.notify(nId, notification);
+			if (android.os.Build.VERSION.SDK_INT >= 16) {
+				Notification.Builder builder = new Notification.Builder(context);
+				Bitmap bitmap = null;
+                try {
+                    if(!TextUtils.isEmpty(icon) && DHFile.isExist(icon)) {
+                        bitmap = BitmapFactory.decodeFile(icon);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if(bitmap == null && isstreamapp){
+					String uri = DataInterface.getIconImageUrl(appid, context.getResources().getDisplayMetrics().widthPixels + "");
+					bitmap = ImageLoader.getInstance().loadImageSync(uri);
+				}
+				if(bitmap != null) {
+					builder.setLargeIcon(bitmap);
+				}
+				int id = RInformation.getInt("drawable","push");
+				if(id <= 0){
+					builder.setSmallIcon(context.getApplicationInfo().icon); //设置图标
+				}else{
+					builder.setSmallIcon(id); //设置图标
+				}
+				builder.setContentTitle(title); //设置标题
+				builder.setContentText(message); //消息内容
+				builder.setWhen(when); //发送时间
+				// 添加声音提示
+				if("system".equals(sound)){
+					builder.setDefaults(Notification.DEFAULT_SOUND); //设置默认的提示音，振动方式，灯光
+				}
+				builder.setAutoCancel(true);//打开程序后图标消失
+				builder.setContentIntent(contentIntent);
+				notification = builder.build();
+			}else {
+				notification = new Notification();
+				notification.icon = context.getApplicationInfo().icon;
+				// 添加声音提示
+				if("system".equals(sound)){
+					notification.defaults = Notification.DEFAULT_SOUND;
+				}
+				notification.flags = Notification.FLAG_AUTO_CANCEL;
+				notification.when = when;
+				Class clazz = notification.getClass();
+				try {
+					Method m2 = clazz.getDeclaredMethod("setLatestEventInfo", Context.class,CharSequence.class,CharSequence.class,PendingIntent.class);
+					m2.invoke(notification, context, title,message, contentIntent);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			try {
+				_notificationManager.notify(nId, notification);
+			}catch (Exception e){
+				e.printStackTrace();
+			}
 		} else if (APSFeatureImpl.REMOVE_NOTIFICATION.equals(_action)) {
 			int _id = intent.getIntExtra("id", 0);
 			_notificationManager.cancel(_id);

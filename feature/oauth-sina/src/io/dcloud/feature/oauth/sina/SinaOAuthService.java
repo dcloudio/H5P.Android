@@ -2,17 +2,14 @@ package io.dcloud.feature.oauth.sina;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.text.TextUtils;
 
+import com.sina.weibo.sdk.WbSdk;
 import com.sina.weibo.sdk.auth.AuthInfo;
 import com.sina.weibo.sdk.auth.Oauth2AccessToken;
-import com.sina.weibo.sdk.auth.WeiboAuthListener;
+import com.sina.weibo.sdk.auth.WbConnectErrorMessage;
 import com.sina.weibo.sdk.auth.sso.SsoHandler;
-import com.sina.weibo.sdk.exception.WeiboException;
-import com.sina.weibo.sdk.net.RequestListener;
-import com.sina.weibo.sdk.openapi.LogoutAPI;
-import com.sina.weibo.sdk.openapi.UsersAPI;
+import com.sina.weibo.sdk.auth.AccessTokenKeeper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -22,9 +19,15 @@ import io.dcloud.common.DHInterface.ISysEventListener;
 import io.dcloud.common.DHInterface.ISysEventListener.SysEventType;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.util.AndroidResources;
+import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.JSONUtil;
+import io.dcloud.common.util.NetTool;
+import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.ThreadPool;
 import io.dcloud.feature.oauth.BaseOAuthService;
+
+import static io.dcloud.common.util.JSONUtil.createJSONObject;
 
 /**
  * 新浪微博登陆
@@ -36,34 +39,11 @@ public class SinaOAuthService extends BaseOAuthService {
 
     public static final String TAG = "SinaOAuthService";
 
-    /**
-     * Scope 是 OAuth2.0 授权机制中 authorize 接口的一个参数。通过 Scope，平台将开放更多的微博
-     * 核心功能给开发者，同时也加强用户隐私保护，提升了用户体验，用户在新 OAuth2.0 授权页中有权利
-     * 选择赋予应用的功能。
-     * <p>
-     * 我们通过新浪微博开放平台-->管理中心-->我的应用-->接口管理处，能看到我们目前已有哪些接口的
-     * 使用权限，高级权限需要进行申请。
-     * <p>
-     * 目前 Scope 支持传入多个 Scope 权限，用逗号分隔。
-     * <p>
-     * 有关哪些 OpenAPI 需要权限申请，请查看：http://open.weibo.com/wiki/%E5%BE%AE%E5%8D%9AAPI
-     * 关于 Scope 概念及注意事项，请查看：http://open.weibo.com/wiki/Scope
-     */
     private static final String SCOPE =
             "email,direct_messages_read,direct_messages_write,"
                     + "friendships_groups_read,friendships_groups_write,statuses_to_me_read,"
                     + "follow_app_official_microblog," + "invitation_write";
 
-    private AuthInfo mWeiboAuth;
-    /**
-     * 注意：SsoHandler 仅当 SDK 支持 SSO 时有效
-     */
-    private SsoHandler mSsoHandler;
-
-    /**
-     * 封装了 "access_token"，"expires_in"，"refresh_token"，并提供了他们的管理功能
-     */
-    private Oauth2AccessToken mAccessToken;
 
     private static final String UID = "uid";
     private static final String TOKEN = "token";
@@ -74,6 +54,29 @@ public class SinaOAuthService extends BaseOAuthService {
 
     protected static String redirectUri = null;
     protected static String appKEY = null;
+
+
+    /**
+     * 封装了 "access_token"，"expires_in"，"refresh_token"，并提供了他们的管理功能
+     */
+    private Oauth2AccessToken mAccessToken;
+    /**
+     * 注意：SsoHandler 仅当 SDK 支持 SSO 时有效
+     */
+    private SsoHandler mSsoHandler;
+    /**
+     * 获取用户信息接口
+     */
+    private static final String URL_GET_USERINFO = "https://api.weibo.com/2/users/show.json?access_token=%s&uid=%s";
+    /**
+     * 通过获取uid验证token是否有效
+     */
+    private static final String URL_GETUID = "https://api.weibo.com/2/account/get_uid.json?access_token=%s";
+
+    /**
+     * 授权回收接口，帮助开发者主动取消用户的授权。
+     */
+    private static final String URL_REVOKE_OAUTH = "https://api.weibo.com/oauth2/revokeoauth2";
 
     @Override
     public void initMetaData() {
@@ -108,122 +111,99 @@ public class SinaOAuthService extends BaseOAuthService {
 
     @Override
     public void login(final IWebview pWebViewImpl, JSONArray pJsArgs) {
-        // TODO Auto-generated method stub
         super.login(pWebViewImpl, pJsArgs);
+        WbSdk.install(pWebViewImpl.getActivity(), new AuthInfo(pWebViewImpl.getActivity(), appKEY, redirectUri, SCOPE));
         if (hasGeneralError(mLoginWebViewImpl, mLoginCallbackId)) {
             return;
         }
-        // 从 SharedPreferences 中读取上次已保存好 AccessToken 等信息，
-        // 第一次启动本应用，AccessToken 不可用
-        mAccessToken = AccessTokenKeeper.readAccessToken(pWebViewImpl.getActivity());
-        if (mAccessToken != null && mAccessToken.isSessionValid()) {
-            authResult = getSinaAuthResultJB(mAccessToken);
-            UsersAPI usersAPI = new UsersAPI(pWebViewImpl.getActivity(), appKEY, mAccessToken);
-            long uid = Long.parseLong(mAccessToken.getUid());
-            usersAPI.show(uid, mRequestListener);
-        } else {
-            if (mWeiboAuth == null) {
-                mWeiboAuth = new AuthInfo(pWebViewImpl.getActivity(), appKEY, redirectUri, SCOPE);
-            }
-            if (mSsoHandler == null) {
-                mSsoHandler = new SsoHandler(pWebViewImpl.getActivity(), mWeiboAuth);
-            }
-            mSsoHandler.authorize(new AuthListener());
-        }
-        pWebViewImpl.obtainApp().registerSysEventListener(new ISysEventListener() {
 
-            @Override
-            public boolean onExecute(SysEventType pEventType, Object pArgs) {
-                // TODO Auto-generated method stub
-                Object[] _args = (Object[]) pArgs;
-                int requestCode = (Integer) _args[0];
-                int resultCode = (Integer) _args[1];
-                Intent data = (Intent) _args[2];
-                if (mSsoHandler != null) {
-                    mSsoHandler.authorizeCallBack(requestCode, resultCode, data);
+        ThreadPool.self().addThreadTask(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        loginInThread();
+                    }
                 }
-                if (pWebViewImpl != null) {
-                    pWebViewImpl.obtainApp().unregisterSysEventListener(this, SysEventType.onActivityResult);
-                }
-                return false;
-            }
-        }, SysEventType.onActivityResult);
+        );
     }
 
+    /**
+     * 因需要请求网络，所以将之放入子线程
+     */
+    private void loginInThread() {
+
+        //首先判断sharepreference中的token是否为空，
+        // 不为空检验是否有效，无效时需要继续授权操作，有效时就回调前端sharepreference保存的授权结果
+        //为空 需要继续授权操作
+        if (mAccessToken == null) {
+            mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
+        }
+        if (mAccessToken != null && mAccessToken.isSessionValid()) {
+            if (!PdrUtil.isEmpty(mAccessToken.getToken())) {
+                String get_uid_url = String.format(URL_GETUID, mAccessToken.getToken());
+                String resultStr = getToken(get_uid_url);
+                if (resultStr!=null){
+                    JSONObject getUidResult = JSONUtil.createJSONObject(resultStr);
+                    if(!PdrUtil.isEmpty(getUidResult.optString("uid"))) {
+                        authResult = getSinaAuthResultJB(mAccessToken);
+                        onLoginFinished(makeResultJson(), true);
+                        return;
+                    }
+                }
+            }
+        }
+        if (mSsoHandler == null) {
+                mSsoHandler = new SsoHandler(mLoginWebViewImpl.getActivity());
+            }
+            mSsoHandler.authorize(new SelfWbAuthListener());
+            mLoginWebViewImpl.obtainApp().registerSysEventListener(new ISysEventListener() {
+                @Override
+                public boolean onExecute(SysEventType pEventType, Object pArgs) {
+                    // TODO Auto-generated method stub
+                    Object[] _args = (Object[]) pArgs;
+                    int requestCode = (Integer) _args[0];
+                    int resultCode = (Integer) _args[1];
+                    Intent data = (Intent) _args[2];
+                    // SSO 授权回调
+                    // 重要：发起 SSO 登陆的 Activity 必须重写 onActivityResults
+                    if (mSsoHandler != null) {
+                        mSsoHandler.authorizeCallBack(requestCode, resultCode, data);
+                    }
+                    if (mLoginWebViewImpl != null) {
+                        mLoginWebViewImpl.obtainApp().unregisterSysEventListener(this, SysEventType.onActivityResult);
+                    }
+                    return false;
+                }
+            }, SysEventType.onActivityResult);
+
+    }
 
     /**
      * 新浪微博登陆授权回调接口
      */
-    class AuthListener implements WeiboAuthListener {
+    private class SelfWbAuthListener implements com.sina.weibo.sdk.auth.WbAuthListener {
+        @Override
+        public void onSuccess(final Oauth2AccessToken token) {
+            mAccessToken = token;
+            if (mAccessToken.isSessionValid()) {
+                // 保存 Token 到 SharedPreferences
+                AccessTokenKeeper.writeAccessToken(mContext, mAccessToken);
+                authResult = getSinaAuthResultJB(mAccessToken);
+                JSONObject sucJSON = makeResultJSONObject();
+                onLoginFinished(sucJSON, true);
+            }
+        }
 
         @Override
-        public void onCancel() {
-            // TODO Auto-generated method stub
+        public void cancel() {
             onLoginFinished(getErrorJsonbject(DOMException.CODE_USER_CANCEL, DOMException.MSG_USER_CANCEL), false);
         }
 
         @Override
-        public void onComplete(Bundle values) {
-            // TODO Auto-generated method stub
-            mAccessToken = Oauth2AccessToken.parseAccessToken(values);
-            if (mAccessToken.isSessionValid()) {
-                // 保存 Token 到 SharedPreferences
-                authResult = getSinaAuthResultJB(mAccessToken);
-                AccessTokenKeeper.writeAccessToken(mContext, mAccessToken);
-                UsersAPI usersAPI = new UsersAPI(mContext, appKEY, mAccessToken);
-                long uid = Long.parseLong(mAccessToken.getUid());
-                usersAPI.show(uid, mRequestListener);
-            } else {
-                // 以下几种情况，您会收到 Code：
-                // 1. 当您未在平台上注册的应用程序的包名与签名时；
-                // 2. 当您注册的应用程序包名与签名不正确时；
-                // 3. 当您在平台上注册的包名和签名与您当前测试的应用的包名和签名不匹配时。
-                String code = values.getString("code");
-                onLoginFinished(getErrorJsonbject(DOMException.CODE_BUSINESS_INTERNAL_ERROR, code), false);
-            }
+        public void onFailure(WbConnectErrorMessage errorMessage) {
+            onLoginFinished(getErrorJsonbject(errorMessage.getErrorCode(), errorMessage.getErrorMessage()), false);
         }
-
-        @Override
-        public void onWeiboException(WeiboException arg0) {
-            // TODO Auto-generated method stub
-            onLoginFinished(getErrorJsonbject(DOMException.CODE_BUSINESS_INTERNAL_ERROR, arg0.getMessage()), false);
-        }
-
     }
-
-    /**
-     * 新浪微博用户信息回调接口
-     */
-    RequestListener mRequestListener = new RequestListener() {
-
-        @Override
-        public void onWeiboException(WeiboException arg0) {
-            // TODO Auto-generated method stub
-            onLoginFinished(getErrorJsonbject(DOMException.CODE_BUSINESS_INTERNAL_ERROR, arg0.getMessage()), false);
-        }
-
-        @Override
-        public void onComplete(String arg0) {
-            // TODO Auto-generated method stub
-            if (arg0 != null) {
-                JSONObject tempuserInfo = JSONUtil.createJSONObject(arg0);
-                userInfo = tempuserInfo;
-                try {
-                    userInfo.put(KEY_HEADIMGURL, tempuserInfo.optString("profile_image_url"));
-                    userInfo.put(KEY_NICKNAME, tempuserInfo.optString("screen_name"));
-                    userInfo.put(KEY_OPENID, tempuserInfo.optString("idstr"));
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                saveValue(BaseOAuthService.KEY_USERINFO, userInfo.toString());
-                onLoginFinished(makeResultJson(), true);
-            } else {
-                onLoginFinished(getErrorJsonbject(DOMException.CODE_GET_TOKEN_ERROR, DOMException.MSG_GET_TOKEN_ERROR), false);
-            }
-
-        }
-    };
-
 
     @Override
     public void logout(IWebview pWebViewImpl, JSONArray pJsArgs) {
@@ -232,25 +212,41 @@ public class SinaOAuthService extends BaseOAuthService {
         if (hasGeneralError(mLogoutWebViewImpl, mLogoutCallbackId)) {
             return;
         }
-        LogoutAPI logoutAPI = new LogoutAPI(mContext, appKEY, mAccessToken);
-        logoutAPI.logout(new RequestListener() {
+        ThreadPool.self().addThreadTask(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mAccessToken == null) {
+                            mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
+                        }
+                        if (!PdrUtil.isEmpty(mAccessToken.getToken())) {
 
-            @Override
-            public void onWeiboException(WeiboException arg0) {
-                // TODO Auto-generated method stub
-                onLogoutFinished(getErrorJsonbject(DOMException.CODE_BUSINESS_INTERNAL_ERROR, arg0.getMessage()), false);
-            }
+                            StringBuffer buffer = new StringBuffer();
+                            buffer.append("access_token=" + mAccessToken.getToken());
+                            byte[] resultByte = NetTool.httpPost(URL_REVOKE_OAUTH, buffer.toString(), null);
+                            if (null != resultByte && 0 < resultByte.length) {
+                                String resultStr = new String(resultByte);
+                                Logger.e("ian", "logout resultStr==" + resultStr);
+                                try {
+                                    JSONObject resultJsonObj = new JSONObject(resultStr);
+                                    if (PdrUtil.isEquals(resultJsonObj.optString("result"), "true")) {
+                                        AccessTokenKeeper.clear(mContext);
+                                        mAccessToken = null;
+                                        userInfo = null;
+                                        authResult = null;
+                                        removeToken();
+                                        onLogoutFinished(makeResultJson(), true);
+                                    }
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
 
-            @Override
-            public void onComplete(String arg0) {
-                // TODO Auto-generated method stub
-                userInfo = null;
-                authResult = null;
-                AccessTokenKeeper.clear(mContext);
-                removeToken();
-                onLogoutFinished(makeResultJson(), true);
-            }
-        });
+                        }
+                    }
+                });
+
+
     }
 
     @Override
@@ -260,24 +256,53 @@ public class SinaOAuthService extends BaseOAuthService {
         if (hasGeneralError(mGetUserInfoWebViewImpl, mGetUserInfoCallbackId)) {
             return;
         }
-        mAccessToken = AccessTokenKeeper.readAccessToken(pWebViewImpl.getActivity());
+        ThreadPool.self().addThreadTask(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        boolean suc = initUserInfo();
+                        if (suc) {
+                            JSONObject sucJSON = makeResultJSONObject();
+                            onGetUserInfoFinished(sucJSON, suc);
+                        } else {
+                            // 运行此处表示登录无效或未登录 直接提示登录失效
+                            onGetUserInfoFinished(getErrorJsonbject(DOMException.CODE_OAUTH_FAIL, DOMException.MSG_OAUTH_FAIL),
+                                    false);
+                        }
+                    }
+                }
+        );
+    }
+
+    /**
+     * 从SharedPreferences中获取授权结果，并取出token，请求服务器获取用户信息，并保存到SharedPreferences
+     *
+     * @return
+     */
+    private boolean initUserInfo() {
+        boolean suc = false;
+        if (mAccessToken == null) {
+            mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
+        }
         if (mAccessToken != null && mAccessToken.isSessionValid()) {
-            authResult = getSinaAuthResultJB(mAccessToken);
-            String userv = getValue(BaseOAuthService.KEY_USERINFO);
-            if (!TextUtils.isEmpty(userv)) {
+            String get_userInfo_url = String.format(URL_GET_USERINFO, mAccessToken.getToken(), mAccessToken.getUid());
+            String s_userInfoResult = getUserInfo(get_userInfo_url);
+            Logger.e("ian", "inituserinfo  s_userinforesult" + s_userInfoResult);
+            if (s_userInfoResult != null) {
+                JSONObject userInfoResult = createJSONObject(s_userInfoResult);
+                userInfo = userInfoResult;
                 try {
-                    userInfo = new JSONObject(userv);
+                    userInfo.put(KEY_HEADIMGURL, userInfoResult.optString("profile_image_url"));
+                    userInfo.put(KEY_NICKNAME, userInfoResult.optString("screen_name"));
+                    userInfo.put(KEY_OPENID, userInfoResult.optString("idstr"));
                 } catch (JSONException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
-                onGetUserInfoFinished(makeResultJson(), true);
-                return;
+                saveValue(BaseOAuthService.KEY_USERINFO, userInfo.toString());
+                suc = true;
             }
         }
-        // 运行此处表示登录无效或未登录 直接提示登录失效
-        onGetUserInfoFinished(getErrorJsonbject(DOMException.CODE_OAUTH_FAIL, DOMException.MSG_OAUTH_FAIL),
-                false);
+        return suc;
     }
 
     /**

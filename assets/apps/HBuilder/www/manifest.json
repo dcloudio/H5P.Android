@@ -2,8 +2,8 @@
     "id": "HBuilder",
     "name": "HBuilder",
     "version": {
-        "name": "8.1.1",
-        "code": "80101"
+        "name": "8.8.5",
+        "code": "885"
     },
     "description": "基于HTML5+技术规范开发移动应用",
     "icons": {

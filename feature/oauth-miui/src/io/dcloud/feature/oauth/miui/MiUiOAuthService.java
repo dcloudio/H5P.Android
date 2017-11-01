@@ -289,16 +289,7 @@ public class MiUiOAuthService extends BaseOAuthService {
         );
     }
 
-    private JSONObject makeResultJSONObject() {
-        JSONObject sucJSON = new JSONObject();
-        try {
-            sucJSON.put(BaseOAuthService.KEY_AUTHRESULT, authResult);
-            sucJSON.put(BaseOAuthService.KEY_USERINFO, userInfo);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return sucJSON;
-    }
+
 
     /**
      * 从SharedPreferences中获取授权结果，并取出token，请求服务器获取用户信息，并保存到SharedPreferences

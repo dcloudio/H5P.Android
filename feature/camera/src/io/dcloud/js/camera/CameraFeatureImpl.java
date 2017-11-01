@@ -3,6 +3,8 @@ package io.dcloud.js.camera;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 
 import java.io.File;
@@ -40,8 +42,13 @@ public class CameraFeatureImpl implements IFeature{
 		String _result = null;
 		final IApp _app = pWebViewImpl.obtainFrameView().obtainApp();
 		final String pCallbackId = pJsArgs[0];
+        //Android 7.0 FileUriExposedException 解决
+        if (Build.VERSION.SDK_INT >= 24) {
+            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+            StrictMode.setVmPolicy(builder.build());
+        }
 		if(pActionName.equals("captureImage")){
-				 PermissionUtil.usePermission(_app.getActivity(), false,PermissionUtil.PMS_CAMERA , new PermissionUtil.StreamPermissionRequest(_app) {
+				 PermissionUtil.usePermission(_app.getActivity(), _app.isStreamApp(),PermissionUtil.PMS_CAMERA , new PermissionUtil.StreamPermissionRequest(_app) {
 					 @Override
 					 public void onGranted(String streamPerName) {
 						 try {
@@ -97,7 +104,7 @@ public class CameraFeatureImpl implements IFeature{
 				 });
 
 		}else if(pActionName.equals("startVideoCapture")){
-			PermissionUtil.usePermission(_app.getActivity(), false,PermissionUtil.PMS_CAMERA , new PermissionUtil.StreamPermissionRequest(_app) {
+			PermissionUtil.usePermission(_app.getActivity(), _app.isStreamApp(),PermissionUtil.PMS_CAMERA , new PermissionUtil.StreamPermissionRequest(_app) {
 				@Override
 				public void onGranted(String streamPerName) {
 					try{

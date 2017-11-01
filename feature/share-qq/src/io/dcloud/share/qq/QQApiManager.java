@@ -72,9 +72,9 @@ public class QQApiManager implements IFShareApi {
 		try {
 			JSONObject _msg = new JSONObject(pShareMsg);
 			String _content = _msg.optString("content");
-			String href = _msg.getString("href");
-			String thumbs = _msg.getString("thumbs");
-			String title = _msg.getString("title");
+			String href = _msg.optString("href");
+			String thumbs = _msg.optString("thumbs");
+			String title = _msg.optString("title");
 
 			if (!TextUtils.isEmpty(_content)) {
 				params.putString(QQShare.SHARE_TO_QQ_SUMMARY, _content);
@@ -135,7 +135,7 @@ public class QQApiManager implements IFShareApi {
 			JSONObject _msg = new JSONObject(pShareMsg);
 			String _content = _msg.optString("content");
 			String _title = _msg.optString("title");
-			String href = JSONUtil.getString(_msg, "href");
+			String href = _msg.optString("href");
 			JSONArray _thumbs = _msg.optJSONArray("thumbs");
 			JSONArray _pictures = _msg.optJSONArray("pictures");
 			String imgPath = _pictures != null ? _pictures.optString(0, null) : null;

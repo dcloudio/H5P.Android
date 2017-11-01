@@ -40,9 +40,7 @@ public class MapRoute {
 	 */
 	private Paint mPaint;
 	/**
-	 * Description: 构造函数 
-	 * @param pFrameView
-	 * @param pJsId 
+	 * Description: 构造函数
 	 *
 	 * <pre><p>ModifiedLog:</p>
 	 * Log ID: 1.0 (Log编号 依次递增)

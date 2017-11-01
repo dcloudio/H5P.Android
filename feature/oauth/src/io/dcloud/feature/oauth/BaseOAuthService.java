@@ -12,6 +12,7 @@ import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.AESHelper;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.NetTool;
+import io.dcloud.common.util.PdrUtil;
 
 public abstract class BaseOAuthService extends BaseModule implements IReflectAble {
     /**
@@ -194,7 +195,11 @@ public abstract class BaseOAuthService extends BaseModule implements IReflectAbl
     }
 
     protected String getUserInfo(String url) {
-        return new String(NetTool.httpGet(url));
+        byte[] res= NetTool.httpGet(url);
+        if (!PdrUtil.isEmpty(res)){
+            return new String(res);
+        }
+        return null;
     }
 
     protected String checkToken(String url) {
@@ -282,6 +287,17 @@ public abstract class BaseOAuthService extends BaseModule implements IReflectAbl
         }
     }
 
+
+    public JSONObject getErrorJsonbject(String pCode, String pMessage) {
+        String json = DOMException.toJSON(pCode, pMessage);
+        try {
+            return new JSONObject(json);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return new JSONObject();
+        }
+    }
+
     public JSONObject getErrorJsonbject(int pCode, String pMessage, int innerCode) {
         String json = DOMException.toJSON(pCode, pCode + ":" + pMessage, innerCode);
         try {
@@ -291,5 +307,16 @@ public abstract class BaseOAuthService extends BaseModule implements IReflectAbl
             e.printStackTrace();
             return new JSONObject();
         }
+    }
+
+    public JSONObject makeResultJSONObject() {
+        JSONObject sucJSON = new JSONObject();
+        try {
+            sucJSON.put(BaseOAuthService.KEY_AUTHRESULT, authResult);
+            sucJSON.put(BaseOAuthService.KEY_USERINFO, userInfo);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return sucJSON;
     }
 }

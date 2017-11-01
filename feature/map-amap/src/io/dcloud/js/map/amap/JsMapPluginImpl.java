@@ -86,7 +86,14 @@ public class JsMapPluginImpl implements IFeature{
 				String _srcLatitude =  JSONUtil.getString(_src,"latitude");
 				
 				DHMapUtil.openSysMap(pWebViewImpl, "", new String[][]{{_destLatitude,_destLongitude}, {_srcLatitude,_srcLongitude}},desp);
-			}
+            }else if("close".equals(subActionName)) {
+                String uuid = JSONUtil.getString(_arrs,1);
+                JsMapObject _jsMapObject = mMapManager.getJsObject(uuid);
+                if(_jsMapObject != null){
+                    ((IFMapDispose)_jsMapObject).dispose();
+                    mMapManager.removeJsObject(uuid);
+                }
+            }
 		} else if("geocode".equals(pActionName)) {
 			String address = pJsArgs[0];
 			JSONObject jsonObject = JSONUtil.createJSONObject(pJsArgs[1]);

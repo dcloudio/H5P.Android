@@ -9,6 +9,7 @@ import io.dcloud.common.adapter.util.DeviceInfo;
 import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.adapter.util.ViewRect;
 import io.dcloud.common.util.JSONUtil;
+import io.dcloud.common.util.PdrUtil;
 import io.dcloud.js.map.amap.IFMapDispose;
 import io.dcloud.js.map.amap.JsMapObject;
 
@@ -547,8 +548,14 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 	}
 	@Override
 	public void dispose() {
-		mMapView.dispose();
-		mMapView.mAutoPopFromStack = false;
+        if (!PdrUtil.isEmpty(mMapView)) {
+            mMapView.dispose();
+            mMapView.setVisible(false);
+            mMapView.onDestroy();
+            mMapView.mAutoPopFromStack = false;
+            mMapView = null;
+            mWebview.removeFrameItem(DHMapFrameItem.this);
+        }
 	}
 
 	public String getBounds() {

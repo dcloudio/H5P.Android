@@ -21,6 +21,7 @@ public class GeoOptDispatcher {
 	GeoManagerBase mAMapGeoManager = null;
 	GeoManagerBase mGpsGeoManager = null;
 //	GeoManagerBase mQihooGeoManager = null;
+	GeoManagerBase mQihooBrowserGeoManager = null;
 	boolean mIsLightApp = false;
 	public GeoOptDispatcher(AbsMgr mgr) {
 		mFeatureMgr = mgr;
@@ -104,9 +105,44 @@ public class GeoOptDispatcher {
 				optGeoManager = mAMapGeoManager = (mAMapGeoManager == null ?  initGeoManager("io.dcloud.js.geolocation.amap.AMapGeoManager") :mAMapGeoManager);
 			}
 		}
+		// 360浏览器拆件需要特殊处理
+		if(optGeoManager == null && BaseInfo.isForQihooBrowser(mFeatureMgr.getContext())) {
+			optGeoManager = mQihooBrowserGeoManager = (mQihooBrowserGeoManager == null ? initGeoManager("io.dcloud.js.geolocation.browser.Browser360GeoManager"): mQihooBrowserGeoManager);
+		}
 		if(optGeoManager == null){//走到此处代表高德百度定位引擎均未能成功初始化
 			optGeoManager = mGpsGeoManager = (mGpsGeoManager == null ? initGeoManager("io.dcloud.js.geolocation.system.LocalGeoManager") : mGpsGeoManager);
 		}
+
+        //流应用SDK会将AMapGeoManager和BaiduGeoManage及LocalGeoManager均打入jar包，故此选择合适的定位provider时，
+        //还需要判断清单文件是否进行了完整的配置
+        //    如果清单文件中也配置完整，则选择完整的那个provider进行定位
+        //    如果清单文件中对高德和百度均配置了apikey,则按照5+api的优先级进行选择。
+        if (BaseInfo.isStreamSDK()){
+            if (!PdrUtil.isEmpty(mAMapGeoManager)) {
+                if (PdrUtil.isEmpty(AndroidResources.getMetaValue("com.amap.api.v2.apikey"))){
+                    if (!PdrUtil.isEmpty(mBaiduGeoManager)) {
+                        if (PdrUtil.isEmpty(AndroidResources.getMetaValue("com.baidu.lbsapi.API_KEY"))){
+                            return mGpsGeoManager;
+                        }else{
+                            return mBaiduGeoManager;
+                        }
+                    }
+                }else{
+                    return mAMapGeoManager;
+                }
+            }else{
+                if (!PdrUtil.isEmpty(mBaiduGeoManager)) {
+                    if (PdrUtil.isEmpty(AndroidResources.getMetaValue("com.baidu.lbsapi.API_KEY"))){
+                        return optGeoManager = mGpsGeoManager = (mGpsGeoManager == null ? initGeoManager("io.dcloud.js.geolocation.system.LocalGeoManager") : mGpsGeoManager);
+                    }else{
+                        return mBaiduGeoManager;
+                    }
+                }else{
+                    return mGpsGeoManager;
+                }
+
+            }
+        }
 		return optGeoManager;
 	}
 	

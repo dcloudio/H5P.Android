@@ -13,7 +13,6 @@ import android.text.TextUtils;
 import android.widget.Toast;
 
 import com.tencent.mm.sdk.modelbase.BaseResp;
-import com.tencent.mm.sdk.modelmsg.SendAuth;
 import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
 import com.tencent.mm.sdk.modelmsg.WXImageObject;
 import com.tencent.mm.sdk.modelmsg.WXMediaMessage;
@@ -49,6 +48,7 @@ import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 import io.dcloud.share.IFShareApi;
 
 /**
@@ -90,7 +90,7 @@ public class WeiXinApiManager implements IFShareApi{
 			String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
 			JSUtil.execCallback(pWebViewImpl, pCallbackId, msg, JSUtil.ERROR, true, false);
 			return true;
-		}else if(!PlatformUtil.hasAppInstalled(pWebViewImpl.getContext(), "com.tencent.mm")){
+		}else if(!PlatformUtil.isAppInstalled(pWebViewImpl.getContext(), "com.tencent.mm")){
 			String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_CLIENT_UNINSTALLED, DOMException.toString(DOMException.MSG_CLIENT_UNINSTALLED));
 			JSUtil.execCallback(pWebViewImpl, pCallbackId, msg, JSUtil.ERROR, true, false);
 			return true;
@@ -244,7 +244,7 @@ public class WeiXinApiManager implements IFShareApi{
 			JSONObject msgJs = new JSONObject(msg);
 			String content = msgJs.getString("content");
 			String href = msgJs.getString("href");
-			String thumbs = msgJs.getString("thumbs");
+			String thumbs = msgJs.optString("thumbs");
 			int flag = msgJs.getInt("flag");
 			initData();
 			if(api == null){
@@ -260,7 +260,10 @@ public class WeiXinApiManager implements IFShareApi{
 			WXMediaMessage wxmsg = new WXMediaMessage(webpage); 
 			wxmsg.description = content;  
 			wxmsg.title = content;
-		    Bitmap thumb = BitmapFactory.decodeFile(thumbs);
+		    Bitmap thumb = null;
+			if(!TextUtils.isEmpty(thumbs) && new File(thumbs).exists()){
+				thumb = BitmapFactory.decodeFile(thumbs);
+			}
 			//如果图标为null，默认用App的图标。
 			if(null==thumb){
 				thumb=BitmapFactory.decodeResource(activity.getResources(),RInformation.DRAWABLE_ICON);
@@ -273,6 +276,106 @@ public class WeiXinApiManager implements IFShareApi{
 		    api.sendReq(req);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+	}
+
+	/**
+	 * 供原生代码分享调用-分享图片
+	 * @param activity
+	 * @param msg
+	 * flag 1是朋友圈，0是好友
+	 */
+	public void sendImage(final Activity activity, final String msg) {
+		try {
+			JSONObject msgJs = new JSONObject(msg);
+			String image = msgJs.optString("image");
+			String thumbs = msgJs.optString("thumbs");
+			String textToImage = msgJs.optString("textToImage");
+			int flag = msgJs.optInt("flag");
+			initData();
+			if(api == null){
+				api = WXAPIFactory.createWXAPI(activity.getApplicationContext(), APPID, true);
+			}
+			api.registerApp(APPID);
+			if (!api.isWXAppInstalled()) {
+		        Toast.makeText(activity.getApplicationContext(), "您还未安装微信客户端", Toast.LENGTH_SHORT).show();
+		        return;
+		    }
+			Bitmap imageBitmap = null;
+			if(!TextUtils.isEmpty(image) && new File(image).exists()){
+				imageBitmap = BitmapFactory.decodeFile(image);
+			}
+			if(null==imageBitmap){
+				if(!TextUtils.isEmpty(textToImage)){
+					imageBitmap = StringUtil.textToBitmap(activity,textToImage);
+				}
+			}
+			if(null==imageBitmap){
+				return;
+			}
+
+			WXImageObject imageObject = new WXImageObject(imageBitmap);
+
+			WXMediaMessage wxmsg = new WXMediaMessage(imageObject);
+			wxmsg.mediaObject = imageObject;
+		    Bitmap thumb = null;
+			if(!TextUtils.isEmpty(thumbs) && new File(thumbs).exists()){
+				thumb = BitmapFactory.decodeFile(thumbs);
+			}
+			//如果图标为null，默认用App的图标。
+			if(null==thumb){
+				thumb=BitmapFactory.decodeResource(activity.getResources(),RInformation.DRAWABLE_ICON);
+			}
+		    wxmsg.setThumbImage(thumb);
+
+		    SendMessageToWX.Req req = new SendMessageToWX.Req();
+		    req.transaction = String.valueOf(System.currentTimeMillis());
+		    req.message = wxmsg;
+		    req.scene = flag;
+		    api.sendReq(req);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+	}
+
+	/**
+	 * 供原生代码分享调用-分享文本
+	 * @param activity
+	 * @param msg
+	 * flag 1是朋友圈，0是好友
+	 */
+	public void sendText(final Activity activity, final String msg) {
+		try {
+			JSONObject msgJs = new JSONObject(msg);
+			String text = msgJs.optString("text");
+			int flag = msgJs.optInt("flag");
+			initData();
+			if(api == null){
+				api = WXAPIFactory.createWXAPI(activity.getApplicationContext(), APPID, true);
+			}
+			api.registerApp(APPID);
+			if (!api.isWXAppInstalled()) {
+				Toast.makeText(activity.getApplicationContext(), "您还未安装微信客户端", Toast.LENGTH_SHORT).show();
+				return;
+			}
+
+			WXTextObject textObject = new WXTextObject();
+			textObject.text = text;
+
+			WXMediaMessage wxmsg = new WXMediaMessage(textObject);
+			wxmsg.mediaObject = textObject;
+			wxmsg.description = text;
+
+			SendMessageToWX.Req req = new SendMessageToWX.Req();
+			req.transaction = String.valueOf(System.currentTimeMillis());
+			req.message = wxmsg;
+			req.scene = flag;
+			api.sendReq(req);
+		} catch (Exception e) {
 			e.printStackTrace();
 			return;
 		}

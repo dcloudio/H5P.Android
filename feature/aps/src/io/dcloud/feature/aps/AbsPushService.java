@@ -133,7 +133,7 @@ public abstract class AbsPushService extends BaseModule implements IReflectAble{
 	public String createMessage(IWebview pWebViewImpl, JSONArray pJsArgs,
 			final String _appId,final Context _context) throws JSONException {
 		final PushManager pushManager = PushManager.getInstance(_context);
-		final PushMessage _message = new PushMessage(pJsArgs.getString(0), pWebViewImpl.obtainApp().obtainAppId(), pWebViewImpl.obtainApp().obtainAppName());
+		final PushMessage _message = new PushMessage(pJsArgs.getString(0), pWebViewImpl.obtainApp());
 		if(_message.mDelay == 0){
 			
 			pushManager.addPushMessage(_appId, _message);
