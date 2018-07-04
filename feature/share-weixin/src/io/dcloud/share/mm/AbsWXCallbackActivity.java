@@ -3,7 +3,6 @@ package io.dcloud.share.mm;
 import io.dcloud.ProcessMediator;
 import io.dcloud.common.DHInterface.FeatureMessageDispatcher;
 import io.dcloud.common.adapter.util.AndroidResources;
-import io.dcloud.feature.oauth.weixin.WeiXinMediator;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -34,7 +33,7 @@ public class AbsWXCallbackActivity extends Activity implements IWXAPIEventHandle
 	@Override
 	// 微信发送请求到第三方应用时，会回调到该方法
 	public void onReq(BaseReq req) {
-		FeatureMessageDispatcher.dispatchMessage(req);
+        FeatureMessageDispatcher.dispatchMessage(req);
 		if(isMultiProcess){
 			Intent n = new Intent();
 			Bundle bundle = new Bundle();
@@ -49,7 +48,7 @@ public class AbsWXCallbackActivity extends Activity implements IWXAPIEventHandle
 	// 第三方应用发送到微信的请求处理后的响应结果，会回调到该方法
 	@Override
 	public void onResp(BaseResp resp) {
-		FeatureMessageDispatcher.dispatchMessage(resp);
+        FeatureMessageDispatcher.dispatchMessage(resp);
 		if(isMultiProcess){
 			Intent n = new Intent();
 			Bundle bundle = new Bundle();

@@ -1,32 +1,5 @@
 package io.dcloud.feature.barcode;
 
-import io.dcloud.common.DHInterface.IApp;
-import io.dcloud.common.DHInterface.IEventCallback;
-import io.dcloud.common.DHInterface.IWebview;
-import io.dcloud.common.adapter.ui.AdaFrameItem;
-import io.dcloud.common.adapter.util.CanvasHelper;
-import io.dcloud.common.adapter.util.Logger;
-import io.dcloud.common.adapter.util.MessageHandler;
-import io.dcloud.common.adapter.util.PermissionUtil;
-import io.dcloud.common.constant.StringConst;
-import io.dcloud.common.util.JSONUtil;
-import io.dcloud.common.util.JSUtil;
-import io.dcloud.common.util.PdrUtil;
-import io.dcloud.feature.barcode.camera.CameraManager;
-import io.dcloud.feature.barcode.decoding.CaptureActivityHandler;
-import io.dcloud.feature.barcode.decoding.IBarHandler;
-import io.dcloud.feature.barcode.decoding.InactivityTimer;
-import io.dcloud.feature.barcode.view.DetectorViewConfig;
-import io.dcloud.feature.barcode.view.ViewfinderView;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Vector;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
@@ -58,7 +31,35 @@ import android.widget.AbsoluteLayout;
 import com.dcloud.zxing.BarcodeFormat;
 import com.dcloud.zxing.Result;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Vector;
+
+import io.dcloud.common.DHInterface.IApp;
+import io.dcloud.common.DHInterface.IEventCallback;
+import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.common.adapter.ui.AdaFrameItem;
+import io.dcloud.common.adapter.util.CanvasHelper;
+import io.dcloud.common.adapter.util.Logger;
+import io.dcloud.common.adapter.util.MessageHandler;
+import io.dcloud.common.adapter.util.PermissionUtil;
+import io.dcloud.common.constant.StringConst;
+import io.dcloud.common.util.JSONUtil;
+import io.dcloud.common.util.JSUtil;
+import io.dcloud.common.util.PdrUtil;
+import io.dcloud.feature.barcode.camera.CameraManager;
+import io.dcloud.feature.barcode.decoding.CaptureActivityHandler;
+import io.dcloud.feature.barcode.decoding.IBarHandler;
+import io.dcloud.feature.barcode.decoding.InactivityTimer;
+import io.dcloud.feature.barcode.view.DetectorViewConfig;
+import io.dcloud.feature.barcode.view.ViewfinderView;
+
 class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
+    public static final String TAG=BarcodeFrameItem.class.getSimpleName();
 	private CaptureActivityHandler handler;
 	private ViewfinderView viewfinderView;
 	private boolean hasSurface;
@@ -274,8 +275,22 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 			}
 		}
 	}
-	
-	protected void onPause(){
+
+    @Override
+    public void onPopFromStack(boolean autoPop) {
+        super.onPopFromStack(autoPop);
+        if (autoPop)
+        onPause();
+    }
+
+    @Override
+    public void onPushToStack(boolean autoPush) {
+        super.onPushToStack(autoPush);
+        if (autoPush)
+        onResume(false);
+    }
+
+    protected void onPause(){
 		if (handler != null) {
 			handler.quitSynchronously();
 			handler = null;

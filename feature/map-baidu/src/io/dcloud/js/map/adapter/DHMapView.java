@@ -224,11 +224,13 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
 	 * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2012-11-22 下午2:15:40</pre>
 	 */
 	protected void setVisible(boolean pIsVisible){
-		if (pIsVisible) {
-			mMapView.setVisibility(View.VISIBLE);
-		}else {
-			mMapView.setVisibility(View.GONE);
-		}
+        if (null!=mMapView){
+            if (pIsVisible) {
+                mMapView.setVisibility(View.VISIBLE);
+            }else {
+                mMapView.setVisibility(View.GONE);
+            }
+        }
 	}
 	
 	/**

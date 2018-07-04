@@ -198,7 +198,7 @@ final class DecodedBitStreamParser {
     }
     // Shift_JIS may not be supported in some environments:
     try {
-      result.append(new String(buffer, StringUtils.SHIFT_JIS));
+      result.append(new String(buffer, StringUtils.UTF8));
     } catch (UnsupportedEncodingException ignored) {
       throw FormatException.getFormatInstance();
     }

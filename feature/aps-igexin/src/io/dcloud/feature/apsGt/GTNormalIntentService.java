@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 
 import com.igexin.sdk.GTIntentService;
 import com.igexin.sdk.message.GTCmdMessage;
+import com.igexin.sdk.message.GTNotificationMessage;
 import com.igexin.sdk.message.GTTransmitMessage;
 
 import io.dcloud.common.adapter.util.Logger;
@@ -29,6 +30,12 @@ public class GTNormalIntentService extends GTIntentService {
 
     public GTNormalIntentService() {
 
+    }
+
+    public void onNotificationMessageClicked(Context context, GTNotificationMessage gtNotificationMessage) {
+    }
+
+    public void onNotificationMessageArrived(Context context, GTNotificationMessage gtNotificationMessage) {
     }
 
     @Override

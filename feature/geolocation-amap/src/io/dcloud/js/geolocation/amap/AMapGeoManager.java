@@ -137,6 +137,7 @@ public class AMapGeoManager extends GeoManagerBase {
                     //不需要连接网络，只使用GPS进行定位，这种模式下不支持室内环境的定位，自 v2.9.0 版本支持返回地址描述信息。
                     //mOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Device_Sensors);
                 }
+                mOption.setLocationCacheEnable(false);
                 mOption.setHttpTimeOut(timeOut);
             }else{
                 mOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Device_Sensors);
@@ -195,6 +196,7 @@ public class AMapGeoManager extends GeoManagerBase {
                     //不需要连接网络，只使用GPS进行定位，这种模式下不支持室内环境的定位，自 v2.9.0 版本支持返回地址描述信息。
                     //mOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Device_Sensors);
                 }
+                mOption.setLocationCacheEnable(false);
                 mOption.setHttpTimeOut(timeOut);
             }else{
                 mOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Device_Sensors);

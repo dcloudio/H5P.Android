@@ -125,18 +125,20 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 	
 	@Override
 	public boolean onExecute(SysEventType pEventType, Object pArgs) {
-		if(pEventType == ISysEventListener.SysEventType.onPause){
-			mMapView.getMapView().onPause();  
-			mMapView.locationStop();
-		        return true;
-		}else if(pEventType == ISysEventListener.SysEventType.onResume){
-			mMapView.getMapView().onResume();
-			mMapView.locationReStart();
-		        return true;
-		}else if(pEventType == ISysEventListener.SysEventType.onStop){
-			mMapView.getMapView().onDestroy();
-		        return true;
-		}
+        if (!PdrUtil.isEmpty(mMapView)&&!PdrUtil.isEmpty(mMapView.getMapView())) {
+            if(pEventType == ISysEventListener.SysEventType.onPause){
+                mMapView.getMapView().onPause();
+                mMapView.locationStop();
+                return true;
+            }else if(pEventType == ISysEventListener.SysEventType.onResume){
+                mMapView.getMapView().onResume();
+                mMapView.locationReStart();
+                return true;
+            }else if(pEventType == ISysEventListener.SysEventType.onStop){
+                mMapView.getMapView().onDestroy();
+                return true;
+            }
+        }
 		return false;
 	}
 	

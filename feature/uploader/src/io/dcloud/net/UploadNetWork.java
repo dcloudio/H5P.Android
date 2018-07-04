@@ -44,7 +44,7 @@ import io.dcloud.net.JsUpload.UploadString;
  * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2013-3-25 下午6:07:31</pre>
  */
 public class UploadNetWork extends NetWork {
-
+public static final String TAG=UploadNetWork.class.getSimpleName();
 	/**
 	 * 请求模式常量
 	 */
@@ -185,7 +185,7 @@ public class UploadNetWork extends NetWork {
 		if(mUploadItems != null && mUploadItems.size() > 0) {
 			Set<String> _sets = mUploadItems.keySet();
 			mTotalSize = mContentLength;
-			for(String pKey : _sets){
+            for(String pKey : _sets){
 				UploadItem ui = mUploadItems.get(pKey);
 				ds.writeBytes(twoHyphens + boundary + end);
 				if(ui instanceof UploadFile) {
@@ -194,11 +194,16 @@ public class UploadNetWork extends NetWork {
 					ds.writeBytes("Content-Type: "+((UploadFile) ui).mMimetype+end);
 					ds.writeBytes(end);
 					FileInputStream fStream = ((UploadFile) ui).mFileInputS;
-					int bufferSize = 1024;
+					int bufferSize = 1024*10;
 					byte[] buffer = new byte[bufferSize];
 					int length = -1;
+                    long curbytes = 0;
 					while ((length = fStream.read(buffer)) != -1) {
-						ds.write(buffer, 0, length);
+                        curbytes += length;
+                        mUploadedSize = curbytes;
+                        Log.e("UploadNetWort", "initUploadData: mUploadedSize=="+mUploadedSize );
+                        mReqListener.onNetStateChanged(NetState.NET_HANDLE_ING,isAbort);
+                        ds.write(buffer, 0, length);
 					}
 					ds.writeBytes(end);
 					fStream.close();
@@ -211,7 +216,7 @@ public class UploadNetWork extends NetWork {
 					ds.write(sb.toString().getBytes());
 					sb.delete(0, sb.length());
 				}
-				mUploadedSize = ds.size();
+				//mUploadedSize = ds.size();
 				mReqListener.onNetStateChanged(NetState.NET_HANDLE_ING,isAbort);
 			}
 		}
@@ -375,6 +380,7 @@ public class UploadNetWork extends NetWork {
 			} catch (Exception e) {
 				Logger.e("uploadnetwork","responseUpload JSONObject _data=" + _data + ";url=" + mRequestData.getUrl() );
 			}
+
 			if(isRightRequest(mStatus)){
 				mReqListener.onNetStateChanged(NetState.NET_HANDLE_END,isAbort);
 			}else{
@@ -438,7 +444,7 @@ public class UploadNetWork extends NetWork {
 	public void run() {
 //查询服务器是否支持断点续传
 //		querySurpport();
-		uploadContent();
+        uploadContent();
 	}
 	/**
 	 * 上传内容
@@ -475,7 +481,7 @@ public class UploadNetWork extends NetWork {
 		mUploadedSize = 0;
 		mTotalSize = 0;
 		UploadMgr.getUploadMgr().removeNetWork(this);
-	}
+    }
 	
 	public String getResponseHeaders() {
 		try {

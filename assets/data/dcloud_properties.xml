@@ -55,12 +55,16 @@
 			<module name="OAuth-MiUi" value="io.dcloud.feature.oauth.miui.MiUiOAuthService"/>
 		</feature>
 		<feature name="Stream" value="io.dcloud.appstream.js.StreamAppFeatureImpl"/>
+		<feature name="VideoPlayer" value="io.dcloud.media.MediaFeatureImpl"/>
+		<feature name="LivePusher" value="io.dcloud.media.live.LiveMediaFeatureImpl"/>
 	</features>	
 
 	<services>
 		<service name="push" value="io.dcloud.feature.aps.APSFeatureImpl"/>
 		<service name="Statistic" value="io.dcloud.feature.statistics.StatisticsBootImpl"/>
 		<service name="Downloader" value="io.dcloud.net.DownloaderBootImpl"/>
+		<service name="LivePusher" value="io.dcloud.media.live.LiveMediaFeatureImpl"/>
+		<service name="UniNView" value="io.dcloud.feature.weex.WeexFeature"/>
         <!--<service name="Maps" value="io.dcloud.js.map.MapInitImpl"/>-->
         <service name="Maps" value="io.dcloud.js.map.amap.JsMapPluginImpl"/>
 	</services>

@@ -188,17 +188,19 @@ class PushManager {
 			if (!mNeedExecMessages.isEmpty()) {// 存在需要立即执行的消息
 				for (PushMessage _message : mNeedExecMessages) {
 					String _json = String.format(EVENT_TEMPLATE, callBackId, evtType, _message.toJSON());
-					webview.executeScript(_json);
-					mNeedExecMessages.remove(_message);
+                    webview.executeScript(_json);
 				}
+				//删除操作在for循环会导致ConcurrentModificationException异常
+				mNeedExecMessages.clear();
 			}
 		} else if ("receive".equals(evtType)) {
 			if (!mNeedExecMessages_receive.isEmpty()) {// 存在需要立即执行的消息
 				for (PushMessage _message : mNeedExecMessages_receive) {
 					String _json = String.format(EVENT_TEMPLATE, callBackId, evtType, _message.toJSON());
 					webview.executeScript(_json);
-					mNeedExecMessages_receive.remove(_message);
 				}
+				//删除操作在for循环会导致ConcurrentModificationException异常
+                mNeedExecMessages_receive.clear();
 			}
 		}
 	}
@@ -245,9 +247,9 @@ class PushManager {
 	 * 
 	 * Description:删除消息对象
 	 * 
-	 * @param appid
+	 * @param pAppid
 	 *            应用ID
-	 * @param pMsg
+	 * @param pPushMsg
 	 *            消息对象
 	 *
 	 *            <pre>
@@ -271,7 +273,7 @@ class PushManager {
 	 * 
 	 * Description:查找消息对象
 	 * 
-	 * @param appid
+	 * @param pAppid
 	 * @param pUuid
 	 * @return
 	 *
@@ -411,10 +413,9 @@ class PushManager {
 	/**
 	 * 
 	 * Description:执行
-	 * 
-	 * @param pCallbackId
+	 *
 	 * @param pEventType
-	 * @param pMeassage
+	 * @param pMessage
 	 *
 	 *            <pre>
 	 * <p>ModifiedLog:</p>

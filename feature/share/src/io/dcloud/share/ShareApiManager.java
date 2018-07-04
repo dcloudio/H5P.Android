@@ -3,6 +3,7 @@ package io.dcloud.share;
 import android.content.Intent;
 import android.content.res.Resources.NotFoundException;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.view.View;
 
 import org.json.JSONArray;
@@ -159,6 +160,10 @@ public class ShareApiManager {
             JSONObject _msg = new JSONObject(pShareMsg);
             String _content = _msg.optString("content");
             String _title = _msg.optString("title");
+            String _href = _msg.optString("href");
+            if(!TextUtils.isEmpty(_href)) {
+                _content = _content + "  "+ _href;
+            }
             JSONArray _pictures = _msg.optJSONArray("pictures");
             Intent intent;
             if (!PdrUtil.isEmpty(_pictures)) {

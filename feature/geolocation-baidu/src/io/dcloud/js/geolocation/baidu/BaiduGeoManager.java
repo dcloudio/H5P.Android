@@ -175,7 +175,7 @@ public class BaiduGeoManager extends GeoManagerBase{
             });
             mClient.start();
         } else {
-            String _json = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_GEOLOCATION_HASNT_BAIDU_APPKEY, DOMException.MSG_GEOLOCATION_HASNT_AMAP_KEY);
+            String _json = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_GEOLOCATION_HASNT_BAIDU_APPKEY, DOMException.MSG_GEOLOCATION_HASNT_BAIDU_APKEY);
             JSUtil.execCallback(pWebViewImpl, pCallbackId, _json, JSUtil.ERROR, true, false);
         }
 
@@ -249,7 +249,7 @@ public class BaiduGeoManager extends GeoManagerBase{
 				address.put("district",pLoc.getDistrict()); // 区（县）名称
 				address.put("street",pLoc.getStreet()); //街道和门牌信息
 				address.put("streetNum",pLoc.getStreetNumber()); //街道和门牌信息
-				address.put("poiName",null); //POI信息
+				address.put("poiName",pLoc.getPoiList() != null && pLoc.getPoiList().size() > 0 ? pLoc.getPoiList().get(0) : null); //POI信息
 				address.put("postalCode",null); //邮政编码
 				address.put("cityCode",pLoc.getCityCode()); //城市代码
 				json.put("addresses",pLoc.getAddrStr());

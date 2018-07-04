@@ -49,6 +49,11 @@ public class PushMessage implements IReflectAble{
 	 * 消息的业务数据
 	 */
 	public String mPayload = null;
+
+    /**
+     * 消息的业务数据 JSONObject类型的对象
+     */
+    public JSONObject mPayloadJSON = null;
 	/**
 	 * 消息声音
 	 */
@@ -185,10 +190,19 @@ public class PushMessage implements IReflectAble{
 				}
 			}
 			if(_json.has("payload")){
-				mPayload = _json.optString("payload");
+                if (!PdrUtil.isEmpty(_json.optJSONObject("payload"))) {
+                    mPayloadJSON=_json.optJSONObject("payload");
+                }else{
+                    mPayload = _json.optString("payload");
+                }
+
 			}else{
 				if(_json.has("Payload")){//兼容本地创建消息
-					mPayload = _json.optString("Payload");
+                    if (!PdrUtil.isEmpty(_json.optJSONObject("Payload"))) {
+                        mPayloadJSON=_json.optJSONObject("Payload");
+                    }else{
+                        mPayload = _json.optString("Payload");
+                    }
 				}else{
 					needCreateNotifcation = false;
 					mPayload = pJsonMsg;
@@ -331,7 +345,11 @@ public class PushMessage implements IReflectAble{
 			json.put("title", mTitle);
 			json.put("appid", mMessageAppid);
 			json.put("content", mContent);
-			json.put("payload", mPayload);
+            if (!PdrUtil.isEmpty(mPayloadJSON)) {
+                json.put("payload", mPayloadJSON);
+            }else{
+                json.put("payload", mPayload);
+            }
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}

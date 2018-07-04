@@ -323,7 +323,7 @@ public class MapSearch implements OnGetRoutePlanResultListener, OnGetPoiSearchRe
 	 */
 	private String newJS_Point_Obj(LatLng pPoint, String pName){
         if (pPoint == null) {
-            return "";
+            return "var " + pName +";";
         }
 		StringBuffer sb = new StringBuffer();
 		double _lat = pPoint.latitude;

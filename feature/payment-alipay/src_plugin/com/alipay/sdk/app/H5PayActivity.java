@@ -101,7 +101,7 @@ public class H5PayActivity
         super.onConfigurationChanged(var1);
     }
 
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         if (this.a != null) {
             this.a.removeAllViews();
