@@ -1,6 +1,10 @@
 package io.dcloud.js.map.amap.adapter;
 
 import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.js.map.amap.overlay.BusRouteOverlay;
+import io.dcloud.js.map.amap.overlay.DrivingRouteOverlay;
+import io.dcloud.js.map.amap.overlay.WalkRouteOverlay;
+
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Cap;
@@ -9,9 +13,6 @@ import android.graphics.Paint.Style;
 
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.PolylineOptions;
-import com.amap.api.maps.overlay.BusRouteOverlay;
-import com.amap.api.maps.overlay.DrivingRouteOverlay;
-import com.amap.api.maps.overlay.WalkRouteOverlay;
 import com.amap.api.services.route.BusPath;
 import com.amap.api.services.route.DrivePath;
 import com.amap.api.services.route.WalkPath;
@@ -46,9 +47,7 @@ public class MapRoute {
 	 */
 	private Paint mPaint;
 	/**
-	 * Description: 构造函数 
-	 * @param pFrameView
-	 * @param pJsId 
+	 * Description: 构造函数
 	 *
 	 * <pre><p>ModifiedLog:</p>
 	 * Log ID: 1.0 (Log编号 依次递增)
@@ -87,7 +86,7 @@ public class MapRoute {
 			DrivePath drivePath = (DrivePath) mRoute;
 			DrivingRouteOverlay drivingRouteOverlay = new DrivingRouteOverlay(
 					mWebview.getContext(), mMapview.getMap(), drivePath,
-					mStart.getLatLngPoint(), mEnd.getLatLngPoint());
+					mStart.getLatLngPoint(), mEnd.getLatLngPoint(), null);
 			overlay = drivingRouteOverlay;
 			drivingRouteOverlay.zoomToSpan();
 			drivingRouteOverlay.addToMap();
@@ -96,6 +95,7 @@ public class MapRoute {
 			BusRouteOverlay busRouteOverlay = new BusRouteOverlay(
 					mWebview.getContext(), mMapview.getMap(), busPath,
 					mStart.getLatLngPoint(), mEnd.getLatLngPoint());
+			overlay = busRouteOverlay;
 			busRouteOverlay.zoomToSpan();
 			busRouteOverlay.addToMap();
 		}

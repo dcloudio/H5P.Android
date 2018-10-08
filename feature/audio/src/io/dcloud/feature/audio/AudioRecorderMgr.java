@@ -1,5 +1,7 @@
 package io.dcloud.feature.audio;
 
+import android.os.Build;
+
 import io.dcloud.common.adapter.util.PermissionUtil;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.JSUtil;
@@ -28,6 +30,10 @@ public class AudioRecorderMgr extends AbsAudio {
 			public void onGranted(String streamPerName) {
 				if(isPause(mInstance.mOption.mFormat)) {
 					mInstance.mNativeRecorder = new HighGradeRecorder().setRecordOption(mInstance.mOption);
+					if(mInstance.mOption.mFormat.equals("aac") && Build.VERSION.SDK_INT < 16) {
+						mInstance.failCallback("当前系统不支持AAC录制！");
+						return;
+					}
 					try {
 						mInstance.mNativeRecorder.start();
 					} catch (Exception e) {

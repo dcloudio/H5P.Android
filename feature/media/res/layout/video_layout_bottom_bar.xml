@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/tv_recover_screen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="70dp"
+        android:background="@drawable/video_shape_video_bg"
+        android:paddingBottom="10dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:paddingTop="10dp"
+        android:visibility="gone"
+        android:textSize="20sp"
+        android:text="还原屏幕"
+        android:textColor="@color/video_recover_screen_text"/>
+
+    <LinearLayout
+        android:id="@+id/ll_bottom_bar"
+        android:background="@color/video_bg_video_view"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/video_control_bar_height"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/iv_play"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/video_sel_item_background"
+            android:padding="10dp"
+            android:src="@drawable/video_sel_btn_play"/>
+
+        <TextView
+            android:id="@+id/tv_cur_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="00:00"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"/>
+
+        <SeekBar
+            android:id="@+id/player_seek"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:maxHeight="1.5dp"
+            android:minHeight="1.5dp"
+            android:background="@android:color/transparent"
+            android:progressDrawable="@drawable/video_layer_seek_progress"
+            android:thumb="@drawable/video_shape_seek_ball"/>
+
+        <TextView
+            android:id="@+id/tv_end_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginRight="5dp"
+            android:text="00:00"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"/>
+
+        <TextView
+            android:id="@+id/iv_danmaku_control"
+            android:layout_width="40dp"
+            android:layout_height="18dp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="3dp"
+            android:text="弹幕"
+            android:textSize="10sp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:textColor="@color/video_btn_danmaku_control_color"
+            android:background="@drawable/video_sel_btn_danmaku_control"
+            android:visibility="gone"/>
+
+        <ImageView
+            android:id="@+id/iv_fullscreen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginRight="5dp"
+            android:background="@drawable/video_sel_item_background"
+            android:padding="5dp"
+            android:src="@drawable/video_sel_btn_fullscreen"/>
+    </LinearLayout>
+</merge>

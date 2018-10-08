@@ -8,7 +8,6 @@ import android.os.Message;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 
 import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.feature.audio.aac.AacEncode;
@@ -55,21 +54,21 @@ public class RecorderTask extends Thread {
     private File outputFile;
     private double mDuration;//录音时间,单位为毫秒
     private HighGradeRecorder.Callback mDurationListener;
-    HighGradeRecorder mMyMp3Recorder;
+    HighGradeRecorder mRecorder;
     boolean reallyStart;
     Handler handler;
     int waitingTime;
     private String mFormat;
 //    private int mSamplingRate;
-    public RecorderTask(File file, HighGradeRecorder myMp3Recorder, RecordOption option) {
+    public RecorderTask(File file, HighGradeRecorder recorder, RecordOption option) {
         outputFile = file;
-        mMyMp3Recorder = myMp3Recorder;
+        mRecorder = recorder;
         handler = new Handler();
         this.mFormat = option.mFormat;
         if(!option.isRateDeft) {
             sampleRates = new int[]{option.mSamplingRate, 44100, 22050, 11025, 8000};
         }
-        if(myMp3Recorder.getRecorderState() == HighGradeRecorder.State.PREPARED){
+        if(recorder.getRecorderState() == HighGradeRecorder.State.PREPARED){
             waitingTime = 1000;
         }else {
             waitingTime = 10000;
@@ -153,7 +152,7 @@ public class RecorderTask extends Thread {
                             RecorderUtil.postTaskSafely(new Runnable() {
                                 @Override
                                 public void run() {
-                                    mMyMp3Recorder.onstart();
+                                    mRecorder.onstart();
                                 }
                             });
                         }
@@ -188,7 +187,7 @@ public class RecorderTask extends Thread {
                                     //mDurationListener.onRecording(mDuration);
                                     mDurationListener.onRecording(mDuration,volume);
                                     if(maxDuration >0 && mDuration >= maxDuration){
-                                        mMyMp3Recorder.stop(HighGradeRecorder.ACTION_STOP);
+                                        mRecorder.stop(HighGradeRecorder.ACTION_STOP);
                                         mDurationListener.onMaxDurationReached();
                                     }
                                 }
@@ -250,7 +249,7 @@ public class RecorderTask extends Thread {
         mPCMBuffer = new short[bufsize];
         mAacBuffer = new byte[bufsize];
         if(mFormat.equalsIgnoreCase("aac")) {
-            AacEncode.getAacEncode().init(16000, 16000, (short) 1, (short) 1);
+            AacEncode.getAacEncode(audioRecord.getSampleRate(), audioRecord.getChannelCount());
         } else {
             		/*
 		 * Initialize lame buffer
@@ -265,20 +264,21 @@ public class RecorderTask extends Thread {
         // The thread will
         try {
             if(!outputFile.exists()){
+                File parent = outputFile.getParentFile();
+                if(!parent.exists()) {
+                    parent.mkdirs();
+                }
                 outputFile.createNewFile();
             }
             mEncodeThread = new DataEncodeThread(outputFile, bufsize, mFormat);
+            mEncodeThread.start();
+            audioRecord.setRecordPositionUpdateListener(mEncodeThread, mEncodeThread.getHandler());
+            audioRecord.setPositionNotificationPeriod(FRAME_COUNT);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        }catch(IOException e){
+        }catch(Exception e){
             e.printStackTrace();
         }
-        mEncodeThread.start();
-        audioRecord.setRecordPositionUpdateListener(mEncodeThread, mEncodeThread.getHandler());
-        audioRecord.setPositionNotificationPeriod(FRAME_COUNT);
-
-
-
     }
 
     /**
@@ -331,20 +331,7 @@ public class RecorderTask extends Thread {
     }
 
     private void createRecord(int sample_rate, int channel_config, int format) {
-        if(mFormat.equalsIgnoreCase("aac")) {
-            int min = AudioRecord.getMinBufferSize(16000,
-                    AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT);
-            if (min < 2048) {
-                min = 2048;
-            }
-            audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
-                    16000, AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT, min);
-        } else {
-            audioRecord = new AudioRecord(
-                    MediaRecorder.AudioSource.MIC, sample_rate,
-                    channel_config, format, bufsize);
-        }
+        audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, sample_rate,
+                channel_config, format, bufsize);
     }
 }

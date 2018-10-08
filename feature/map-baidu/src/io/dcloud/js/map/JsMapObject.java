@@ -1,6 +1,7 @@
 package io.dcloud.js.map;
 
 import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.common.adapter.ui.AdaFrameView;
 import io.dcloud.js.map.adapter.DHMapView;
 
 import org.json.JSONArray;
@@ -21,13 +22,18 @@ import com.baidu.mapapi.map.MapView;
 public abstract class JsMapObject {
 	protected DHMapView mMapView = null;
 	protected IWebview mWebview = null;
-	String mUUID = null; 
+	String mUUID = null;
+	String mJsId = null;
 	protected JsMapObject(IWebview pWebview){
 		mWebview = pWebview;
 	}
 	
 	void setUUID(String uuid){
 		mUUID = uuid;
+	}
+
+	void setJsId(String id) {
+		mJsId = id;
 	}
 	/**
 	 * 

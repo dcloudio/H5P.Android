@@ -92,6 +92,19 @@ public abstract class BaseOAuthService extends BaseModule implements IReflectAbl
         }
     }
 
+
+    protected IWebview mAuthWebview = null;
+    protected String mAuthCallbackId = null;
+    protected JSONObject mAuthOptions = null;
+    //写死只能是微信
+    public void authorize(IWebview pwebview, JSONArray pJsArgs){
+        initMetaData();
+        mAuthWebview = pwebview;
+        mAuthCallbackId = pJsArgs.optString(1,"");
+        mAuthOptions = pJsArgs.optJSONObject(2);
+        initAuthOptions(mAuthOptions);
+    }
+
     /**
      * 子类重写此方法，获取AndroidMenifest.xml中的值。
      */

@@ -1,16 +1,7 @@
 package io.dcloud.js.map.amap.adapter;
 
-import io.dcloud.common.DHInterface.IWebview;
-import io.dcloud.common.constant.DOMException;
-import io.dcloud.common.util.PdrUtil;
-import io.dcloud.js.map.amap.JsMapManager;
-import io.dcloud.js.map.amap.JsMapRoute;
-import io.dcloud.js.map.amap.MapJsUtil;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.json.JSONArray;
+import android.os.Handler;
+import android.os.Message;
 
 import com.amap.api.maps.MapView;
 import com.amap.api.services.core.AMapException;
@@ -18,10 +9,11 @@ import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.core.PoiItem;
 import com.amap.api.services.geocoder.GeocodeAddress;
 import com.amap.api.services.geocoder.GeocodeQuery;
+import com.amap.api.services.geocoder.GeocodeResult;
 import com.amap.api.services.geocoder.GeocodeSearch;
 import com.amap.api.services.geocoder.RegeocodeAddress;
 import com.amap.api.services.geocoder.RegeocodeQuery;
-import com.amap.api.services.poisearch.PoiItemDetail;
+import com.amap.api.services.geocoder.RegeocodeResult;
 import com.amap.api.services.poisearch.PoiResult;
 import com.amap.api.services.poisearch.PoiSearch;
 import com.amap.api.services.poisearch.PoiSearch.OnPoiSearchListener;
@@ -31,6 +23,7 @@ import com.amap.api.services.route.BusRouteResult;
 import com.amap.api.services.route.DrivePath;
 import com.amap.api.services.route.DriveRouteResult;
 import com.amap.api.services.route.DriveStep;
+import com.amap.api.services.route.RideRouteResult;
 import com.amap.api.services.route.RouteSearch;
 import com.amap.api.services.route.RouteSearch.BusRouteQuery;
 import com.amap.api.services.route.RouteSearch.DriveRouteQuery;
@@ -39,6 +32,19 @@ import com.amap.api.services.route.RouteSearch.OnRouteSearchListener;
 import com.amap.api.services.route.RouteSearch.WalkRouteQuery;
 import com.amap.api.services.route.WalkPath;
 import com.amap.api.services.route.WalkRouteResult;
+
+import org.json.JSONArray;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.common.adapter.util.Logger;
+import io.dcloud.common.constant.DOMException;
+import io.dcloud.common.util.PdrUtil;
+import io.dcloud.js.map.amap.JsMapManager;
+import io.dcloud.js.map.amap.JsMapRoute;
+import io.dcloud.js.map.amap.MapJsUtil;
 
 
 /**
@@ -81,10 +87,42 @@ public class MapSearch {
 	private int walkMode = RouteSearch.WalkDefault;// 步行默认模式
 
 
+	private final static int BUS_MODE_SEARCH = 0;
+	private final static int DRIVING_MODE_SEARCH = 1;
+	private final static int WALK_MODE_SEARCH = 2;
+	private final static int SEARCH_ACTION = 10000;
+
+	private ArrayList<AMapSearchResultData> mCallResultDatas;
+
+	private Handler mHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			super.handleMessage(msg);
+			switch (msg.what) {
+				case SEARCH_ACTION:
+					AMapSearchResultData data = (AMapSearchResultData) msg.obj;
+					if (data.pStart instanceof LatLonPoint && data.pEnd instanceof LatLonPoint) {
+						switch (data.type) {
+							case BUS_MODE_SEARCH:
+								transitSearch(data.pStart, data.pEnd, data.endCity);
+								break;
+							case DRIVING_MODE_SEARCH:
+								drivingSearch(data.pStart, data.startCity, data.pEnd, data.endCity);
+								break;
+							case WALK_MODE_SEARCH:
+								walkingSearch(data.pStart, data.startCity, data.pEnd, data.endCity);
+								break;
+						}
+						data = null;
+					}
+					break;
+			}
+		}
+	};
+
 	/**
 	 * Description: 构造函数 
-	 * @param pFrameView
-	 * @param pJsId 
+	 * @param pIWebview
 	 *
 	 * <pre><p>ModifiedLog:</p>
 	 * Log ID: 1.0 (Log编号 依次递增)
@@ -228,7 +266,7 @@ public class MapSearch {
 	/**
 	 * 
 	 * Description:设置驾车线路
-	 * @param policy
+	 * @param pPolicy
 	 * @return
 	 *
 	 * <pre><p>ModifiedLog:</p>
@@ -267,10 +305,10 @@ public class MapSearch {
 	 * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2012-11-22 下午12:05:01</pre>
 	 */
 	public void transitSearch(Object pStart,Object pEnd,String city) {
-		LatLonPoint lpS = getLatLonPoint(pStart, city);
-		LatLonPoint lpE = getLatLonPoint(pEnd, city);
-		if (lpS == null) {
-			route_error_callback_js(DOMException.CODE_PARAMETER_ERRORP, DOMException.MSG_PARAMETER_ERROR);
+		AMapSearchResultData data = new AMapSearchResultData(BUS_MODE_SEARCH, pStart, null, pEnd, city);
+		LatLonPoint lpS = getLatLonPoint(pStart, city, data, 1);
+		LatLonPoint lpE = getLatLonPoint(pEnd, city, data, 2);
+		if (lpS == null || lpE == null) {
 			return;
 		}
 		RouteSearch.FromAndTo fromAndTo = new FromAndTo(lpS, lpE);
@@ -285,10 +323,11 @@ public class MapSearch {
 	 * @param pEnd point
 	 */
 	public void drivingSearch(Object pStart, String startCity, Object pEnd, String endCity) {
-		LatLonPoint lpS = getLatLonPoint(pStart, startCity);
-		LatLonPoint lpE = getLatLonPoint(pEnd, endCity);
-		if (lpS == null) {
-			route_error_callback_js(DOMException.CODE_PARAMETER_ERRORP, DOMException.MSG_PARAMETER_ERROR);
+		AMapSearchResultData data = new AMapSearchResultData(DRIVING_MODE_SEARCH, pStart, startCity, pEnd, endCity);
+		LatLonPoint lpS = getLatLonPoint(pStart, startCity, data, 1);
+		LatLonPoint lpE = getLatLonPoint(pEnd, endCity, data, 2);
+		if (lpS == null || lpE == null) {
+			//route_error_callback_js(DOMException.CODE_PARAMETER_ERRORP, DOMException.MSG_PARAMETER_ERROR);
 			return;
 		}
 		RouteSearch.FromAndTo fromAndTo = new FromAndTo(lpS, lpE);
@@ -296,6 +335,7 @@ public class MapSearch {
 		DriveRouteQuery driveRouteQuery = new DriveRouteQuery(fromAndTo, drivingMode, null, null, "");
 		mSearchHandler.calculateDriveRouteAsyn(driveRouteQuery); // 结果会回调到 onDriveRouteSearched
 	}
+
 /*	private void initSearchData(){
 		mSearchHandler.goToPoiPage(mIndex);
 		mSearchHandler.setPoiPageCapacity(mPageCapacity);
@@ -307,10 +347,10 @@ public class MapSearch {
 	 * @param pEnd point
 	 */
 	public void walkingSearch(Object pStart, String startCity, Object pEnd, String endCity) {
-		LatLonPoint lpS = getLatLonPoint(pStart, startCity);
-		LatLonPoint lpE = getLatLonPoint(pEnd, endCity);
-		if (lpS == null) {
-			route_error_callback_js(DOMException.CODE_PARAMETER_ERRORP, DOMException.MSG_PARAMETER_ERROR);
+		AMapSearchResultData data = new AMapSearchResultData(WALK_MODE_SEARCH, pStart, startCity, pEnd, endCity);
+		LatLonPoint lpS = getLatLonPoint(pStart, startCity, data, 1);
+		LatLonPoint lpE = getLatLonPoint(pEnd, endCity, data, 2);
+		if (lpS == null || lpE == null) {
 			return;
 		}
 		RouteSearch.FromAndTo fromAndTo = new FromAndTo(lpS, lpE);
@@ -318,40 +358,65 @@ public class MapSearch {
 		WalkRouteQuery walkRouteQuery = new WalkRouteQuery(fromAndTo, walkMode);
 		mSearchHandler.calculateWalkRouteAsyn(walkRouteQuery); // 结果会回调到 onWalkRouteSearched
 	}
-	
+
 	/**
 	 * 根据当前对象类型获取LatLonPoint
 	 * @param lonPoint
 	 * @param city
+	 * @param data
+	 * @param pointType 坐标点类型 1 表示start Point 2 end Point
 	 * @return
 	 */
-	private LatLonPoint getLatLonPoint(Object lonPoint, String city) {
-		if (lonPoint instanceof MapPoint) {
+	private LatLonPoint getLatLonPoint(Object lonPoint, String city, AMapSearchResultData data, int pointType) {
+		if(lonPoint instanceof LatLonPoint) {
+			return (LatLonPoint) lonPoint;
+		} else if (lonPoint instanceof MapPoint) {
+			if(pointType == 1){
+				data.pStart = ((MapPoint)lonPoint).getLatLngPoint();
+			} else {
+				data.pEnd = ((MapPoint)lonPoint).getLatLngPoint();
+			}
 			return ((MapPoint)lonPoint).getLatLngPoint();
 		} else {
 			GeocodeQuery queryS = new GeocodeQuery((String) lonPoint, city);
-			return getCityLatLon(queryS);
+			getGeocodeLatLon(queryS, data, pointType);
+			return null;
 		}
 	}
+
 	/**
 	 * 通过关键字获取指定坐标 默认选择第一个参数
 	 * @param query
 	 * @return
 	 */
-	private LatLonPoint getCityLatLon(GeocodeQuery query) {
+	private void getGeocodeLatLon(GeocodeQuery query, final AMapSearchResultData data, final int pointType) {
 		GeocodeSearch search = new GeocodeSearch(mIWebview.getContext());
-		List<GeocodeAddress> List = null;
-		try {
-			List = search.getFromLocationName(query);
-		} catch (AMapException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		if (List != null) {
-			GeocodeAddress address = List.get(0);
-			return address.getLatLonPoint();
-		}
-		return null;
+		search.getFromLocationNameAsyn(query);
+		search.setOnGeocodeSearchListener(new GeocodeSearch.OnGeocodeSearchListener() {
+			@Override
+			public void onRegeocodeSearched(RegeocodeResult regeocodeResult, int i) { }
+			@Override
+			public void onGeocodeSearched(GeocodeResult geocodeResult, int i) {
+				if(i == 1000) {
+					List<GeocodeAddress> List = geocodeResult.getGeocodeAddressList();
+					if (List != null) {
+						GeocodeAddress address = List.get(0);
+						if(pointType == 1) {
+							data.pStart = address.getLatLonPoint();
+						} else {
+							data.pEnd = address.getLatLonPoint();
+						}
+						Message message = new Message();
+						message.what = SEARCH_ACTION;
+						message.obj = data;
+						mHandler.sendMessage(message);
+					}
+				} else {
+					route_error_callback_js(DOMException.CODE_PARAMETER_ERRORP, DOMException.MSG_PARAMETER_ERROR+"(原错误号"+i+", 相关SDK官网查询具体错误原因)");
+				}
+				Logger.e("shutao", "onGeocodeSearched"+geocodeResult.getGeocodeAddressList().size() + "   code="+i);
+			}
+		});
 	}
 	
 	/**
@@ -378,8 +443,7 @@ public class MapSearch {
 	/**
 	 * 
 	 * @param searchType [onPoiSearchComplete|onRouteSearchComplete]
-	 * @param pScript 
-	 * @param pJsVar
+	 * @param pScript
 	 */
 	private void onSearchComplete(int searchType,String pScript){
 		if(searchType == POISEARCH_TYPE){
@@ -400,9 +464,9 @@ public class MapSearch {
 		sb.append(newJS_Point_Obj(getMapPoint(poi.getLatLonPoint()),ptName));
 		String posName = "pos";
 		MapJsUtil.newJsVar(sb, posName, "plus.maps.Position", ptName);
-		MapJsUtil.assignJsVar(sb, posName, "address", poi.getSnippet());
-		MapJsUtil.assignJsVar(sb, posName, "city", poi.getCityName());
-		MapJsUtil.assignJsVar(sb, posName, "name", poi.getTitle());
+		MapJsUtil.assignJsVar(sb, posName, "address", PdrUtil.makeQueryStringAllRegExp(poi.getSnippet()));
+		MapJsUtil.assignJsVar(sb, posName, "city", PdrUtil.makeQueryStringAllRegExp(poi.getCityName()));
+		MapJsUtil.assignJsVar(sb, posName, "name", PdrUtil.makeQueryStringAllRegExp(poi.getTitle()));
 		MapJsUtil.assignJsVar(sb, posName, "phone", poi.getTel());
 		MapJsUtil.assignJsVar(sb, posName, "postcode", poi.getPostcode());
 		return MapJsUtil.wrapJsEvalString(sb.toString(), posName);
@@ -456,7 +520,6 @@ public class MapSearch {
 	 * Description:创建CMap.Point对象
 	 * @param pPoint
 	 * @param pName
-	 * @param pRet
 	 * @return
 	 *
 	 * <pre><p>ModifiedLog:</p>
@@ -655,6 +718,9 @@ public class MapSearch {
 		@Override
 		public void onWalkRouteSearched(WalkRouteResult walkRouteResult, int iError) {
 			// TODO Auto-generated method stub
+            if(iError == 1000) { //兼容新版错误号
+                iError = 0;
+            }
 			// 步行结果回调
 			if (iError == 0) {
 				if (walkRouteResult != null && walkRouteResult.getPaths() != null
@@ -667,18 +733,26 @@ public class MapSearch {
 					//对不起，没有搜索到相关数据！
 					route_error_callback_js(DOMException.CODE_PARAMETER_ERRORP, "对不起，没有搜索到相关数据！");
 				}
-			} else if (iError == 27) {
+			} else if (iError == 27 || iError == 1804) {
 				route_error_callback_js(iError, DOMException.MSG_NETWORK_ERROR);
-			} else if (iError == 32) {
+			} else if (iError == 32 || iError == 1001) {
 				route_error_callback_js(iError, "签名错误");
 			} else {
 				route_error_callback_js(iError, DOMException.MSG_UNKNOWN_ERROR);
 			}
 		}
-		
+
+		@Override
+		public void onRideRouteSearched(RideRouteResult rideRouteResult, int i) {
+
+		}
+
 		@Override
 		public void onDriveRouteSearched(DriveRouteResult driveRouteResult, int iError) {
 			// TODO Auto-generated method stub
+            if(iError == 1000) { //兼容新版错误号
+                iError = 0;
+            }
 			// 驾车结果回调
 			if (iError == 0) {
 				if (driveRouteResult != null && driveRouteResult.getPaths() != null
@@ -691,9 +765,9 @@ public class MapSearch {
 					//对不起，没有搜索到相关数据！
 					route_error_callback_js(DOMException.CODE_PARAMETER_ERRORP, "对不起，没有搜索到相关数据！");
 				}
-			} else if (iError == 27) {
+			} else if (iError == 27 || iError == 1804) {
 				route_error_callback_js(iError, DOMException.MSG_NETWORK_ERROR);
-			} else if (iError == 32) {
+			} else if (iError == 32 || iError == 1001) {
 				route_error_callback_js(iError, "签名错误");
 			} else {
 				route_error_callback_js(iError, DOMException.MSG_UNKNOWN_ERROR);
@@ -703,6 +777,9 @@ public class MapSearch {
 		@Override
 		public void onBusRouteSearched(BusRouteResult busRouteResult, int iError) {
 			// TODO Auto-generated method stub
+            if(iError == 1000) { //兼容新版错误号
+                iError = 0;
+            }
 			// 公交路线回调
 			if (iError == 0) {
 				if (busRouteResult != null && busRouteResult.getPaths() != null
@@ -715,9 +792,9 @@ public class MapSearch {
 					//对不起，没有搜索到相关数据！
 					route_error_callback_js(DOMException.CODE_PARAMETER_ERRORP, "对不起，没有搜索到相关数据！");
 				}
-			} else if (iError == 27) {
+			} else if (iError == 27 || iError == 1804) {
 				route_error_callback_js(iError, DOMException.MSG_NETWORK_ERROR);
-			} else if (iError == 32) {
+			} else if (iError == 32 || iError == 1001) {
 				route_error_callback_js(iError, "签名错误");
 			} else {
 				route_error_callback_js(iError, DOMException.MSG_UNKNOWN_ERROR);
@@ -771,6 +848,10 @@ public class MapSearch {
 			// pageNumber: 本次POI检索的总页数
 			// pageIndex: 获取当前页的索引
 			// poiList: 本次POI检索结果数组
+
+			if(code == 1000) { //兼容新版错误号
+				code = 0;
+			}
 			String spr = "spr";
 			StringBuffer js = new StringBuffer();
 			newJS_SearchPoiResult_Obj(spr, js);
@@ -798,10 +879,10 @@ public class MapSearch {
 				JSONArray poiList = toPositionArray(pArray);
 				MapJsUtil.assignJsVar(js, spr, "poiList", poiList);
 				onSearchComplete(POISEARCH_TYPE, MapJsUtil.wrapJsEvalString(js.toString(), spr));
-			} else if (code == 27) {
+			} else if (code == 27 || code == 1804) {
 				MapJsUtil.assignJsVar(js, spr, "errorMsg", DOMException.MSG_NETWORK_ERROR);
 				onSearchComplete(POISEARCH_TYPE, MapJsUtil.wrapJsEvalString(js.toString(), spr));
-			} else if (code == 32) {
+			} else if (code == 32 || code == 1001) {
 				MapJsUtil.assignJsVar(js, spr, "errorMsg", "签名错误");
 				onSearchComplete(POISEARCH_TYPE, MapJsUtil.wrapJsEvalString(js.toString(), spr));
 			} else {
@@ -809,11 +890,12 @@ public class MapSearch {
 				onSearchComplete(POISEARCH_TYPE, MapJsUtil.wrapJsEvalString(js.toString(), spr));
 			}
 		}
-		
+
 		@Override
-		public void onPoiItemDetailSearched(PoiItemDetail arg0, int arg1) {
-			// TODO Auto-generated method stub
+		public void onPoiItemSearched(PoiItem poiItem, int i) {
+
 		}
+
 	};
 	
 	/**

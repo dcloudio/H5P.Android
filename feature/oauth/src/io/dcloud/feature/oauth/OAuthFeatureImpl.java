@@ -1,11 +1,11 @@
 package io.dcloud.feature.oauth;
 
+import org.json.JSONArray;
+
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.DHInterface.StandardFeature;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.JSUtil;
-
-import org.json.JSONArray;
 
 public class OAuthFeatureImpl extends StandardFeature {
 
@@ -36,6 +36,17 @@ public class OAuthFeatureImpl extends StandardFeature {
 			JSUtil.execCallback(pWebViewImpl, pJsArgs.getString(1), json, JSUtil.ERROR,false);
 		}
 	}
+
+	public void authorize(IWebview pwebview, JSONArray pJsArgs) throws Exception {
+        String id = pJsArgs.getString(0);
+        BaseOAuthService service = (BaseOAuthService)getBaseModuleById(id);
+        if (service != null) {
+            service.authorize(pwebview,pJsArgs);
+        } else {
+            String json = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_OAUTH_LOGIN,DOMException.MSG_OAUTH_LOGIN);
+            JSUtil.execCallback(pwebview, pJsArgs.getString(1), json, JSUtil.ERROR,false);
+        }
+    }
 	public void logout(IWebview pWebViewImpl,JSONArray pJsArgs) throws Exception{
 		String id = pJsArgs.getString(0);
 		BaseOAuthService service = (BaseOAuthService)getBaseModuleById(id);

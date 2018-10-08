@@ -37,8 +37,24 @@
         <item name="android:textColor">#bb000000</item>
     </style>
 
+    <style name="NotificationText_Dark" parent="android:TextAppearance.StatusBar.EventContent">
+        <item name="android:textColor">#C0C0C0</item>
+        <item name="android:textSize">13dp</item>
+    </style>
+
+    <style name="NotificationTitle_Dark" parent="android:TextAppearance.StatusBar.EventContent.Title">
+        <item name="android:textColor">#ffffff</item>
+    </style>
+
     <color name="image_pick_title_btn_pressed">#f4f4f4</color>
     <color name="image_pick_title_btn_normal">#00000000</color>
     <color name="ime_background">#cccccc</color>
-
+    <declare-styleable name="GIFVIEW">
+        <!--gif文件引用-->
+        <attr name="gifSrc" format="reference"  />
+        <!--是否加载完自动播放-->
+        <attr name="authPlay" format="boolean"  />
+        <!--播放次放，默认永远播放-->
+        <attr name="playCount" format="integer"  />
+    </declare-styleable>
 </resources>

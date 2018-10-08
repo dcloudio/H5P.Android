@@ -31,7 +31,7 @@ class JsMapSearch extends JsMapObject {
 	 * 
 	 * Description: 构造函数
 	 * 
-	 * @param pIFrameView
+	 * @param pWebview
 	 * 
 	 *            <pre>
 	 * <p>ModifiedLog:</p>

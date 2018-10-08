@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent">
+
+    <RelativeLayout
+        android:id="@+id/bottom_content_layout"
+        android:layout_width="220.0dip"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:background="@drawable/shortcut_permission_guide_bg">
+
+        <TextView
+            android:id="@+id/guide_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:text="开启权限:桌面快捷方式"
+            android:textColor="#ffffffff"
+            android:textSize="12.0dip" />
+
+        <ImageView
+            android:id="@+id/dcloud_guide_close"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="0.0dip"
+            android:background="@drawable/shortcut_permission_guide_close" />
+
+        <RelativeLayout
+            android:id="@+id/dcloud_guide_play_layout"
+            android:layout_width="fill_parent"
+            android:layout_height="140.0dip"
+            android:layout_below="@id/guide_title"
+            android:layout_marginTop="6.0dip">
+
+            <io.dcloud.common.ui.GifImageView
+                android:id="@+id/dcloud_guide_gifview"
+                android:background="#00ffffff"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:scaleType="fitXY"
+                app:authPlay="true"
+                app:playCount="1"
+                />
+            <ImageView
+                android:id="@+id/dcloud_guide_play"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:visibility="gone"
+                android:background="@drawable/shortcut_permission_guide_play" />
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/dcloud_guide_tip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/dcloud_guide_play_layout"
+            android:layout_marginTop="3.0dip"
+            android:text="操作步骤如下：\n权限管理-->桌面快捷方式\n点击允许即可"
+            android:textColor="#ffffffff"
+            android:textSize="12.0dip" />
+    </RelativeLayout>
+</RelativeLayout>

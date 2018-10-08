@@ -264,6 +264,10 @@ class CameraManager {
 			filename = PdrUtil.getDefaultPrivateDocPath(filename, format);
 			_Option.filename = filename;
 			_Option.index = JSONUtil.getInt(json, "index");
+			if(json.has("optimize")) {
+				_Option.optimize = JSONUtil.getBoolean(json, "optimize");
+			}
+
 		}
 		return _Option;
 	}
@@ -274,6 +278,7 @@ class CameraManager {
 		String resolution;
 		String format;
 		int index;
+		boolean optimize = true;
 		/**
 		 * @return the filename
 		 */

@@ -3,6 +3,7 @@ package io.dcloud.js.map.amap.adapter;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.util.PlatformUtil;
 import io.dcloud.js.map.amap.IFMapDispose;
+import io.dcloud.js.map.amap.JsMapManager;
 import io.dcloud.js.map.amap.MapJsUtil;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.PdrUtil;
@@ -75,9 +76,14 @@ public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickLi
 	
 	public String mUUID = null;
 	private String flag="";
+
+	private ArrayList<String> mMapCallBackWebUuids;
+
 	public DHMapView(Context pContext,IWebview pWebView,LatLng center, int zoom, int mapType, boolean traffic, boolean zoomControls) {
 		super(pContext);flag = "我是编号：" + aaaaaaaaaaa++;
 		mWebView = pWebView;
+		mMapCallBackWebUuids = new ArrayList<String>();
+		addMapCallBackWebUuid(pWebView.getWebviewUUID());
 		onResume();
 		initMap();
 		if (center == null) {
@@ -100,7 +106,7 @@ public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickLi
 		if(show){
 			super.dispatchDraw(canvas);
 		}else{
-			show = true; 
+			show = true;
 			postDelayed(new Runnable(){
 				@Override
 				public void run() {
@@ -154,6 +160,7 @@ public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickLi
 	
 	public void dispose() {
 		mAMap.clear();
+		clearMapCallBack();
 	}
 
 	/**
@@ -183,7 +190,7 @@ public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickLi
 	public void setZoom(int pZoom){
 		// 设置倍数
 		CameraUpdate cameraUpdate = CameraUpdateFactory.zoomTo(pZoom);
-		mAMap.animateCamera(cameraUpdate);
+		mAMap.moveCamera(cameraUpdate);
 	}
 	
 	public void setCenterAndZoom(MapPoint pCenter, int pZoom) {
@@ -458,7 +465,6 @@ public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickLi
 	}
 
 	
-	static final String COORTYPE = "bd09ll";//返回国测局经纬度坐标系：gcj02 返回百度墨卡托坐标系 ：bd09 返回百度经纬度坐标系 ：bd09ll
 	static final int SCAN_SPAN_TIME = 10000;
 	public static boolean isRightLocation(double lat,double lng){
 		return lat != 4.9E-324 && lng != 4.9E-324;
@@ -501,10 +507,18 @@ public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickLi
 		// TODO Auto-generated method stub
 		mClickMapMarker = getMapMarker(arg0);
 		if (mClickMapMarker != null) {
-			MapJsUtil.execCallback(mWebView, mClickMapMarker.getUuid(), "{type:'markerclick'}");
+			if(!TextUtils.isEmpty(mClickMapMarker.getBubbleLabel())) {
+				if(!mClickMapMarker.getMarker().isInfoWindowShown()) {
+					mClickMapMarker.getMarker().showInfoWindow();
+				} else {
+					mClickMapMarker.getMarker().hideInfoWindow();
+				}
+			}
+			MapJsUtil.execCallback(mClickMapMarker.getWebview(), mClickMapMarker.getUuid(), "{type:'markerclick'}");
 		}
-		return false;
+		return true;
 	}
+
 	@Override
 	public void onInfoWindowClick(Marker arg0) {
 		// TODO Auto-generated method stub
@@ -523,7 +537,7 @@ public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickLi
 					show |= false;
 				}
 			}*/
-			MapJsUtil.execCallback(mWebView, mapMarker.getUuid(), "{type:'bubbleclick'}");
+			MapJsUtil.execCallback(mapMarker.getWebview(), mapMarker.getUuid(), "{type:'bubbleclick'}");
 		}
 	}
 	
@@ -561,7 +575,7 @@ public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickLi
 		// 用户对地图做出一系列改变地图可视区域的操作（如拖动、动画滑动、缩放）完成之后回调此方法。
 		try {
 			VisibleRegion vr = mAMap.getProjection().getVisibleRegion();
-			MapJsUtil.execCallback(mWebView,mUUID, String.format(Locale.ENGLISH,MAP_STATUS_CHANGE, "change",arg0.target.longitude,
+			execCallBack(String.format(Locale.ENGLISH,MAP_STATUS_CHANGE, "change",arg0.target.longitude,
 					arg0.target.latitude, vr.farRight.longitude, vr.farRight.latitude,
 					vr.nearLeft.longitude, vr.nearLeft.latitude,arg0.zoom));
 		} catch (Exception e) {
@@ -583,7 +597,7 @@ public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickLi
 					",pt:new plus.maps.Point(%f, %f)" +
 					"}";
 			LatLng latLng = arg0.getPosition();
-			MapJsUtil.execCallback(mWebView, mapMarker.getUuid(), String.format(Locale.ENGLISH,code, latLng.longitude, latLng.latitude));
+			MapJsUtil.execCallback(mapMarker.getWebview(), mapMarker.getUuid(), String.format(Locale.ENGLISH,code, latLng.longitude, latLng.latitude));
 		}
 	}
 	@Override
@@ -643,12 +657,12 @@ public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickLi
 		if (mClickMapMarker != null && mClickMapMarker.getMarker().isInfoWindowShown()) {
 			mClickMapMarker.getMarker().hideInfoWindow();
 		}
-		MapJsUtil.execCallback(mWebView, mUUID, String.format(Locale.ENGLISH, POINT_CLICK_TEMPLATE, "click",arg0.longitude, arg0.latitude));
+		execCallBack(String.format(Locale.ENGLISH, POINT_CLICK_TEMPLATE, "click",arg0.longitude, arg0.latitude));
 	}
 	@Override
 	public void onMapLongClick(LatLng arg0) {
 		// TODO Auto-generated method stub
-		MapJsUtil.execCallback(mWebView, mUUID, String.format(Locale.ENGLISH, POINT_CLICK_TEMPLATE, "click",arg0.longitude, arg0.latitude));
+		execCallBack(String.format(Locale.ENGLISH, POINT_CLICK_TEMPLATE, "click",arg0.longitude, arg0.latitude));
 	}
 	/**
 	 * 地图状态改变回调
@@ -663,6 +677,28 @@ public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickLi
 		return String.format(Locale.ENGLISH, T_GETBOUNDS,
 				vr.farRight.longitude, vr.farRight.latitude,
 				vr.nearLeft.longitude, vr.nearLeft.latitude);
+	}
+
+	public void addMapCallBackWebUuid(String uuid) {
+		if(!mMapCallBackWebUuids.contains(uuid))
+			mMapCallBackWebUuids.add(uuid);
+	}
+
+	public void clearMapCallBack() {
+		if(mMapCallBackWebUuids != null) {
+			mMapCallBackWebUuids.clear();
+		}
+	}
+
+	private void execCallBack(String pMessage) {
+		if(mMapCallBackWebUuids != null) {
+			for(String uuid: mMapCallBackWebUuids) {
+				IWebview webview = JsMapManager.getJsMapManager().findWebviewByUuid(mWebView, uuid);
+				if(webview != null) {
+					MapJsUtil.execCallback(webview, mUUID, pMessage);
+				}
+			}
+		}
 	}
 	
 }

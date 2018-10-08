@@ -1,20 +1,15 @@
 package io.dcloud.feature.speech;
 
-import io.dcloud.common.DHInterface.AbsMgr;
-import io.dcloud.common.DHInterface.IFeature;
-import io.dcloud.common.DHInterface.IWebview;
-import io.dcloud.common.DHInterface.IMgr.MgrEvent;
-import io.dcloud.common.DHInterface.IMgr.MgrType;
-import io.dcloud.common.adapter.util.Logger;
-import io.dcloud.common.constant.StringConst;
-import io.dcloud.common.util.JSONUtil;
-import io.dcloud.common.util.PdrUtil;
-
 import java.util.HashMap;
 
-import org.json.JSONObject;
-
-import android.content.Context;
+import io.dcloud.common.DHInterface.AbsMgr;
+import io.dcloud.common.DHInterface.IFeature;
+import io.dcloud.common.DHInterface.IMgr.MgrEvent;
+import io.dcloud.common.DHInterface.IMgr.MgrType;
+import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.common.adapter.util.PermissionUtil;
+import io.dcloud.common.constant.DOMException;
+import io.dcloud.common.util.JSUtil;
 
 /**
  * 语音特征Feature实现类
@@ -28,32 +23,26 @@ import android.content.Context;
 public class SpeechFeatureImpl implements IFeature {
 	AbsSpeechEngine mSpeechEngine = null;
 	HashMap<String, String> mSpeechMap = null;
+	private SpeechManager manager;
 	@Override
-	public String execute(IWebview pWebViewImpl, String pActionName,
-			String[] pJsArgs) {
-		if("startRecognize".equals(pActionName)){//启动语音识别
-			String callbackId = pJsArgs[0];
-			JSONObject speechOption = JSONUtil.createJSONObject(pJsArgs[1]);
-			JSONObject eventCallbackIds = JSONUtil.createJSONObject(pJsArgs[2]);
-			String engine = JSONUtil.getString(speechOption, StringConst.JSON_KEY_ENGINE).toLowerCase();
-			try {
-				stopRecognize(false);
-				String engine_value = mSpeechMap.get(engine);
-				if(!PdrUtil.isEmpty(engine_value)){//指定engine语音识别引擎存在时，实例化对象
-					mSpeechEngine = (AbsSpeechEngine)Class.forName(engine_value).newInstance();
-					mSpeechEngine.init(pWebViewImpl.getActivity(), pWebViewImpl);
-					mSpeechEngine.startRecognize(callbackId, speechOption, eventCallbackIds);
-				}
-			} catch (InstantiationException e) {
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			} catch (Exception e){
-				Logger.e("not found engine=" + engine);
+	public String execute(final IWebview pWebViewImpl, final String pActionName,
+						  final String[] pJsArgs) {
+		PermissionUtil.usePermission(pWebViewImpl.getActivity(), pWebViewImpl.obtainApp().isStreamApp(),  PermissionUtil.PMS_RECORD, new PermissionUtil.StreamPermissionRequest(pWebViewImpl.obtainApp()) {
+			@Override
+			public void onGranted(String streamPerName) {
+			    manager.execute(pWebViewImpl,pActionName,pJsArgs,mSpeechMap);
 			}
-		}else if("stopRecognize".equals(pActionName)){
-			stopRecognize(true);
-		}
+
+			@Override
+			public void onDenied(String streamPerName) {
+				if("startRecognize".equals(pActionName)) {//启动语音识别
+					String callbackId = pJsArgs[0];
+					String msg =  String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_RECORDER_ERROR, DOMException.MSG_NO_PERMISSION);
+					JSUtil.execCallback(pWebViewImpl, callbackId, msg, JSUtil.ERROR, true, false);
+				}
+			}
+		});
+
 		return null;
 	}
 	
@@ -61,16 +50,11 @@ public class SpeechFeatureImpl implements IFeature {
 	public void init(AbsMgr pFeatureMgr, String pFeatureName) {
 		//获取基座自带的语音识别引擎
 		mSpeechMap = (HashMap<String, String>) pFeatureMgr.processEvent(MgrType.FeatureMgr, MgrEvent.OBTAIN_FEATURE_EXT_HASHMAP, pFeatureName);
+		manager = SpeechManager.getInstance();
 	}
-	
-	private void stopRecognize(boolean isExeOnEnd){
-		if(mSpeechEngine != null){
-			mSpeechEngine.stopRecognize(isExeOnEnd);
-			mSpeechEngine = null;
-		}
-	}
+
 	@Override
 	public void dispose(String pAppid) {
-		stopRecognize(false);
+		manager.stopRecognize(false);
 	}
 }

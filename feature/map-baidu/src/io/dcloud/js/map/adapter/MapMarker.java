@@ -102,7 +102,11 @@ public class MapMarker {
 		mMapPoint = pMapPoint;
 		mIWebview = webview;
 	}
-	
+
+	public IWebview getWebview() {
+		return this.mIWebview;
+	}
+
 	public void initMapMarker(DHMapView dhMapView) {
 		mMapMarker = (Marker) dhMapView.getBaiduMap().addOverlay(getMarkerOptions());
 		if (isToTop) {

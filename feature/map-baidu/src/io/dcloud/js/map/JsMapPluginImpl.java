@@ -1,16 +1,19 @@
 package io.dcloud.js.map;
 
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import io.dcloud.common.DHInterface.AbsMgr;
+import io.dcloud.common.DHInterface.IWaiter;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.DHInterface.StandardFeature;
+import io.dcloud.common.adapter.ui.AdaFrameView;
 import io.dcloud.common.adapter.util.MessageHandler;
 import io.dcloud.common.adapter.util.MessageHandler.IMessages;
 import io.dcloud.common.util.JSONUtil;
+import io.dcloud.common.util.JSUtil;
 import io.dcloud.js.map.adapter.DHMapUtil;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 
 /**
@@ -25,21 +28,26 @@ import org.json.JSONObject;
  * <br/>Log ID: 1.0 (Log编号 依次递增)
  * <br/>Modified By: yanglei Email:yanglei@dcloud.io at 2012-11-19 上午11:02:17
  */
-public class JsMapPluginImpl extends StandardFeature{
-	
-	IFMapDispose iFMapDispose;
+public class JsMapPluginImpl extends StandardFeature implements IWaiter{
+
 	JsMapManager mMapManager;
+
 	@Override
 	public String execute(IWebview pWebViewImpl, String pActionName,
 			String[] pJsArgs) {
 		String _result = null;
+		String _appid = pWebViewImpl.obtainApp().obtainAppId();
 		final JSONArray _arr = JSONUtil.createJSONArray(pJsArgs[0]);
-		String subActionName = JSONUtil.getString(_arr,1);
 		if("createObject".equals(pActionName)){
+			String subActionName = JSONUtil.getString(_arr,1);
 			JsMapObject _jsMapObject = null;
 			if("mapview".equals(subActionName)){
 				_jsMapObject = new JsMapView(pWebViewImpl);
-				iFMapDispose = (IFMapDispose) _jsMapObject;
+				if(_arr.length() > 3) {
+					String id = JSONUtil.getString(_arr,3);
+					_jsMapObject.setJsId(id);
+				}
+				mMapManager.putJsMapView(_appid, JSONUtil.getString(_arr,0), (JsMapView) _jsMapObject);
 			}else if("marker".equals(subActionName)){
 				_jsMapObject = new JsMapMarker(pWebViewImpl);
 			}else if("search".equals(subActionName)){
@@ -69,7 +77,7 @@ public class JsMapPluginImpl extends StandardFeature{
 			},null);
 		}else if("execMethod".equals(pActionName)){
 			JSONArray _arrs = JSONUtil.getJSONArray(_arr,1);
-			subActionName = JSONUtil.getString(_arrs,0);
+			String subActionName = JSONUtil.getString(_arrs,0);
 			if("openSysMap".equals(subActionName)){
 				JSONArray __arrs__ = JSONUtil.getJSONArray(_arrs,1);
 				
@@ -89,7 +97,7 @@ public class JsMapPluginImpl extends StandardFeature{
                 JsMapObject _jsMapObject = mMapManager.getJsObject(uuid);
                 if(_jsMapObject != null){
                     ((IFMapDispose)_jsMapObject).dispose();
-                    mMapManager.removeJsObject(uuid);
+                    mMapManager.removeJsObject(pWebViewImpl.obtainApp().obtainAppId(), uuid);
                 }
             }
 		} else if("geocode".equals(pActionName)) {
@@ -139,6 +147,23 @@ public class JsMapPluginImpl extends StandardFeature{
 			String coordType = options == null ? null : options.optString("coordType");
 			String callBackId = pJsArgs[2];
 			DHMapUtil.convertCoordinates(pWebViewImpl, _point.getMapPoint(), coordType, callBackId);
+		} else if("getMapById".equals(pActionName)) {
+			String id = JSONUtil.getString(_arr,0);
+			JsMapView jsMap = mMapManager.getJsMapViewById(_appid, id);
+			if(jsMap != null) {
+				jsMap.setCallBackWebUuid(pWebViewImpl.getWebviewUUID());
+				JSONObject jsonObject = jsMap.getJsJsonMap();
+				if(jsonObject != null) {
+					_result = JSUtil.wrapJsVar(jsonObject);
+				}
+			}
+		} else if("setStyles".equals(pActionName)) {
+			String uuid = JSONUtil.getString(_arr,0);
+			JSONObject stylesJson = JSONUtil.getJSONObject(_arr,1);
+			JsMapView jsMap = mMapManager.getJsMapViewByUuid(_appid, uuid);
+			if(jsMap != null) {
+				jsMap.setStyles(stylesJson);
+			}
 		}
 		return _result;
 	}
@@ -146,16 +171,31 @@ public class JsMapPluginImpl extends StandardFeature{
 	@Override
 	public void init(AbsMgr pFeatureMgr, String pFeatureName) {
 		mMapManager = JsMapManager.getJsMapManager();
+		mMapManager.setFeatureMgr(pFeatureMgr);
 	}
 
 	@Override
 	public void dispose(String pAppid) {
-		if(iFMapDispose != null)
-			iFMapDispose.dispose();
+		mMapManager.dispose(pAppid);
 	}
 
 	@Override
 	public boolean isOldMode() {
 		return true;
+	}
+
+	@Override
+	public Object doForFeature(String actionType, Object args) {
+		if(actionType.equals("appendToFrameView")) {
+			Object[] pArgs = (Object[])args;
+			AdaFrameView frameView = (AdaFrameView) pArgs[0];
+			String uuid = (String) pArgs[1];
+			String appid = frameView.obtainApp().obtainAppId();
+			JsMapView mapView = mMapManager.getJsMapViewByUuid(appid, uuid);
+			if(mapView != null) {
+				mapView.appendToFrameView(frameView);
+			}
+		}
+		return null;
 	}
 }

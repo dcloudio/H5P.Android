@@ -83,6 +83,10 @@ public class MapMarker {
 	private String mLoadImagePath;
 	
 	private String mLoadImageUrlData;
+
+	public IWebview getWebview() {
+		return this.mIWebview;
+	}
 	
 	public Marker getMarker() {
 		return mMarker;

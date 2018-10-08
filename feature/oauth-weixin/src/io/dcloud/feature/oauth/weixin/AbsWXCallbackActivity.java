@@ -4,19 +4,19 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 
-import com.tencent.mm.sdk.modelbase.BaseReq;
-import com.tencent.mm.sdk.modelbase.BaseResp;
-import com.tencent.mm.sdk.openapi.IWXAPI;
-import com.tencent.mm.sdk.openapi.IWXAPIEventHandler;
-import com.tencent.mm.sdk.openapi.WXAPIFactory;
+
+import com.tencent.mm.opensdk.modelbase.BaseReq;
+import com.tencent.mm.opensdk.modelbase.BaseResp;
+import com.tencent.mm.opensdk.openapi.IWXAPI;
+import com.tencent.mm.opensdk.openapi.IWXAPIEventHandler;
+import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 
 import io.dcloud.ProcessMediator;
 import io.dcloud.common.DHInterface.FeatureMessageDispatcher;
 import io.dcloud.common.adapter.util.AndroidResources;
 
-public class AbsWXCallbackActivity extends Activity implements IWXAPIEventHandler{
+public class AbsWXCallbackActivity extends Activity implements IWXAPIEventHandler {
 	boolean isMultiProcess = false;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -55,11 +55,5 @@ public class AbsWXCallbackActivity extends Activity implements IWXAPIEventHandle
 			ProcessMediator.setResult(n);
 		}
 		finish();
-	}
-	@Override
-	protected void onResume() {
-		// TODO Auto-generated method stub
-		Log.d("shutao", "--------onResume");
-		super.onResume();
 	}
 }

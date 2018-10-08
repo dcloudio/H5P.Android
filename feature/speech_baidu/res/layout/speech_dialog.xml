@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:layout_gravity="center"
+    android:padding="0dp">
+    <FrameLayout
+        android:id="@+id/voiceDialogRootView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <RelativeLayout
+            android:layout_width="220dp"
+            android:layout_height="142dp"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:background="@drawable/browser_voice_dialog_content_bg">
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <!-- 取消语音识别图标 -->
+                <!--<ImageView
+                    android:id="@+id/voiceDialogCancel"
+                    android:layout_width="28dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/browser_voice_dialog_cancel"
+                    android:visibility="invisible" />-->
+                <!-- 语音识别提示信息 -->
+                <LinearLayout
+                    android:id="@+id/voiceDialogContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+                    <!-- 标题/语音识别的文本/错误提示 -->
+                    <TextView
+                        android:id="@+id/voiceDialogTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="25dp"
+                        android:ellipsize="start"
+                        android:gravity="center_horizontal"
+                        android:singleLine="true"
+                        android:text="正在聆听"
+                        android:paddingLeft="8dp"
+                        android:paddingRight="8dp"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp" />
+                    <!-- 语音转文本动画/文本语义识别动画/语音识别提示信息-->
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <!-- 语音转文本动画 -->
+                        <LinearLayout
+                            android:id="@+id/voiceToTextAnimationLayout"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:orientation="horizontal">
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/voice_dialog_voice_icon"/>
+                            <io.dcloud.feature.speech.dialog.VolumeView
+                                android:id="@+id/voiceToTextAnimationIV"
+                                android:layout_width="24.5dp"
+                                android:layout_height="36dp"
+                                android:layout_marginLeft="3dp"/>
+                        </LinearLayout>
+                        <!-- 文本语义识别动画 -->
+                        <!-- 文语音识别提示信息 -->
+                    </FrameLayout>
+                </LinearLayout>
+            </FrameLayout>
+        </RelativeLayout>
+    </FrameLayout>
+</LinearLayout>

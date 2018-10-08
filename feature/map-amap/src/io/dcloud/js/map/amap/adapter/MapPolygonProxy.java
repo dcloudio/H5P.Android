@@ -54,8 +54,7 @@ public class MapPolygonProxy {
 //	Symbol polygonSymbol = null;
 	/**
 	 * 
-	 * Description: 构造函数 
-	 * @param mapview 父类GraphicsOverlay需要MapView
+	 * Description: 构造函数
 	 * @param pMapPoints 
 	 *</pre> Create By: yanglei Email:yanglei@dcloud.io at 2014-5-30 下午04:37:02
 	 */
@@ -129,7 +128,7 @@ public class MapPolygonProxy {
 		return mFillColor;
 	}
 	/**
-	 * @param pFillStyle the fillStyle to set
+	 * @param pFillColor the fillStyle to set
 	 */
 	public void setFillColor(int pFillColor) {
 		this.mFillColor =  0xFF000000 | pFillColor;

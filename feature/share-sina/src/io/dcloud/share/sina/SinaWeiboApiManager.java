@@ -5,13 +5,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.webkit.URLUtil;
 
 import com.sina.weibo.sdk.WbSdk;
 import com.sina.weibo.sdk.api.ImageObject;
+import com.sina.weibo.sdk.api.MultiImageObject;
 import com.sina.weibo.sdk.api.TextObject;
+import com.sina.weibo.sdk.api.VideoSourceObject;
+import com.sina.weibo.sdk.api.WebpageObject;
 import com.sina.weibo.sdk.api.WeiboMultiMessage;
 import com.sina.weibo.sdk.auth.AccessTokenKeeper;
 import com.sina.weibo.sdk.auth.AuthInfo;
@@ -21,6 +25,7 @@ import com.sina.weibo.sdk.auth.WbConnectErrorMessage;
 import com.sina.weibo.sdk.auth.sso.SsoHandler;
 import com.sina.weibo.sdk.share.WbShareHandler;
 import com.sina.weibo.sdk.share.WbShareTransActivity;
+import com.sina.weibo.sdk.utils.Utility;
 import com.sina.weibo.sdk.web.WebRequestType;
 import com.sina.weibo.sdk.web.param.ShareWebViewRequestParam;
 
@@ -28,7 +33,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
 
 import io.dcloud.common.DHInterface.IApp;
 import io.dcloud.common.DHInterface.ISysEventDispatch;
@@ -244,7 +251,7 @@ public class SinaWeiboApiManager implements IFShareApi {
      * @param pShareMsg
      */
     @Override
-    public void send(final  IWebview pWebViewImpl, String pCallbackId, String pShareMsg) {
+    public void send(final IWebview pWebViewImpl, String pCallbackId, String pShareMsg) {
         if (mAccessToken == null) {
             mAccessToken = AccessTokenKeeper.readAccessToken(pWebViewImpl.getActivity());
         }
@@ -291,6 +298,7 @@ public class SinaWeiboApiManager implements IFShareApi {
             _msg = new JSONObject(pShareMsg);
             if (_msg != null) {
                 mInterface = _msg.optString("interface");
+                String type = _msg.optString("type");
                 JSONArray _pictures = _msg.optJSONArray("pictures");
                 String _content = _msg.optString("content");
                 file = JSONUtil.getString(_pictures, 0);
@@ -299,14 +307,24 @@ public class SinaWeiboApiManager implements IFShareApi {
                     return;
                 }
                 if ("slient".equals(mInterface)) {//interface=slient
-                    startWebShare(pWebViewImpl.getActivity(),getWeiboMultiMessage(pWebViewImpl,pShareMsg));
+                    WeiboMultiMessage message = getWeiboMultiMessage(pWebViewImpl, pShareMsg, type);
+                    if(message.imageObject != null && ((message.imageObject.imageData != null && message.imageObject.imageData.length > 128000)
+                            || (message.imageObject.thumbData != null && message.imageObject.thumbData.length > 128000))) {
+                        OnSendEnd(pWebViewImpl,false, DOMException.CODE_SHARE_SEND_ERROR, "当前手机无新浪客户端！web分享图片不能超过128KB！");
+                        return;
+                    }
+                    if(!PdrUtil.isEmpty(type) && (type.equals("video") || message.multiImageObject != null)) {
+                        OnSendEnd(pWebViewImpl,false, DOMException.CODE_SHARE_SEND_ERROR, "当前手机无新浪客户端！无法分享视频及多图！");
+                        return;
+                    }
+                    startWebShare(pWebViewImpl.getActivity(), message);
                 } else if ("editable".equals(mInterface)) {//interface=editable
                     if (hasSinaAppInstalled) {
                         if (TextUtils.isEmpty(_content)){// TODO: 2016/10/12 分享新浪微博客户端时，文本内容不能为空，否则进程阻塞，分享不会回调。
                             OnSendEnd(pWebViewImpl,false, DOMException.CODE_SHARE_SEND_ERROR, DOMException.MSG_SHARE_SEND_CONTENT_EMPTY_ERROR);
                             return;
                         }
-                        shareHandler.shareMessage(getWeiboMultiMessage(pWebViewImpl,pShareMsg),true);
+                        shareHandler.shareMessage(getWeiboMultiMessage(pWebViewImpl, pShareMsg, type),true);
                     } else {
                         //未安装新浪微博客户端，触发回调
                         OnSendEnd(pWebViewImpl,false, DOMException.CODE_CLIENT_UNINSTALLED, DOMException.MSG_CLIENT_UNINSTALLED);
@@ -317,9 +335,19 @@ public class SinaWeiboApiManager implements IFShareApi {
                             OnSendEnd(pWebViewImpl,false, DOMException.CODE_SHARE_SEND_ERROR, DOMException.MSG_SHARE_SEND_CONTENT_EMPTY_ERROR);
                             return;
                         }
-                        shareHandler.shareMessage(getWeiboMultiMessage(pWebViewImpl,pShareMsg),true);
+                        shareHandler.shareMessage(getWeiboMultiMessage(pWebViewImpl, pShareMsg, type),true);
                     } else {
-                        startWebShare(pWebViewImpl.getActivity(),getWeiboMultiMessage(pWebViewImpl,pShareMsg));
+                        WeiboMultiMessage message = getWeiboMultiMessage(pWebViewImpl, pShareMsg, type);
+                        if(message.imageObject != null && ((message.imageObject.imageData != null && message.imageObject.imageData.length > 128000)
+                                || (message.imageObject.thumbData != null && message.imageObject.thumbData.length > 128000))) {
+                            OnSendEnd(pWebViewImpl,false, DOMException.CODE_SHARE_SEND_ERROR, "当前手机无新浪客户端！web分享图片不能超过128KB！");
+                            return;
+                        }
+                        if(!PdrUtil.isEmpty(type) && (type.equals("video") || message.multiImageObject != null)) {
+                            OnSendEnd(pWebViewImpl,false, DOMException.CODE_SHARE_SEND_ERROR, "当前手机无新浪客户端！无法分享视频及多图！");
+                            return;
+                        }
+                        startWebShare(pWebViewImpl.getActivity(), message);
                     }
                 }
             }
@@ -330,88 +358,6 @@ public class SinaWeiboApiManager implements IFShareApi {
 
 
 
-    }
-    /**
-     * 创建图片消息对象。大小不超过32k
-     *
-     * @param pWebViewImpl
-     * @param pShareMsg
-     * @return
-     */
-    private ImageObject getImageObject(IWebview pWebViewImpl, String pShareMsg) {
-        final ImageObject imageObject = new ImageObject();
-        try {
-            JSONObject _msg = new JSONObject(pShareMsg);
-            JSONArray _pictures = _msg.optJSONArray("pictures");
-            String file = JSONUtil.getString(_pictures, 0);
-            if (_pictures != null && _pictures.length() > 0 && !PdrUtil.isEmpty(_pictures.getString(0))) {
-                if (BaseInfo.isQihooLifeHelper(pWebViewImpl.getContext()) && URLUtil.isNetworkUrl(file)) {
-                    final String f_url = file;
-                    new Thread() {
-                        public void run() {
-                            try {
-                                Bitmap bitmap = BitmapFactory.decodeStream(new URL(f_url).openStream());
-                                imageObject.setImageObject(bitmap);
-                            } catch (Exception e) {
-
-                            }
-                        }
-                    }.start();
-                } else {
-                    file = pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(), file);
-                    Bitmap bitmap = BitmapFactory.decodeFile(file);
-                    imageObject.setImageObject(bitmap);
-                }
-            }
-            JSONArray thumbs = _msg.optJSONArray("thumbs");
-            String thumb = JSONUtil.getString(thumbs, 0);
-            if (thumbs != null && thumbs.length() > 0 && !PdrUtil.isEmpty(thumbs.getString(0))) {
-                if (BaseInfo.isQihooLifeHelper(pWebViewImpl.getContext()) && URLUtil.isNetworkUrl(thumb)) {
-                    final String f_url = thumb;
-                    new Thread() {
-                        public void run() {
-                            try {
-                                Bitmap bitmap = BitmapFactory.decodeStream(new URL(f_url).openStream());
-                                imageObject.setImageObject(bitmap);
-                            } catch (Exception e) {
-
-                            }
-                        }
-                    }.start();
-                } else {
-                    thumb = pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(), thumb);
-                    Bitmap bitmap = BitmapFactory.decodeFile(thumb);
-                    imageObject.setThumbImage(bitmap);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-        return imageObject;
-    }
-
-    /**
-     * 创建文本消息对象。
-     *
-     * @return 文本消息对象。
-     */
-    private TextObject getTextObj(String pShareMsg) {
-        try {
-            JSONObject _msg = new JSONObject(pShareMsg);
-            String _content = _msg.optString("content");
-            String _title = _msg.optString("title");
-            String href = JSONUtil.getString(_msg, "href");
-            TextObject textObject = new TextObject();
-            textObject.text = _content;
-            textObject.title=_title;
-            textObject.description="desciptiondesciptiondesciption";
-            textObject.actionUrl=href;
-            return textObject;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
     /**
@@ -588,7 +534,7 @@ public class SinaWeiboApiManager implements IFShareApi {
      * @param activity
      * @param message
      */
-    public  void startWebShare(Activity activity,WeiboMultiMessage message) {
+    public void startWebShare(Activity activity,WeiboMultiMessage message) {
         Intent webIntent = new Intent(activity, WbShareTransActivity.class);
         String appPackage = activity.getPackageName();
         ShareWebViewRequestParam webParam = new ShareWebViewRequestParam(WbSdk.getAuthInfo(), WebRequestType.SHARE, "", 1, "微博分享", (String)null, activity);
@@ -618,7 +564,12 @@ public class SinaWeiboApiManager implements IFShareApi {
      */
     public  WeiboMultiMessage getWeiboMultiMessage(String message) {
         WeiboMultiMessage weiboMessage = new WeiboMultiMessage();
-        weiboMessage.textObject = getTextObj(message);
+        try {
+            JSONObject pShareMsg = new JSONObject(message);
+            weiboMessage.textObject = getTextObj(pShareMsg);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         return weiboMessage;
     }
 
@@ -628,10 +579,189 @@ public class SinaWeiboApiManager implements IFShareApi {
      * @param message
      * @return
      */
-    public  WeiboMultiMessage getWeiboMultiMessage(IWebview pWebViewImpl,String message) {
+    public  WeiboMultiMessage getWeiboMultiMessage(IWebview pWebViewImpl, String message, String type) {
+        //WbSdk.supportMultiImage(pWebViewImpl.getContext());
         WeiboMultiMessage weiboMessage = new WeiboMultiMessage();
-        weiboMessage.textObject = getTextObj(message);
-        weiboMessage.imageObject = getImageObject( pWebViewImpl,message);
+        JSONObject pShareMsg = null;
+        try {
+            pShareMsg = new JSONObject(message);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        weiboMessage.textObject = getTextObj(pShareMsg);
+        if(!TextUtils.isEmpty(type) && type.equals("text")) {
+
+        } else if(!TextUtils.isEmpty(type) && type.equals("image")) {
+            JSONArray _pictures = pShareMsg.optJSONArray("pictures");
+            if(_pictures != null && _pictures.length()>0) {
+                if(_pictures.length() >1) {
+                    weiboMessage.multiImageObject = getMultiImageObject(pWebViewImpl, pShareMsg);
+                } else {
+                    weiboMessage.imageObject = getImageObject(pWebViewImpl, pShareMsg);
+                }
+            }
+        } else if(!TextUtils.isEmpty(type) && type.equals("video")) {
+            weiboMessage.videoSourceObject = getVideoObject(pWebViewImpl, pShareMsg);
+        } else if(!TextUtils.isEmpty(type) && type.equals("web")) {
+            weiboMessage.imageObject = getImageObject( pWebViewImpl,pShareMsg);
+        } else if(!TextUtils.isEmpty(type)) {
+            String errorMsg = String.format(DOMException.JSON_ERROR_INFO, -100, "type参数无法正确识别，请按规范范围填写");
+            JSUtil.execCallback(pWebViewImpl, tAuthorizeCallbackId, errorMsg, JSUtil.ERROR, true, false);
+        } else {
+            //weiboMessage.textObject = getTextObj(pShareMsg);
+            weiboMessage.imageObject = getImageObject( pWebViewImpl,pShareMsg);
+        }
+
+        //weiboMessage.imageObject = getImageObject( pWebViewImpl,message);
+//        JSONObject object = new JSONObject();
+//        try {
+//            object.put("content", "我正在使用HBuilder+HTML5开发移动应用，赶紧跟我一起来体验！");
+//            object.put("title", "分享");
+//            object.put("href", "http://www.baidu.com");
+////            object.put("pictures", "[\"file:\\/\\/\\/storage\\/emulated\\/0\\/dcloud_icon_test.png\"]");
+//            JSONArray array = new JSONArray();
+//            array.put("file:///storage/emulated/0/dcloud_icon_test.png");
+//            object.put("thumbs", array);
+//            object.put("media", "file:///storage/emulated/0/movies/DOOV.mp4");
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
         return weiboMessage;
     }
+
+
+    /**
+     * 创建文本消息对象。
+     *
+     * @return 文本消息对象。
+     */
+    private TextObject getTextObj(JSONObject pShareMsg) {
+        try {
+            String _content = pShareMsg.optString("content");
+            String _title = pShareMsg.optString("title");
+            String href = JSONUtil.getString(pShareMsg, "href");
+            TextObject textObject = new TextObject();
+            textObject.text = _content + (TextUtils.isEmpty(href)? "":href);
+            textObject.title=_title;
+            return textObject;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * 创建图片消息对象。大小不超过32k
+     *
+     * @param pWebViewImpl
+     * @param pShareMsg
+     * @return
+     */
+    private ImageObject getImageObject(IWebview pWebViewImpl, JSONObject pShareMsg) {
+        final ImageObject imageObject = new ImageObject();
+        try {
+            JSONArray _pictures = pShareMsg.optJSONArray("pictures");
+            String file = JSONUtil.getString(_pictures, 0);
+            if (_pictures != null && _pictures.length() > 0 && !PdrUtil.isEmpty(_pictures.getString(0))) {
+                if (BaseInfo.isQihooLifeHelper(pWebViewImpl.getContext()) && URLUtil.isNetworkUrl(file)) {
+//                    final String f_url = file;
+//                    new Thread() {
+//                        public void run() {
+//                            try {
+//                                Bitmap bitmap = BitmapFactory.decodeStream(new URL(f_url).openStream());
+//                                imageObject.setImageObject(bitmap);
+//                            } catch (Exception e) {
+//
+//                            }
+//                        }
+//                    }.start();
+                } else {
+                    file = pWebViewImpl.obtainFrameView().obtainApp().convert2LocalFullPath(pWebViewImpl.obtainFullUrl(), file);
+                    Bitmap bitmap = BitmapFactory.decodeFile(file);
+                    imageObject.setImageObject(bitmap);
+                }
+            }
+            JSONArray thumbs = pShareMsg.optJSONArray("thumbs");
+            String thumb = JSONUtil.getString(thumbs, 0);
+            if (thumbs != null && thumbs.length() > 0 && !PdrUtil.isEmpty(thumbs.getString(0))) {
+                if (BaseInfo.isQihooLifeHelper(pWebViewImpl.getContext()) && URLUtil.isNetworkUrl(thumb)) {
+//                    final String f_url = thumb;
+//                    new Thread() {
+//                        public void run() {
+//                            try {
+//                                Bitmap bitmap = BitmapFactory.decodeStream(new URL(f_url).openStream());
+//                                imageObject.setImageObject(bitmap);
+//                            } catch (Exception e) {
+//
+//                            }
+//                        }
+//                    }.start();
+                } else {
+                    thumb = pWebViewImpl.obtainFrameView().obtainApp().convert2LocalFullPath(pWebViewImpl.obtainFullUrl(), thumb);
+                    Bitmap bitmap = BitmapFactory.decodeFile(thumb);
+                    imageObject.setThumbImage(bitmap);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        return imageObject;
+    }
+
+    /***
+     * 创建多图
+     * @return
+     */
+    private MultiImageObject getMultiImageObject(IWebview pWebViewImpl, JSONObject pShareMsg){
+        MultiImageObject multiImageObject = new MultiImageObject();
+        try {
+            if(pShareMsg == null) {
+                return null;
+            }
+            //pathList设置的是本地本件的路径,并且是当前应用可以访问的路径，现在不支持网络路径（多图分享依靠微博最新版本的支持，所以当分享到低版本的微博应用时，多图分享失效
+            // 可以通过WbSdk.hasSupportMultiImage 方法判断是否支持多图分享,h5分享微博暂时不支持多图）多图分享接入程序必须有文件读写权限，否则会造成分享失败
+            ArrayList<Uri> pathList = new ArrayList<Uri>();
+            JSONArray _pictures = pShareMsg.optJSONArray("pictures");
+            if(_pictures != null) {
+                for(int i = 0; i < _pictures.length(); i++) {
+                    String itme = _pictures.getString(i);
+                    if(!PdrUtil.isEmpty(itme) && URLUtil.isNetworkUrl(itme)) {
+                        itme = pWebViewImpl.obtainFrameView().obtainApp().convert2LocalFullPath(pWebViewImpl.obtainFullUrl(), itme);
+                        pathList.add(Uri.fromFile(new File(itme)));
+                    }
+                }
+            }
+            multiImageObject.setImageList(pathList);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return multiImageObject;
+    }
+
+    private VideoSourceObject getVideoObject(IWebview pWebViewImpl, JSONObject pShareMsg){
+        if(!WbSdk.supportMultiImage(pWebViewImpl.getContext())) {
+            return null;
+        }
+        //获取视频
+        VideoSourceObject videoSourceObject = new VideoSourceObject();
+        try {
+
+            if (pShareMsg == null) {
+                return null;
+            }
+            String media = pShareMsg.optString("media");
+
+            if(!TextUtils.isEmpty(media) && !URLUtil.isNetworkUrl(media)) {
+                media = pWebViewImpl.obtainFrameView().obtainApp().convert2LocalFullPath(pWebViewImpl.obtainFullUrl(), media);
+                videoSourceObject.videoPath = Uri.fromFile(new File(media));
+            }
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return videoSourceObject;
+    }
+
 }

@@ -21,9 +21,9 @@ public class MapInitImpl extends StandardFeature{
 			String[] pRuntimeArgs) {
 		// TODO Auto-generated method stub
 		context = pContext;
-		if(!Build.CPU_ABI.equals("x86") && !Build.CPU_ABI.equals("x86_64")){
+		//if(!Build.CPU_ABI.equals("x86") && !Build.CPU_ABI.equals("x86_64")){
 			SDKInitializer.initialize(getDPluginContext().getApplicationContext());
-		}
+		//}
 		// 注册 SDK 广播监听者
 		IntentFilter iFilter = new IntentFilter();
 		iFilter.addAction(SDKInitializer.SDK_BROADTCAST_ACTION_STRING_PERMISSION_CHECK_ERROR);

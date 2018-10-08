@@ -2,11 +2,15 @@ package io.dcloud.feature.speech;
 
 import android.content.Context;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import io.dcloud.common.DHInterface.IReflectAble;
 import io.dcloud.common.DHInterface.IWebview;
-import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.JSONUtil;
@@ -59,6 +63,20 @@ public abstract class AbsSpeechEngine implements IReflectAble{
 		mEventCallbackIds = eventCallbackIds;
 		startRecognize(pOption);
 	}
+
+    private Map<String,String> event;
+
+    /**
+     *
+     * @param action event
+     * @param mCallbackId 回调参数
+     */
+    public void addEventListener(String action ,String mCallbackId){
+        if (null == event) {
+            event = new HashMap<String, String>();
+        }
+        event.put(action,mCallbackId);
+    }
 	
 	/**
 	 * 启动语音解析引擎
@@ -76,16 +94,41 @@ public abstract class AbsSpeechEngine implements IReflectAble{
 	 * 定义语音回调接口
 	 */
 	ISpeechListener mSpeechListener = new ISpeechListener() {
-		
-		@Override
+
+	    private String convert(String str) {
+	        String temp = str;
+            if (str.contains("\'")) {
+                temp = str.replaceAll("\'","\\\\\\\'");
+            }
+            if (temp.contains("\"")) {
+                temp = temp.replaceAll("\"","\\\\\\\"");
+            }
+            return temp;
+        }
+        @Override
 		public void onStateChange(byte state, Object args, boolean keepCallback) {
+            SpeechManager manager = SpeechManager.getInstance();
 			switch (state) {
 			case ISpeechListener.ONSUCCESS:{
-				//String str_args = JSUtil.arrayList2JsStringArray((ArrayList<String>)args);
-				//JSUtil.execCallback(mWebview, mCallbackId, (String)args, JSUtil.OK, true, keepCallback);
-                Logger.e("Success",(String)args);
-				JSUtil.execCallback(mWebview, mCallbackId, (String)args, JSUtil.OK, false, keepCallback);
-				break;
+                String successResult = "";
+                String recog = "{result:\"%s\",results:%s}";
+                if (args != null) {
+                    if (args instanceof String[]) {
+                        String[] value = (String[]) args;
+                        if (value.length > 0) {
+                            successResult = value[0];
+                        }
+                    } else {
+                        successResult = (String) args;
+                    }
+                }
+                successResult = convert(successResult);
+				JSUtil.execCallback(mWebview, mCallbackId, successResult, JSUtil.OK, false, keepCallback);
+                try {
+                    manager.eventListener("recognition",String.format(recog,successResult,args == null ? "[]":args instanceof String?"[\""+convert((String) args)+"\"]":new JSONArray(args).toString()), JSUtil.OK,true);
+                } catch (JSONException e) {
+                }
+                break;
 			}
 			case ISpeechListener.ONERROR:{
 				String[] objs = (String[])args;
@@ -93,19 +136,28 @@ public abstract class AbsSpeechEngine implements IReflectAble{
 				String error_msg = String.valueOf(objs[1]);
 				String msg =  String.format(DOMException.JSON_ERROR_INFO,error_code,error_msg);
 				//msg = JSONUtil.toJSONableString(msg);
-				JSUtil.execCallback(mWebview, mCallbackId, msg, JSUtil.ERROR, true, keepCallback);
+				JSUtil.execCallback(mWebview, mCallbackId, msg, JSUtil.ERROR, true, false);
+                manager.eventListener("error",msg, JSUtil.OK,true);
 				break;
 			}
 			case ISpeechListener.ONSTART:{
 				String callbackId = JSONUtil.getString(mEventCallbackIds, StringConst.JSON_KEY_ONSTART);
-				JSUtil.execCallback(mWebview, callbackId, "", JSUtil.OK, false, keepCallback);
+				JSUtil.execCallback(mWebview, callbackId, "", JSUtil.OK, false, false);
+                manager.eventListener("start","{}", JSUtil.OK,true);
 				break;
 			}
 			case ISpeechListener.ONEND:{
 				String callbackId = JSONUtil.getString(mEventCallbackIds, StringConst.JSON_KEY_ONEND);
-				JSUtil.execCallback(mWebview, callbackId, "", JSUtil.OK, false, keepCallback);
+				JSUtil.execCallback(mWebview, callbackId, "", JSUtil.OK, false, false);
+                manager.eventListener("end","{}", JSUtil.OK, true);
 				break;
 			}
+			case ISpeechListener.PARTICALRESULT:
+                manager.eventListener("recognizing",String.format("{partialResult:\"%s\"}",convert((String)args)), JSUtil.OK, keepCallback);
+			    break;
+            case ISpeechListener.VOLUME:
+                manager.eventListener("volumeChange",String.format("{volume:%f}",(1f/7f)*(Integer)args),JSUtil.OK,keepCallback);
+                break;
 			default:
 				break;
 			}

@@ -190,8 +190,10 @@ public static final String TAG=UploadNetWork.class.getSimpleName();
 				ds.writeBytes(twoHyphens + boundary + end);
 				if(ui instanceof UploadFile) {
 					mUploadingFile.append(pKey);
-					ds.writeBytes("Content-Disposition: form-data; name=\""+pKey+"\"; filename=\""+((UploadFile) ui).mFilename+"\""+end);
-					ds.writeBytes("Content-Type: "+((UploadFile) ui).mMimetype+end);
+					String disposition = "Content-Disposition: form-data; name=\""+pKey+"\"; filename=\""+((UploadFile) ui).mFilename+"\""+end;
+					ds.write(disposition.getBytes());
+					String contentType = "Content-Type: "+((UploadFile) ui).mMimetype+end;
+					ds.write(contentType.getBytes());
 					ds.writeBytes(end);
 					FileInputStream fStream = ((UploadFile) ui).mFileInputS;
 					int bufferSize = 1024*10;

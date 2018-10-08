@@ -26,6 +26,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AbsoluteLayout;
 
 import com.dcloud.zxing.BarcodeFormat;
@@ -37,16 +38,20 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import io.dcloud.common.DHInterface.IApp;
 import io.dcloud.common.DHInterface.IEventCallback;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.ui.AdaFrameItem;
+import io.dcloud.common.adapter.ui.AdaFrameView;
 import io.dcloud.common.adapter.util.CanvasHelper;
 import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.adapter.util.MessageHandler;
 import io.dcloud.common.adapter.util.PermissionUtil;
+import io.dcloud.common.adapter.util.ViewRect;
 import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
@@ -71,9 +76,10 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 	private static final float BEEP_VOLUME = 0.80f;
 	boolean vibrate = true;
 	SurfaceView surfaceView;
-	String mCallbackId = null;
+	Map<String, String> mCallbackIds = null;
 	private Context mAct;
 	private IWebview mWebViewImpl;
+	private IWebview mContainerWebview;
 	private IApp mAppHandler;
 	/**是否处于待扫描状态*/
 	private boolean mRunning = false;
@@ -83,13 +89,25 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 	BarcodeProxy mProxy;
 	static BarcodeFrameItem sBarcodeFrameItem = null;
 	boolean noPermission = false;
-	protected BarcodeFrameItem(BarcodeProxy pProxy,IWebview pWebViewImpl,final AbsoluteLayout.LayoutParams lp,JSONArray filters,JSONObject styles) {
+	JSONArray mDivRectJson;
+	JSONObject mStyles;
+	JSONArray mFilters;
+	private String mPosition = "static";
+	public String mUuid;
+	protected BarcodeFrameItem(BarcodeProxy pProxy,IWebview pWebViewImpl, String uuid, JSONArray divRect,JSONArray filters,JSONObject styles) {
 		super(pWebViewImpl.getContext());
 		sBarcodeFrameItem = this;
 		mProxy = pProxy;
+		mUuid = uuid;
+		mCallbackIds = new HashMap<String, String>();
 		mAct = pWebViewImpl.getContext();
 		mWebViewImpl = pWebViewImpl;
+		mContainerWebview = pWebViewImpl;
 		mAppHandler = pWebViewImpl.obtainApp();
+		mDivRectJson = divRect;
+		mStyles = styles;
+		mFilters = filters;
+		final AbsoluteLayout.LayoutParams lp = getFrameLayoutParam(mDivRectJson, mStyles);
 		final AbsoluteLayout mainView = new AbsoluteLayout(mAct){
 			Paint paint = new Paint();
 			@Override
@@ -111,11 +129,42 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 //		RelativeLayout mainView = new RelativeLayout(mAct);//相对布局不会超出div区域
 //		FrameLayout mainView = new FrameLayout(mAct);//相对布局不会超出div区域
 		setMainView(mainView);
+		if(styles!=null){
+			initStyles(styles,mainView);
+		}
+		initDecodeFormats(filters);
+	}
+
+	public void appendToFrameView(AdaFrameView frameView) {
+		if(obtainMainView() != null && obtainMainView().getParent() != null) {
+			removeMapFrameItem(mContainerWebview);
+		}
+		mContainerWebview = frameView.obtainWebView();
+		toFrameView();
+	}
+
+	public void removeMapFrameItem(IWebview pFrame) {
+		if(mPosition.equals("absolute")) {
+			pFrame.obtainFrameView().removeFrameItem(BarcodeFrameItem.this);
+		} else {
+			pFrame.removeFrameItem(BarcodeFrameItem.this);
+		}
+	}
+
+	public void addCallBackId(String callBackId, String webUuid) {
+		if(!mCallbackIds.containsKey(callBackId)) {
+			mCallbackIds.put(callBackId, webUuid);
+		}
+	}
+
+	public void toFrameView() {
+		final AbsoluteLayout mainView = (AbsoluteLayout) obtainMainView();
+		final AbsoluteLayout.LayoutParams lp = getFrameLayoutParam(mDivRectJson, mStyles);
 		surfaceView = new SurfaceView(mAct);
 		viewfinderView = new ViewfinderView(mAct,this);
 		hasSurface = false;
 		inactivityTimer = new InactivityTimer(getActivity());
-		PermissionUtil.usePermission(mWebViewImpl.getActivity(), pWebViewImpl.obtainApp().isStreamApp(),PermissionUtil.PMS_CAMERA , new PermissionUtil.StreamPermissionRequest(mWebViewImpl.obtainApp()) {
+		PermissionUtil.usePermission(mContainerWebview.getActivity(), mContainerWebview.obtainApp().isStreamApp(),PermissionUtil.PMS_CAMERA , new PermissionUtil.StreamPermissionRequest(mContainerWebview.obtainApp()) {
 			@Override
 			public void onGranted(String streamPerName) {
 				initCameraView(lp, mainView);
@@ -133,10 +182,7 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 				},null);
 			}
 		});
-		initDecodeFormats(filters);
-		if(styles!=null){
-			setStyles(styles,mainView);
-		}
+
 		onResume(false);//启动预览，绘制探测区域
 		saveOrientationState();//记录进来时候屏幕重力感应设置，退出时候进行还原
 		isVerticalScreen = mAppHandler.isVerticalScreen();
@@ -145,7 +191,52 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 		}else{//横屏进来
 			mAppHandler.setRequestedOrientation("landscape");
 		}
-		listenHideAndShow(pWebViewImpl);
+		listenHideAndShow(mContainerWebview);
+		if(mPosition.equals("absolute")) {
+			mContainerWebview.obtainFrameView().addFrameItem(BarcodeFrameItem.this, lp);
+		} else {
+			mContainerWebview.addFrameItem(BarcodeFrameItem.this, lp);
+		}
+	}
+
+
+	private AbsoluteLayout.LayoutParams getFrameLayoutParam(JSONArray arr, JSONObject styles) {
+		float s = mContainerWebview.getScale();
+		com.dcloud.android.widget.AbsoluteLayout.LayoutParams lp = null;
+		if(arr.length() > 3) {
+			Rect dvc = DetectorViewConfig.getInstance().gatherRect;
+			dvc.left = PdrUtil.parseInt(JSONUtil.getString(arr, 0), 0);
+			dvc.top = PdrUtil.parseInt(JSONUtil.getString(arr, 1), 0);
+			dvc.right = dvc.left + PdrUtil.parseInt(JSONUtil.getString(arr, 2), 0);
+			dvc.bottom = dvc.top + PdrUtil.parseInt(JSONUtil.getString(arr, 3), 0);
+
+			dvc.left *= s;
+			dvc.top *= s;
+			dvc.right *= s;
+			dvc.bottom *= s;
+			if(dvc.width() != 0 && dvc.height() != 0){
+				lp = (com.dcloud.android.widget.AbsoluteLayout.LayoutParams)LayoutParamsUtil.createLayoutParams(dvc.left, dvc.top, dvc.width(), dvc.height());
+			}
+		} else {
+			if(styles == null){
+				return lp;
+			}
+			AdaFrameItem frameView = (AdaFrameItem)mContainerWebview.obtainFrameView();
+			ViewRect webParentViewRect = frameView.obtainFrameOptions();
+			int l = PdrUtil.convertToScreenInt(JSONUtil.getString(styles, StringConst.JSON_KEY_LEFT), webParentViewRect.width, /*_wOptions.left*/0, s);
+			int t = PdrUtil.convertToScreenInt(JSONUtil.getString(styles, StringConst.JSON_KEY_TOP), webParentViewRect.height, /*_wOptions.top*/0, s);
+			int w = PdrUtil.convertToScreenInt(JSONUtil.getString(styles, StringConst.JSON_KEY_WIDTH), webParentViewRect.width, webParentViewRect.width, s);
+			int h = PdrUtil.convertToScreenInt(JSONUtil.getString(styles, StringConst.JSON_KEY_HEIGHT), webParentViewRect.height, webParentViewRect.height, s);
+			Rect dvc = DetectorViewConfig.getInstance().gatherRect;
+			dvc.left = l;
+			dvc.top = t;
+			dvc.right = dvc.left + w;
+			dvc.bottom = dvc.top + h;
+			if(dvc.width() != 0 && dvc.height() != 0){
+				lp = (com.dcloud.android.widget.AbsoluteLayout.LayoutParams)LayoutParamsUtil.createLayoutParams(dvc.left, dvc.top, dvc.width(), dvc.height());
+			}
+		}
+		return lp;
 	}
 
 	private void initCameraView(AbsoluteLayout.LayoutParams lp, AbsoluteLayout mainView) {
@@ -160,7 +251,7 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 		
 		//计算surfaceView宽高，前提不能超过采集区域(div)大小
 		int surfaceViewWidth,surfaceViewHeight;
-//		公式 w/h = y/x
+		//公式 w/h = y/x
 		surfaceViewWidth = lp.width;
 		surfaceViewHeight = (int)(surfaceViewWidth * camearResolution.x / camearResolution.y);//获得分辨率的宽高比，根据此宽高比计算出适合的surfaceview布局
 		int left = 0, top = 0;
@@ -188,9 +279,13 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 		mainView.addView(viewfinderView);
 	}
 
-	private void setStyles(JSONObject obj,View v){//给控件设置样式
+	private void initStyles(JSONObject obj,View v){//给控件设置样式
+		mStyles = obj;
 		DetectorViewConfig.laserColor = DetectorViewConfig.F_LASER_COLOR;
 		DetectorViewConfig.cornerColor = DetectorViewConfig.F_CORNER_COLOR;
+		if(obj.has("position")) {
+			mPosition = obj.optString("position");
+		}
 		if(!TextUtils.isEmpty(obj.optString("scanbarColor"))){
 			int scanbarColor = PdrUtil.stringToColor(obj.optString("scanbarColor"));
 			scanbarColor = (scanbarColor!=-1) ? scanbarColor : DetectorViewConfig.laserColor;
@@ -207,6 +302,29 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 			v.setBackgroundColor(background);
 		}	
 	}
+
+	public void upateStyles(JSONObject styles) {
+		JSONUtil.combinJSONObject(mStyles, styles);
+		if(styles.has("top") || styles.has("left") || styles.has("width") || styles.has("height") || styles.has("position")) {
+			ViewGroup.LayoutParams _lp = getFrameLayoutParam(mDivRectJson, mStyles);
+			if(styles.has("position")) {
+				String position = styles.optString("position");
+				if(!position.equals(mPosition)) {
+					if(mPosition.equals("absolute")) {
+						mContainerWebview.obtainFrameView().removeFrameItem(BarcodeFrameItem.this);
+						mContainerWebview.addFrameItem(BarcodeFrameItem.this, _lp);
+					} else {
+						mContainerWebview.removeFrameItem(BarcodeFrameItem.this);
+						mContainerWebview.obtainFrameView().addFrameItem(BarcodeFrameItem.this, _lp);
+					}
+					mPosition = position;
+				}
+			} else {
+				obtainMainView().setLayoutParams(_lp);
+			}
+		}
+	}
+
 	private void listenHideAndShow(IWebview pWebViewImpl){
 		pWebViewImpl.obtainFrameView().addFrameViewListener(new IEventCallback() {
 			@Override
@@ -238,6 +356,7 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 		}
 		CameraManager.get().clearLastBitmapData();
 		resumeOrientationState();
+		BarcodeProxyMgr.getBarcodeProxyMgr().removeBarcodeProxy(mUuid);
 	}
 	/**是否是竖屏*/
 	boolean isVerticalScreen = true;
@@ -369,6 +488,7 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 		hasSurface = false;
 		decodeFormats = null;
 		characterSet = null;
+		mCallbackIds.clear();
 	}
 
 	private void initCamera(SurfaceHolder surfaceHolder) {
@@ -454,7 +574,7 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 			 String message = "{type:%d,message:%s}";
 			 json = String.format(message, num,JSONUtil.toJSONableString(obj.getText())); 
 		 }
-		 JSUtil.execCallback(mWebViewImpl, mCallbackId, json, JSUtil.OK, true, true);
+		 runJsCallBack(json, JSUtil.OK, true, true);
 		 cancel();//start一次只能有一次结果，所以成功之后需要停止
 	}
 
@@ -488,8 +608,12 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 			mediaPlayer.start();
 		}
 		if (vibrate) {
-			Vibrator vibrator = (Vibrator) mAct.getSystemService(mAct.VIBRATOR_SERVICE);
-			vibrator.vibrate(VIBRATE_DURATION);
+			try {
+				Vibrator vibrator = (Vibrator) mAct.getSystemService(mAct.VIBRATOR_SERVICE);
+				vibrator.vibrate(VIBRATE_DURATION);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -670,5 +794,30 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 			e.printStackTrace();
 		}
 		return bmp;
+	}
+
+	public JSONObject getJsBarcode() {
+		JSONObject data = null;
+		if(obtainMainView() != null) {
+			data = new JSONObject();
+			try {
+				data.put("uuid", mUuid);
+				data.put("filters", mFilters);
+				data.put("options", mStyles);
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}
+		return data;
+	}
+
+	public void runJsCallBack(String msg, int code, boolean isJson, boolean pKeepCallBack) {
+		for(String callbackId : mCallbackIds.keySet()) {
+			String webUuid = mCallbackIds.get(callbackId);
+			IWebview webview = BarcodeProxyMgr.getBarcodeProxyMgr().findWebviewByUuid(mWebViewImpl, webUuid);
+			if(webview != null) {
+				JSUtil.execCallback(webview, callbackId, msg, code, isJson, pKeepCallBack);
+			}
+		}
 	}
 }

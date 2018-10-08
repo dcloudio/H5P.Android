@@ -20,6 +20,9 @@ public interface ISpeechListener extends IReflectAble{
 	byte ONRECOGNIZEEND = 6;
 	byte ONERROR = 7;
 	byte ONSUCCESS = 8;
+	byte FINALRESULT = 9;
+	byte PARTICALRESULT = 10;
+	byte VOLUME = 11;
 	/**
 	 * 当语音解析引擎，解析语音状态发生变化时调用
 	 * @param state 语音解析状态

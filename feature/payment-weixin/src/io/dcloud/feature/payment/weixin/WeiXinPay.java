@@ -5,12 +5,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 
-import com.tencent.mm.sdk.modelbase.BaseReq;
-import com.tencent.mm.sdk.modelbase.BaseResp;
-import com.tencent.mm.sdk.modelpay.PayReq;
-import com.tencent.mm.sdk.modelpay.PayResp;
-import com.tencent.mm.sdk.openapi.IWXAPI;
-import com.tencent.mm.sdk.openapi.WXAPIFactory;
+
+import com.tencent.mm.opensdk.modelbase.BaseReq;
+import com.tencent.mm.opensdk.modelbase.BaseResp;
+import com.tencent.mm.opensdk.modelpay.PayReq;
+import com.tencent.mm.opensdk.modelpay.PayResp;
+import com.tencent.mm.opensdk.openapi.IWXAPI;
+import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 
 import org.json.JSONObject;
 
@@ -171,7 +172,7 @@ public class WeiXinPay extends AbsPaymentChannel implements ISysEventListener{
 			FeatureMessageDispatcher.registerListener(sPayCallbackMessageListener);
 			Logger.d("wxpay","will pay");
 		}else{
-			onPayCallback(ret?BaseResp.ErrCode.ERR_OK:BaseResp.ErrCode.ERR_COMM, null);
+			onPayCallback(ret? BaseResp.ErrCode.ERR_OK:BaseResp.ErrCode.ERR_COMM, null);
 		}
 	}
 	MessageListener sPayCallbackMessageListener = new MessageListener() {

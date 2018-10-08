@@ -1,10 +1,15 @@
 package io.dcloud.js.map.amap;
 
+import android.text.TextUtils;
+
+import io.dcloud.common.DHInterface.AbsMgr;
+import io.dcloud.common.DHInterface.IMgr;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.util.JSONUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -27,6 +32,11 @@ public class JsMapManager {
 	 * 保存所有的mapApi对象对应的Js对象键值对
 	 */
 	private HashMap<String,JsMapObject> mJsMapObjects;
+
+	/**
+	 * 保存所有jsmap对象
+	 */
+	private HashMap<String, LinkedHashMap<String, JsMapView>> mJsMapViews;
 	/**
 	 * DHMapManager实例对象
 	 */
@@ -35,11 +45,15 @@ public class JsMapManager {
 	 * 保存route对象
 	 */
 	private HashMap<String, JsMapRoute> mMapRoutes;
+
+	private AbsMgr mFeatureMgr;
+
+	public void setFeatureMgr(AbsMgr pFeatureMgr) {
+		mFeatureMgr = pFeatureMgr;
+	}
 	/**
 	 * 
-	 * Description: 构造函数 
-	 * @param pFrameView
-	 * @param pJsId 
+	 * Description: 构造函数
 	 *
 	 * <pre><p>ModifiedLog:</p>
 	 * Log ID: 1.0 (Log编号 依次递增)
@@ -48,6 +62,7 @@ public class JsMapManager {
 	private JsMapManager(){
 		mJsMapObjects = new HashMap<String, JsMapObject>();
 		mMapRoutes = new HashMap<String, JsMapRoute>();
+		mJsMapViews = new HashMap<String, LinkedHashMap<String, JsMapView>>();
 	}
 	/**
 	 * 
@@ -63,6 +78,59 @@ public class JsMapManager {
 			mJsMapManager = new JsMapManager();
 		}
 		return mJsMapManager;
+	}
+
+	public void dispose(String appid) {
+		//mJsMapObjects.clear();
+		LinkedHashMap<String, JsMapView> maps = mJsMapViews.remove(appid);
+		if(maps != null) {
+			for(String key : maps.keySet()) {
+				maps.get(key).dispose();
+			}
+			maps.clear();
+		}
+	}
+
+	public JsMapView getJsMapViewById(String appid, String id) {
+		if(mJsMapViews.containsKey(appid)) {
+			LinkedHashMap<String, JsMapView> maps = mJsMapViews.get(appid);
+			for(String key: maps.keySet()) {
+				String itmeId = maps.get(key).mJsId;
+				if(!TextUtils.isEmpty(itmeId) && id.equals(itmeId)){
+					return maps.get(key);
+				}
+			}
+		}
+		return null;
+	}
+
+	public JsMapView getJsMapViewByUuid(String appid, String uuid) {
+		if(mJsMapViews.containsKey(appid)) {
+			LinkedHashMap<String, JsMapView> maps = mJsMapViews.get(appid);
+			if(maps.containsKey(uuid)) {
+				return maps.get(uuid);
+			}
+		}
+		return null;
+	}
+
+	public void putJsMapView(String appid, String uuid, JsMapView mapView) {
+		if(!mJsMapViews.containsKey(appid)) {
+			LinkedHashMap<String, JsMapView> maps = new LinkedHashMap<String, JsMapView>();
+			mJsMapViews.put(appid, maps);
+		}
+		if(!mJsMapViews.get(appid).containsKey(uuid)) {
+			mJsMapViews.get(appid).put(uuid, mapView);
+		}
+	}
+
+	public void removeJsMapView(String appid, String uuid) {
+		if(mJsMapViews.containsKey(appid)) {
+			LinkedHashMap<String, JsMapView> maps = mJsMapViews.get(appid);
+			if(maps.containsKey(uuid)) {
+				maps.remove(uuid);
+			}
+		}
 	}
 	/**
 	 * 
@@ -90,24 +158,26 @@ public class JsMapManager {
 	public JsMapObject getJsObject(String pId){
 		return mJsMapObjects.get(pId);
 	}
-    /**
-     *
-     * Description:删除Js对应Java对象
-     * @param pId
-     * @return
-     *
-     * <pre><p>ModifiedLog:</p>
-     * Log ID: 1.0 (Log编号 依次递增)
-     * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2012-11-9 上午9:44:55</pre>
-     */
-    public JsMapObject removeJsObject(String pId){
-        return mJsMapObjects.remove(pId);
-    }
+
+	/**
+	 * 删除Js对应Java对象
+	 * @param appid
+	 * @param uuid
+	 * @return
+	 */
+	public JsMapObject removeJsObject(String appid, String uuid){
+		JsMapObject jsObject = mJsMapObjects.remove(uuid);
+		if(jsObject instanceof JsMapView) {
+			removeJsMapView(appid, uuid);
+		}
+		return jsObject;
+	}
+
 	/**
 	 * 
 	 * Description:通过JSON对象转换为mappoin
 	 * @param pWebview TODO
-	 * @param pJson
+	 * @param _json
 	 * @return
 	 *
 	 * <pre><p>ModifiedLog:</p>
@@ -214,5 +284,15 @@ public class JsMapManager {
 			}
 		}
 		return _ret;
+	}
+
+	public IWebview findWebviewByUuid(IWebview webview, String uuid) {
+		if(mFeatureMgr != null) {
+			Object object =  mFeatureMgr.processEvent(IMgr.MgrType.FeatureMgr, IMgr.MgrEvent.CALL_WAITER_DO_SOMETHING,new Object[]{webview,"ui","findWebview",new String[]{webview.obtainApp().obtainAppId(), uuid}});
+			if(object != null) {
+				return (IWebview) object;
+			}
+		}
+		return null;
 	}
 }

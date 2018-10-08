@@ -5,12 +5,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 
-import com.tencent.mm.sdk.modelbase.BaseReq;
-import com.tencent.mm.sdk.modelbase.BaseResp;
-import com.tencent.mm.sdk.modelmsg.SendAuth;
-import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
-import com.tencent.mm.sdk.openapi.IWXAPI;
-import com.tencent.mm.sdk.openapi.WXAPIFactory;
+
+import com.tencent.mm.opensdk.modelbase.BaseReq;
+import com.tencent.mm.opensdk.modelbase.BaseResp;
+import com.tencent.mm.opensdk.modelmsg.SendAuth;
+import com.tencent.mm.opensdk.modelmsg.SendMessageToWX;
+import com.tencent.mm.opensdk.openapi.IWXAPI;
+import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -112,6 +113,27 @@ public class WeiXinOAuthService extends BaseOAuthService {
                         String state = resp.state;
                         JSONObject result = null;
                         String s_access_token = null;
+                        if (isAuth) {
+                            isAuth = false;
+                            if (resp.errCode == BaseResp.ErrCode.ERR_OK){
+                                JSONObject jsonResult = new JSONObject();
+                                try {
+                                    jsonResult.put("scope",mAuthOptions == null?DEFAULT_SCOPE:mAuthOptions.optString(BaseOAuthService.KEY_SCOPE, DEFAULT_SCOPE));
+                                    jsonResult.put("state",state);
+                                    jsonResult.put("code",code);
+                                    jsonResult.put("lang",resp.lang);
+                                    jsonResult.put("country",resp.country);
+                                    JSUtil.execCallback(mAuthWebview, mAuthCallbackId, jsonResult.toString(), JSUtil.OK, true, false);
+                                } catch (JSONException e) {
+//                                    e.printStackTrace();
+                                }
+
+                            } else {
+                                onLoginCallBack(mAuthWebview, mAuthCallbackId, resp.errCode);
+                            }
+                            FeatureMessageDispatcher.unregisterListener(sLoginMessageListener);
+                            return;
+                        }
                         if (code != null) {
                             String access_token_url = String.format(URL_GET_ACCESS_TOKEN, appId, appSecret, code);
                             s_access_token = getToken(access_token_url);
@@ -175,7 +197,7 @@ public class WeiXinOAuthService extends BaseOAuthService {
         } else if (code == BaseResp.ErrCode.ERR_UNSUPPORT) {
             errorMsg = ERR_MSG_UNSUPPORT;
         } else if (code == BaseResp.ErrCode.ERR_USER_CANCEL) {
-            onLoginFinished(getErrorJsonbject(DOMException.CODE_USER_CANCEL, DOMException.MSG_USER_CANCEL), false);
+            onLoginFinished(getErrorJsonbject(DOMException.CODE_USER_CANCEL, DOMException.MSG_USER_CANCEL), false,pWebViewImpl,pCallbackId);
             return;
         }
         if (suc) {//由于调用微信发送接口，会立马回复true，而不是真正分享成功，甚至连微信界面都没有启动，在此延迟回调，以增强体验
@@ -202,48 +224,73 @@ public class WeiXinOAuthService extends BaseOAuthService {
                 new Runnable() {
                     @Override
                     public void run() {
-                        loginInThread();
+                        loginInThread(mLoginWebViewImpl,mLoginCallbackId,mLoginOptions);
                     }
                 }
         );
     }
 
+    private boolean isAuth = false;
+    @Override
+    public void authorize(IWebview pwebview, JSONArray pJsArgs) {
+        super.authorize(pwebview, pJsArgs);
+//        appId不允许为空 secret不在设置之间
+        if (TextUtils.isEmpty(appId)) {
+            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
+            JSUtil.execCallback(pwebview, mAuthCallbackId, msg, JSUtil.ERROR, true, false);
+            return;
+        }
+        if (!PlatformUtil.isAppInstalled(pwebview.getContext(), "com.tencent.mm")) {
+            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_CLIENT_UNINSTALLED, DOMException.toString(DOMException.MSG_CLIENT_UNINSTALLED));
+            JSUtil.execCallback(pwebview, mAuthCallbackId, msg, JSUtil.ERROR, true, false);
+            return;
+        }
+        ThreadPool.self().addThreadTask(new Runnable() {
+            @Override
+            public void run() {
+                isAuth = true;
+                loginInThread(mAuthWebview,mAuthCallbackId,mAuthOptions);
+            }
+        });
+    }
+
     /**
      * 因需要请求网络，所以将之放入子线程
      */
-    private void loginInThread() {
+    private void loginInThread(final IWebview pwebview, final String callbackId, JSONObject option) {
 
         isLoginReceiver = false;
         String s_authResult = getValue(BaseOAuthService.KEY_AUTHRESULT);
         JSONObject authResult = JSONUtil.createJSONObject(s_authResult);
-        if (authResult != null && authResult.has(KEY_ACCESS_TOKEN)) {
-            //存在access_token
-            String check_token_url = String.format(URL_CHECK_TOKEN, authResult.optString(KEY_ACCESS_TOKEN), authResult.optString(KEY_OPENID));
-            byte[] temp = NetTool.httpGet(check_token_url);
-            if (null != temp) {
-                String str = new String(temp);
-                JSONObject checkTokenResult = JSONUtil.createJSONObject(str);
-                if (checkTokenResult != null) {//{"errcode":0,"errmsg":"ok"}
-                    if (checkTokenResult.optInt(KEY_ERRCODE) == 0) {//成功
-                        //access_token依然有效，不需要重新授权
-                        initUserInfo();
-                        onLoginCallBack(mLoginWebViewImpl, mLoginCallbackId, BaseResp.ErrCode.ERR_OK);
-                        return;
-                    } else {//{"errcode":40003,"errmsg":"invalid openid"}
-                        //access_token无效，需要重新授权
-                        removeToken();
-                        //刷新access_token
-                        String refresh_token = authResult.optString(KEY_REFRESH_TOKEN);
-                        //refresh_token拥有较长的有效期（30天），当refresh_token失效的后，需要用户重新授权。
-                        String refresh_token_url = String.format(URL_REFRESH_TOKEN, appId, refresh_token);
-                        String s_refreshToken = refreshToken(refresh_token_url);//authResult
-                        JSONObject refreshTokenResult = null;
-                        if (!PdrUtil.isEmpty(s_refreshToken)) {
+        if (!isAuth) {
+            if (authResult != null && authResult.has(KEY_ACCESS_TOKEN)) {
+                //存在access_token
+                String check_token_url = String.format(URL_CHECK_TOKEN, authResult.optString(KEY_ACCESS_TOKEN), authResult.optString(KEY_OPENID));
+                byte[] temp = NetTool.httpGet(check_token_url);
+                if (null != temp) {
+                    String str = new String(temp);
+                    JSONObject checkTokenResult = JSONUtil.createJSONObject(str);
+                    if (checkTokenResult != null) {//{"errcode":0,"errmsg":"ok"}
+                        if (checkTokenResult.optInt(KEY_ERRCODE) == 0) {//成功
+                            //access_token依然有效，不需要重新授权
+                            initUserInfo();
+                            onLoginCallBack(pwebview, callbackId, BaseResp.ErrCode.ERR_OK);
+                            return;
+                        } else {//{"errcode":40003,"errmsg":"invalid openid"}
+                            //access_token无效，需要重新授权
+                            removeToken();
+                            //刷新access_token
+                            String refresh_token = authResult.optString(KEY_REFRESH_TOKEN);
+                            //refresh_token拥有较长的有效期（30天），当refresh_token失效的后，需要用户重新授权。
+                            String refresh_token_url = String.format(URL_REFRESH_TOKEN, appId, refresh_token);
+                            String s_refreshToken = refreshToken(refresh_token_url);//authResult
+                            JSONObject refreshTokenResult = null;
+                            if (!PdrUtil.isEmpty(s_refreshToken)) {
 
-                            refreshTokenResult = JSONUtil.createJSONObject(s_refreshToken);
-                        } else {
-                            onLoginCallBack(mLoginWebViewImpl, mLoginCallbackId, BaseResp.ErrCode.ERR_COMM);
-                        }
+                                refreshTokenResult = JSONUtil.createJSONObject(s_refreshToken);
+                            } else {
+                                onLoginCallBack(pwebview, callbackId, BaseResp.ErrCode.ERR_COMM);
+                            }
 //					{
 //						"access_token":"ACCESS_TOKEN",  接口调用凭证
 //						"expires_in":7200, access_token接口调用凭证超时时间，单位（秒）
@@ -252,16 +299,16 @@ public class WeiXinOAuthService extends BaseOAuthService {
 //						"scope":"SCOPE" 用户授权的作用域，使用逗号（,）分隔
 //					}
 
-                        if (!PdrUtil.isEmpty(refreshTokenResult)) {
-                            if (refreshTokenResult.has(KEY_ERRCODE)) {//失败时走重新授权逻辑
-                                //{"errcode":40030,"errmsg":"invalid refresh_token"}
+                            if (!PdrUtil.isEmpty(refreshTokenResult)) {
+                                if (refreshTokenResult.has(KEY_ERRCODE)) {//失败时走重新授权逻辑
+                                    //{"errcode":40030,"errmsg":"invalid refresh_token"}
 //						int errcode = JSONUtil.getInt(refreshTokenResult, KEY_ERRCODE);
 //						String errmsg = JSONUtil.getString(refreshTokenResult, KEY_ERRMSG);
 //						String jsonResult = String.format(DOMException.JSON_ERROR_INFO, errcode,errmsg);
 //						JSUtil.execCallback(mLoginWebViewImpl, mLoginCallbackId, jsonResult, JSUtil.ERROR, true, false);
 
 
-                            } else {
+                                } else {
 
 
 //						access_token = JSONUtil.getString(result, KEY_ACCESS_TOKEN);
@@ -270,42 +317,43 @@ public class WeiXinOAuthService extends BaseOAuthService {
 //						openid = JSONUtil.getString(result, KEY_OPENID);
 
 
-                                saveValue(BaseOAuthService.KEY_AUTHRESULT, s_refreshToken);
-                                initUserInfo();
-                                onLoginCallBack(mLoginWebViewImpl, mLoginCallbackId, BaseResp.ErrCode.ERR_OK);
-                                return;
+                                    saveValue(BaseOAuthService.KEY_AUTHRESULT, s_refreshToken);
+                                    initUserInfo();
+                                    onLoginCallBack(pwebview, callbackId, BaseResp.ErrCode.ERR_OK);
+                                    return;
+                                }
+                            } else {
+                                onLoginCallBack(pwebview, callbackId, BaseResp.ErrCode.ERR_COMM);
                             }
-                        } else {
-                            onLoginCallBack(mLoginWebViewImpl, mLoginCallbackId, BaseResp.ErrCode.ERR_COMM);
+
+
                         }
-
-
                     }
+                } else {
+                    onLoginCallBack(pwebview, callbackId, BaseResp.ErrCode.ERR_COMM);
                 }
-            } else {
-                onLoginCallBack(mLoginWebViewImpl, mLoginCallbackId, BaseResp.ErrCode.ERR_COMM);
-            }
 
+            }
         }
 
         //第一次授权或access_token失效后，重新授权
         final SendAuth.Req req = new SendAuth.Req();
         req.scope = WeiXinOAuthService.DEFAULT_SCOPE;
         req.state = WeiXinOAuthService.DEFAULT_STATE;
-        if (mLoginOptions != null) {
-            req.scope = mLoginOptions.optString(BaseOAuthService.KEY_SCOPE, req.scope);
-            req.state = mLoginOptions.optString(BaseOAuthService.KEY_STATE, req.state);
+        if (option != null) {
+            req.scope = option.optString(BaseOAuthService.KEY_SCOPE, req.scope);
+            req.state = option.optString(BaseOAuthService.KEY_STATE, req.state);
         }
-        if(mLoginWebViewImpl.getActivity() instanceof IActivityHandler && ((IActivityHandler)mLoginWebViewImpl.getActivity()).isMultiProcessMode()){//多进程模式
-            startWeiXinMediator(req);
+        if(pwebview.getActivity() instanceof IActivityHandler && ((IActivityHandler)pwebview.getActivity()).isMultiProcessMode()){//多进程模式
+            startWeiXinMediator(req,pwebview,callbackId);
             return;
         }
         if (api == null) {
-            api = WXAPIFactory.createWXAPI(mLoginWebViewImpl.getActivity(), appId, true);
+            api = WXAPIFactory.createWXAPI(pwebview.getActivity(), appId, true);
             api.registerApp(appId);
         }
         final boolean suc = api.sendReq(req);
-        final IApp app = mLoginWebViewImpl.obtainFrameView().obtainApp();
+        final IApp app = pwebview.obtainFrameView().obtainApp();
         app.registerSysEventListener(new ISysEventListener() {
 
             @Override
@@ -313,7 +361,7 @@ public class WeiXinOAuthService extends BaseOAuthService {
                 // TODO Auto-generated method stub
                 // isLoginReceiver = false 表示login并未回调。 表示用户并未实施登录而是返回关闭了登录请求页面。
                 if (!isLoginReceiver) { //用户取消
-                    onLoginFinished(getErrorJsonbject(DOMException.CODE_USER_CANCEL, DOMException.MSG_USER_CANCEL), false);
+                    onLoginFinished(getErrorJsonbject(DOMException.CODE_USER_CANCEL, DOMException.MSG_USER_CANCEL), false,pwebview,callbackId);
                 }
 
                 if (app != null) {
@@ -322,28 +370,40 @@ public class WeiXinOAuthService extends BaseOAuthService {
                 return false;
             }
         }, ISysEventListener.SysEventType.onResume);
-        if (suc && hasWXEntryActivity(mLoginWebViewImpl.getContext())) {
+        if (suc && hasWXEntryActivity(pwebview.getContext())) {
             FeatureMessageDispatcher.registerListener(sLoginMessageListener);
         } else {
-            mLoginWebViewImpl.obtainWebview().postDelayed(new Runnable() {
+            pwebview.obtainWebview().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    onLoginCallBack(mLoginWebViewImpl, mLoginCallbackId, BaseResp.ErrCode.ERR_SENT_FAILED);
+                    onLoginCallBack(pwebview, callbackId, BaseResp.ErrCode.ERR_SENT_FAILED);
                 }
             }, 500);
         }
     }
 
-    private void startWeiXinMediator(SendAuth.Req req) {
+    protected void onLoginFinished(JSONObject msg, boolean suc,IWebview pwebview, String callbackId) {
+        JSUtil.execCallback(pwebview, callbackId, msg,
+                suc ? JSUtil.OK : JSUtil.ERROR, false);
+        if (isAuth) {
+            mAuthWebview = null;
+            mAuthCallbackId = null;
+        } else {
+            mLoginCallbackId = null;
+            mLoginWebViewImpl = null;
+        }
+    }
+
+    private void startWeiXinMediator(SendAuth.Req req, final IWebview pwebview, final String callbackId) {
         Intent intent = new Intent();
         intent.putExtra(ProcessMediator.LOGIC_CLASS,WeiXinMediator.class.getName());
         Bundle bundle = new Bundle();
         req.toBundle(bundle);
         intent.putExtra(ProcessMediator.REQ_DATA,bundle);
-        intent.setClassName(mLoginWebViewImpl.getActivity(),ProcessMediator.class.getName());
-        mLoginWebViewImpl.getActivity().startActivityForResult(intent,ProcessMediator.CODE_REQUEST);
-        mLoginWebViewImpl.getActivity().overridePendingTransition(0,0);
-        mLoginWebViewImpl.obtainApp().registerSysEventListener(new ISysEventListener() {
+        intent.setClassName(pwebview.getActivity(),ProcessMediator.class.getName());
+        pwebview.getActivity().startActivityForResult(intent,ProcessMediator.CODE_REQUEST);
+        pwebview.getActivity().overridePendingTransition(0,0);
+        pwebview.obtainApp().registerSysEventListener(new ISysEventListener() {
             @Override
             public boolean onExecute(SysEventType pEventType, Object pArgs) {
                 Object[] _args = (Object[])pArgs;
@@ -353,7 +413,7 @@ public class WeiXinOAuthService extends BaseOAuthService {
                 if(pEventType == SysEventType.onActivityResult && requestCode == ProcessMediator.CODE_REQUEST){
                     Bundle bundle = data.getBundleExtra(ProcessMediator.RESULT_DATA);
                     if(bundle == null){
-                        onLoginCallBack(mLoginWebViewImpl, mLoginCallbackId, BaseResp.ErrCode.ERR_USER_CANCEL);
+                        onLoginCallBack(pwebview, callbackId, BaseResp.ErrCode.ERR_USER_CANCEL);
                     }else {
                         String s = bundle.getString(ProcessMediator.STYLE_DATA);
                         if ("BaseResp".equals(s)) {

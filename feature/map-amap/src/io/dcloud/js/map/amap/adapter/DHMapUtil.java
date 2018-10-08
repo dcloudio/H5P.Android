@@ -84,6 +84,9 @@ public class DHMapUtil {
 			@Override
 			public void onGeocodeSearched(GeocodeResult result, int code) {
 				// TODO Auto-generated method stub
+				if(code == 1000) {//兼容低版本成功错误号
+					code = 0;
+				}
 				if(code == 0) { //搜索成功
 					if (result != null && result.getGeocodeAddressList() != null
 							&& result.getGeocodeAddressList().size() > 0) {
@@ -101,10 +104,10 @@ public class DHMapUtil {
 						String error = DOMException.toJSON(DOMException.CODE_BUSINESS_INTERNAL_ERROR, DOMException.toString("对不起，没有搜索到相关数据！"));
 						JSUtil.execCallback(webview, callBackId, error, JSUtil.ERROR, true, false);
 					}
-				} else if(code == 27){
+				} else if(code == 27 || code == 1804){
 					String error = DOMException.toJSON(DOMException.CODE_NETWORK_ERROR, DOMException.toString(code, "Maps高德地图", "网络错误", AMapLink.AMapErrorLink));
 					JSUtil.execCallback(webview, callBackId, error, JSUtil.ERROR, true, false);
-				} else if(code == 32){
+				} else if(code == 32 || code == 1001){
 					String error = DOMException.toJSON(DOMException.CODE_NETWORK_ERROR, DOMException.toString(code, "Maps高德地图", "key验证无效！", AMapLink.AMapErrorLink));
 					JSUtil.execCallback(webview, callBackId, error, JSUtil.ERROR, true, false);
 				} else {
@@ -130,6 +133,9 @@ public class DHMapUtil {
 			@Override
 			public void onRegeocodeSearched(RegeocodeResult result, int rCode) {
 				// TODO Auto-generated method stub
+				if(rCode == 1000) {//兼容低版本成功错误码
+					rCode = 0;
+				}
 				if (rCode == 0) {
 					if (result != null && result.getRegeocodeAddress() != null
 							&& result.getRegeocodeAddress().getFormatAddress() != null) {
@@ -146,10 +152,10 @@ public class DHMapUtil {
 						String error = DOMException.toJSON(DOMException.CODE_BUSINESS_INTERNAL_ERROR, DOMException.toString("对不起，没有搜索到相关数据！"));
 						JSUtil.execCallback(webview, callBackId, error, JSUtil.ERROR, true, false);
 					}
-				} else if (rCode == 27) {
+				} else if (rCode == 27 || rCode == 1804) {
 					String error = DOMException.toJSON(DOMException.CODE_NETWORK_ERROR, DOMException.toString(rCode, "Maps高德地图", "网络错误", AMapLink.AMapErrorLink));
 					JSUtil.execCallback(webview, callBackId, error, JSUtil.ERROR, true, false);
-				} else if(rCode == 32){
+				} else if(rCode == 32 || rCode == 1001){
 					String error = DOMException.toJSON(DOMException.CODE_NETWORK_ERROR, DOMException.toString(rCode, "Maps高德地图", "key验证无效！", AMapLink.AMapErrorLink));
 					JSUtil.execCallback(webview, callBackId, error, JSUtil.ERROR, true, false);
 				} else {

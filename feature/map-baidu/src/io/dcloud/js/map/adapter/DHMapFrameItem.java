@@ -1,25 +1,5 @@
 package io.dcloud.js.map.adapter;
 
-import io.dcloud.common.DHInterface.IApp;
-import io.dcloud.common.DHInterface.ISysEventListener;
-import io.dcloud.common.DHInterface.ITypeofAble;
-import io.dcloud.common.DHInterface.IWebview;
-import io.dcloud.common.adapter.ui.AdaFrameItem;
-import io.dcloud.common.adapter.util.DeviceInfo;
-import io.dcloud.common.adapter.util.Logger;
-import io.dcloud.common.adapter.util.ViewRect;
-import io.dcloud.common.util.JSONUtil;
-import io.dcloud.common.util.PdrUtil;
-import io.dcloud.js.map.IFMapDispose;
-import io.dcloud.js.map.JsMapObject;
-import io.dcloud.js.map.MapJsUtil;
-
-import java.util.ArrayList;
-import java.util.Locale;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -29,6 +9,30 @@ import android.view.ViewGroup.LayoutParams;
 
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.model.LatLng;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Locale;
+
+import io.dcloud.common.DHInterface.IApp;
+import io.dcloud.common.DHInterface.ISysEventListener;
+import io.dcloud.common.DHInterface.ITypeofAble;
+import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.common.adapter.ui.AdaFrameItem;
+import io.dcloud.common.adapter.ui.AdaFrameView;
+import io.dcloud.common.adapter.util.DeviceInfo;
+import io.dcloud.common.adapter.util.Logger;
+import io.dcloud.common.adapter.util.ViewRect;
+import io.dcloud.common.constant.StringConst;
+import io.dcloud.common.util.JSONUtil;
+import io.dcloud.common.util.PdrUtil;
+import io.dcloud.js.map.IFMapDispose;
+import io.dcloud.js.map.JsMapManager;
+import io.dcloud.js.map.JsMapObject;
+import io.dcloud.js.map.MapJsUtil;
 
 /**
  * <p>Description:MapFrameItem继承FrameItem
@@ -83,9 +87,14 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 	 * 封装的webview
 	 */
 	private IWebview mWebview;
+	private IWebview mContainerWebview;
 	public String mUUID;
+
+	private String mPosition = "static";
 	
 	JsMapObject mJsMapView = null;
+
+	private JSONArray mOptions;
 	/**
 	 * Handler处理message常量
 	 */
@@ -101,6 +110,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 	public static final int MSG_VISIBLE = 9;
 	public static final int MSG_SHOWZOOMCONTROLS = 10;
 	public static final int MSG_UPDATE_CENTER_AND_ZOOM = 11;
+	public static final int MSG_APPEND = 12;
 	
 	
 	/**
@@ -114,6 +124,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 	public DHMapFrameItem(Context pContext,IWebview pWebview,JsMapObject jsMapObject) {
 		super(pContext);
 		mWebview = pWebview;
+		mContainerWebview = pWebview;
 		mJsMapView = jsMapObject;
 		mMapHandler = new MapHandler(Looper.getMainLooper());
 		mOverlaysId = new ArrayList<Object>();
@@ -173,7 +184,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 		}
 	}
 	/**
-	 * @param mZoom the zoom to set
+	 * @param pZoom the zoom to set
 	 */
 	public void setZoom(String pZoom) {
 		int _zoom = 0;
@@ -383,33 +394,123 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 	
 	
 	public void createMap(JSONArray array){
-		
 		Message m = Message.obtain();
 		m.what = MSG_CREATE;
 		m.obj = array;
+		mOptions = array;
 		mMapHandler.sendMessage(m);
-		
 	}
 	
 	public void resize(JSONArray pJsArgs){
-		AdaFrameItem frameView = (AdaFrameItem)mWebview.obtainFrameView();
+		AdaFrameItem frameView = (AdaFrameItem)mContainerWebview.obtainFrameView();
 		ViewRect webParentViewRect = frameView.obtainFrameOptions();
-		
-		float scale = mWebview.getScale();
-		
-		int _l = (int)(Integer.parseInt(JSONUtil.getString(pJsArgs,0)) * scale) /*+ webParentViewRect.left*/;
-		int _t = (int)(Integer.parseInt(JSONUtil.getString(pJsArgs,1)) * scale) /*+ webParentViewRect.top*/;
-		int _w = Math.min((int)(Integer.parseInt(JSONUtil.getString(pJsArgs,2)) * scale), webParentViewRect.width);
-		int _h = Math.min((int)(Integer.parseInt(JSONUtil.getString(pJsArgs,3)) * scale), webParentViewRect.height);
-		Logger.d("Maps","DHMapFrameItem.resize _l=" + _l + ";_t=" + _t + ";_w=" + _w + ";_h=" + _h);
-		obtainMainView().setLayoutParams(LayoutParamsUtil.createLayoutParams(_l, _t, _w, _h));
+		JSONObject option = mOptions.optJSONObject(0);
+		if(mOptions.length() > 4) {
+			try {
+				mOptions.put(1, pJsArgs.optInt(0));
+				mOptions.put(2, pJsArgs.optInt(1));
+				mOptions.put(3, pJsArgs.optInt(2));
+				mOptions.put(4, pJsArgs.optInt(3));
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}
+		LayoutParams _lp = getMapLayoutParams(webParentViewRect, option, mOptions);
+		obtainMainView().setLayoutParams(_lp);
 	}
-	
+
+	public void appendToFrameView(AdaFrameView frameView) {
+		if(getMapView() != null && getMapView().getMapView().getParent() != null) {
+			removeMapFrameItem(mContainerWebview);
+		}
+		mContainerWebview = frameView.obtainWebView();
+		Message m = Message.obtain();
+		m.what = MSG_APPEND;
+		m.obj = mOptions;
+		mMapHandler.sendMessage(m);
+	}
+
+	public void removeMapFrameItem(IWebview pFrame) {
+		if(mPosition.equals("absolute")) {
+			pFrame.obtainFrameView().removeFrameItem(DHMapFrameItem.this);
+		} else {
+			pFrame.removeFrameItem(DHMapFrameItem.this);
+		}
+	}
+
+	public void setStyles(JSONObject styles) {
+		JSONObject cStyles = JSONUtil.getJSONObject(mOptions, 0);
+		JSONUtil.combinJSONObject(cStyles, styles);
+		if(mMapView != null) {
+			if(styles.has("center")) {
+				LatLng center = new LatLng(styles.optJSONObject("center").optDouble("latitude"),
+						styles.optJSONObject("center").optDouble("longitude"));
+				mMapView.setCenter(center);
+			}
+
+			if(styles.has("zoom")) {
+				int zoom = styles.optInt("zoom");
+				mMapView.setZoom(zoom);
+			}
+
+			if(styles.has("type")) {
+				int type = DHMapView.MAPTYPE_NORMAL;
+				if("MAPTYPE_SATELLITE".equals(styles.optString("type"))){
+					type = DHMapView.MAPTYPE_SATELLITE;
+				}
+				mMapView.setMapType(type);
+			}
+
+			if(styles.has("traffic")) {
+				boolean isTraffic = styles.optBoolean("traffic");
+				setTraffic(isTraffic);
+			}
+
+			if(styles.has("zoomControls")) {
+				boolean isZoomControls = styles.optBoolean("zoomControls");
+				mMapView.showZoomControls(isZoomControls);
+			}
+
+			if(styles.has("top") || styles.has("left") || styles.has("width") || styles.has("height") || styles.has("position")) {
+				AdaFrameItem frameView = (AdaFrameItem)mContainerWebview.obtainFrameView();
+				ViewRect webParentViewRect = frameView.obtainFrameOptions();
+				LayoutParams _lp = getMapLayoutParams(webParentViewRect, JSONUtil.getJSONObject(mOptions, 0), mOptions);
+				if(styles.has("position")) {
+					String position = styles.optString("position");
+					if(!position.equals(mPosition)) {
+						if(mPosition.equals("absolute")) {
+							mContainerWebview.obtainFrameView().removeFrameItem(DHMapFrameItem.this);
+							mContainerWebview.addFrameItem(DHMapFrameItem.this, _lp);
+						} else {
+							mContainerWebview.removeFrameItem(DHMapFrameItem.this);
+							mContainerWebview.obtainFrameView().addFrameItem(DHMapFrameItem.this, _lp);
+						}
+						mPosition = position;
+					}
+				} else {
+					obtainMainView().setLayoutParams(_lp);
+				}
+			}
+		}
+
+
+		/*Iterator<String> iterator = styles.keys();
+		while(iterator.hasNext()){
+			String key = iterator.next();
+			try {
+				oldStyles.put(key, styles.opt(key));
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}*/
+
+	}
+
 	class MapHandler extends Handler {
 
 		/**
 		 * Description: 构造函数 
-		 * @param mainLooper 
+		 * @param looper
 		 *
 		 * <pre><p>ModifiedLog:</p>
 		 * Log ID: 1.0 (Log编号 依次递增)
@@ -430,66 +531,19 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 		public void handleMessage(Message m) {// 处理消息
 		
 			switch (m.what) {
-			case MSG_CREATE:
-				JSONArray jsonArray = (JSONArray)m.obj;
-				AdaFrameItem frameView = (AdaFrameItem)mWebview.obtainFrameView();
-				ViewRect webParentViewRect = frameView.obtainFrameOptions();
-				
-				float scale = mWebview.getScale();
-				int _l = (int)(jsonArray.optInt(0) * scale) /*+ webParentViewRect.left*/;
-				int _t = (int)(jsonArray.optInt(1) * scale) /*+ webParentViewRect.top*/;
-				int _w = Math.min((int)(jsonArray.optInt(2) * scale), webParentViewRect.width);
-				int _h = Math.min((int)(jsonArray.optInt(3) * scale), webParentViewRect.height);
-				DHMapFrameItem.this.updateViewRect((AdaFrameItem)mWebview.obtainFrameView(), new int[]{_l,_t,_w,_h}, new int[]{webParentViewRect.width,webParentViewRect.height});
-				Logger.d("mapview","_l=" + _l + ";_t=" + _t + ";_w=" + _w + ";_h=" + _h);
-				LayoutParams _lp = LayoutParamsUtil.createLayoutParams(_l, _t,_w, _h);
-				JSONObject option = jsonArray.optJSONObject(4);
-				LatLng center = null;
-				if (option.optJSONObject("center") != null) {
-					center = new LatLng(option.optJSONObject("center").optDouble("latitude"), 
-							option.optJSONObject("center").optDouble("longitude"));
-				}
-				int zoom = option.optInt("zoom");
-				boolean isTraffic = option.optBoolean("traffic");
-				boolean isZoomControls = option.optBoolean("zoomControls");
-				int type = BaiduMap.MAP_TYPE_NORMAL;
-				if (option.optString("type").equals("MAPTYPE_SATELLITE")) {
-					type = BaiduMap.MAP_TYPE_SATELLITE;
-				}
-				DHMapView _mapView = new DHMapView(getActivity(),mWebview, center, zoom, type, isTraffic, isZoomControls);
-//				mMapManager.start();
-				_mapView.mUUID = mUUID;
-				setMapView(_mapView);
-				if(_mapView.getMapView().getParent() != null){
-					obtainMainView().setLayoutParams(_lp);	
-				}else{
-//					_mapView.initMap();
-//					View frameView = ((AdaFrameItem)mWebview.obtainFrameView()).obtainMainView();
-//					if(DeviceInfo.sDeviceSdkVer >= 11){
-//						frameView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-//					}
-//					mWebview.addFrameItem(DHMapFrameItem.this,_lp);
-					//将地图添加到frameView上,android 2.3地图添加到webview上为透明的
-					String position = option.optString("position");
-					if("absolute".equals(position)){
-						mWebview.obtainFrameView().addFrameItem(DHMapFrameItem.this,_lp);
-					}else{//默认为"static",也可能为其它非法字符串
-						if(DeviceInfo.sDeviceSdkVer >= 11){//使用系统默认View硬件加速，可能引起闪屏，LAYER_TYPE_HARDWARE无效
-							mWebview.obtainWebview().setLayerType(View.LAYER_TYPE_NONE, null);
-						}
-						mWebview.addFrameItem(DHMapFrameItem.this,_lp);
-					}
-					Logger.d(Logger.MAP_TAG,"addMapView webview_name=" + mWebview.obtainFrameId());
-//					((ViewGroup)((AdaFrameItem)mWebview.obtainFrameView()).obtainMainView())
-//					.addView(_mapView,_lp);
-				}
-				break;
-			case MSG_SCALE:
-				mMapView.setZoom((Integer)m.obj);
-				break;
-			case MSG_UPDATE_CENTER:
-				mMapView.setCenter((LatLng) m.obj);
-				break;
+				case MSG_CREATE:
+					JSONArray jsonArray = (JSONArray)m.obj;
+					createMapFrameItem(jsonArray);
+					break;
+				case MSG_APPEND:
+					addToFrameItem(m.obj);
+					break;
+				case MSG_SCALE:
+					mMapView.setZoom((Integer)m.obj);
+					break;
+				case MSG_UPDATE_CENTER:
+					mMapView.setCenter((LatLng) m.obj);
+					break;
 //			case MSG_UPDATE_CENTER_AND_ZOOM:
 //				Object[] args = (Object[])m.obj;
 //				LatLng ll = (LatLng) args[0];
@@ -497,34 +551,98 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 //				int _zoom = Integer.parseInt(s_zoom == null ? "12":s_zoom);
 //				mMapView.setZoom(_zoom);
 //				mMapView.setCenter(ll);
-			case MSG_ADD_OVERLAY:
-				mMapView.addOverlay(m.obj);
-				break;
-			case MSG_REMOVE_OVERLAY:
-				mMapView.removeOverlay(m.obj);
-				break;
-			case MSG_CLEAR_OVERLAY:
-				mMapView.clearOverlays();
-				break;
-			case MSG_SHOWLOCATION:
-				mMapView.showUserLocation((Boolean) m.obj);
-				break;
-			case MSG_SET_MAPTYPE:
-				mMapView.setMapType((Integer)m.obj);
-				break;
-			case MSG_VISIBLE:
-				mMapView.setVisible((Boolean)m.obj);
-				break;
-			case MSG_SHOWZOOMCONTROLS:
-				mMapView.showZoomControls((Boolean) m.obj);
-				break;
-			case MSG_RESET:
-				Object[] _objs = (Object[]) m.obj;
-				mMapView.setZoom((Integer)_objs[0]);
-				mMapView.setCenter((LatLng) _objs[1]);
-				break;
+				case MSG_ADD_OVERLAY:
+					mMapView.addOverlay(m.obj);
+					break;
+				case MSG_REMOVE_OVERLAY:
+					mMapView.removeOverlay(m.obj);
+					break;
+				case MSG_CLEAR_OVERLAY:
+					mMapView.clearOverlays();
+					break;
+				case MSG_SHOWLOCATION:
+					mMapView.showUserLocation((Boolean) m.obj);
+					break;
+				case MSG_SET_MAPTYPE:
+					mMapView.setMapType((Integer)m.obj);
+					break;
+				case MSG_VISIBLE:
+					mMapView.setVisible((Boolean)m.obj);
+					break;
+				case MSG_SHOWZOOMCONTROLS:
+					mMapView.showZoomControls((Boolean) m.obj);
+					break;
+				case MSG_RESET:
+					Object[] _objs = (Object[]) m.obj;
+					mMapView.setZoom((Integer)_objs[0]);
+					mMapView.setCenter((LatLng) _objs[1]);
+					break;
 			}
 		}
+	}
+
+	private void createMapFrameItem(JSONArray jsonArray) {
+		//AdaFrameItem frameView = (AdaFrameItem)mContainerWebview.obtainFrameView();
+		//ViewRect webParentViewRect = frameView.obtainFrameOptions();
+		JSONObject option = jsonArray.optJSONObject(0);
+		mPosition = option.optString("position");
+		//LayoutParams _lp = getMapLayoutParams(webParentViewRect, option, jsonArray);
+		LatLng center = null;
+		if (option.optJSONObject("center") != null) {
+			center = new LatLng(option.optJSONObject("center").optDouble("latitude"),
+					option.optJSONObject("center").optDouble("longitude"));
+		}
+		int zoom = option.optInt("zoom");
+		boolean isTraffic = option.optBoolean("traffic");
+		boolean isZoomControls = option.optBoolean("zoomControls");
+		int type = BaiduMap.MAP_TYPE_NORMAL;
+		if (option.optString("type").equals("MAPTYPE_SATELLITE")) {
+			type = BaiduMap.MAP_TYPE_SATELLITE;
+		}
+		DHMapView _mapView = new DHMapView(getActivity(),mWebview, center, zoom, type, isTraffic, isZoomControls);
+//				mMapManager.start();
+		_mapView.mUUID = mUUID;
+		setMapView(_mapView);
+	}
+
+	private void addToFrameItem(Object obj) {
+		JSONArray jsonArray = (JSONArray)obj;
+		if(getMapView() == null) {
+			createMapFrameItem(jsonArray);
+		}
+		JSONObject option = jsonArray.optJSONObject(0);
+		AdaFrameItem frameView = (AdaFrameItem)mContainerWebview.obtainFrameView();
+		ViewRect webParentViewRect = frameView.obtainFrameOptions();
+		LayoutParams _lp = getMapLayoutParams(webParentViewRect, option, jsonArray);
+		if("absolute".equals(mPosition)) {
+			mContainerWebview.obtainFrameView().addFrameItem(DHMapFrameItem.this, _lp);
+		}else {//默认为"static",也可能为其它非法字符串
+			if(DeviceInfo.sDeviceSdkVer >= 11){//使用系统默认View硬件加速，可能引起闪屏，LAYER_TYPE_HARDWARE无效
+				mContainerWebview.obtainWebview().setLayerType(View.LAYER_TYPE_NONE, null);
+			}
+			mContainerWebview.addFrameItem(DHMapFrameItem.this,_lp);
+		}
+	}
+
+	private LayoutParams getMapLayoutParams(ViewRect rect, JSONObject option, JSONArray jsonArray) {
+		float scale = mContainerWebview.getScale();
+		LayoutParams _lp = null;
+		if(jsonArray != null && jsonArray.length() > 4) {
+			int _l = (int)(jsonArray.optInt(1) * scale) /*+ webParentViewRect.left*/;
+			int _t = (int)(jsonArray.optInt(2) * scale) /*+ webParentViewRect.top*/;
+			int _w = Math.min((int)(jsonArray.optInt(3) * scale), rect.width);
+			int _h = Math.min((int)(jsonArray.optInt(4) * scale), rect.height);
+			DHMapFrameItem.this.updateViewRect((AdaFrameItem)mContainerWebview.obtainFrameView(), new int[]{_l,_t,_w,_h}, new int[]{rect.width,rect.height});
+			Logger.d("mapview","_l=" + _l + ";_t=" + _t + ";_w=" + _w + ";_h=" + _h);
+			_lp = LayoutParamsUtil.createLayoutParams(_l, _t,_w, _h);
+		} else {
+			int l = PdrUtil.convertToScreenInt(JSONUtil.getString(option, StringConst.JSON_KEY_LEFT), rect.width, /*_wOptions.left*/0, scale);
+			int t = PdrUtil.convertToScreenInt(JSONUtil.getString(option, StringConst.JSON_KEY_TOP), rect.height, /*_wOptions.top*/0, scale);
+			int w = PdrUtil.convertToScreenInt(JSONUtil.getString(option, StringConst.JSON_KEY_WIDTH), rect.width, rect.width, scale);
+			int h = PdrUtil.convertToScreenInt(JSONUtil.getString(option, StringConst.JSON_KEY_HEIGHT), rect.height, rect.height, scale);
+			_lp = LayoutParamsUtil.createLayoutParams(l, t, w, h);
+		}
+		return _lp;
 	}
 
 	@Override
@@ -549,8 +667,14 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
             mMapView.clearOverlays();
             mMapView.setVisible(false);
             mMapView.dispose();
-            mWebview.removeFrameItem(DHMapFrameItem.this);
+			JsMapManager.getJsMapManager().removeJsMapView(mContainerWebview.obtainApp().obtainAppId(), mUUID);
+			if(mPosition.equals("static")) {
+				mContainerWebview.removeFrameItem(DHMapFrameItem.this);
+			} else {
+				mContainerWebview.obtainFrameView().removeFrameItem(DHMapFrameItem.this);
+			}
             mMapView.mAutoPopFromStack = false;
+			mContainerWebview = null;
             //mMapView = null;
         }
     }
@@ -569,5 +693,51 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 	}
 	public String getBounds(){
 		return mMapView.getBounds();
+	}
+
+	public JSONObject getMapOptions(){
+		if(mOptions != null) {
+			return mOptions.optJSONObject(0);
+		}
+		return null;
+	}
+
+	private String PERCENTAGE = "%";
+	@Override
+	protected void onResize() {
+		super.onResize();
+		if(mOptions != null && getMapView().getMapView().getParent() != null) {
+			JSONObject option = mOptions.optJSONObject(0);
+			if(option != null) {
+				if(!option.has(StringConst.JSON_KEY_WIDTH) && !option.has(StringConst.JSON_KEY_HEIGHT) && !option.has(StringConst.JSON_KEY_TOP) && !option.has(StringConst.JSON_KEY_LEFT)) {
+					return;
+				}
+			}
+			// 检测是否存在百分比数据 进行自适应
+			String width = JSONUtil.getString(option, StringConst.JSON_KEY_WIDTH);
+			String height = JSONUtil.getString(option, StringConst.JSON_KEY_HEIGHT);
+			String top = JSONUtil.getString(option, StringConst.JSON_KEY_TOP);
+			String left = JSONUtil.getString(option, StringConst.JSON_KEY_LEFT);
+			boolean isResize = false;
+			if(!PdrUtil.isEmpty(width) && width.endsWith(PERCENTAGE)) {
+				isResize = true;
+			}
+			if(!PdrUtil.isEmpty(height) && height.endsWith(PERCENTAGE)) {
+				isResize = true;
+			}
+			if(!PdrUtil.isEmpty(top) && top.endsWith(PERCENTAGE)) {
+				isResize = true;
+			}
+			if(!PdrUtil.isEmpty(left) && left.endsWith(PERCENTAGE)) {
+				isResize = true;
+			}
+			if(!isResize) {
+				return;
+			}
+			AdaFrameItem frameView = (AdaFrameItem)mContainerWebview.obtainFrameView();
+			ViewRect webParentViewRect = frameView.obtainFrameOptions();
+			LayoutParams _lp = getMapLayoutParams(webParentViewRect, option, mOptions);
+			obtainMainView().setLayoutParams(_lp);
+		}
 	}
 }

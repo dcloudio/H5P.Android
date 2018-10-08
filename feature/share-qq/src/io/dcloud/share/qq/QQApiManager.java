@@ -133,9 +133,11 @@ public class QQApiManager implements IFShareApi {
 		Bundle params = new Bundle();
 		try {
 			JSONObject _msg = new JSONObject(pShareMsg);
+			String type = _msg.optString("type");
 			String _content = _msg.optString("content");
 			String _title = _msg.optString("title");
 			String href = _msg.optString("href");
+			String media = _msg.optString("media");
 			JSONArray _thumbs = _msg.optJSONArray("thumbs");
 			JSONArray _pictures = _msg.optJSONArray("pictures");
 			String imgPath = _pictures != null ? _pictures.optString(0, null) : null;
@@ -147,7 +149,36 @@ public class QQApiManager implements IFShareApi {
 			if (!TextUtils.isEmpty(_content)) {
 				params.putString(QQShare.SHARE_TO_QQ_SUMMARY, _content);
 			}
-		    if(!PdrUtil.isEmpty(href)) {
+			if(!TextUtils.isEmpty(type) && type.equals("text")) {
+				if(TextUtils.isEmpty(href)) {
+					callBackError(pWebViewImpl, pCallbackId, DOMException.toString("非纯图片分享必须传递链接地址！"), DOMException.CODE_PARAMETER_ERRORP);
+					return;
+				}
+				params.putString(QQShare.SHARE_TO_QQ_TARGET_URL,  href); // 链接
+			} else if(!TextUtils.isEmpty(type) && type.equals("image")) {
+				if(TextUtils.isEmpty(href)) {
+					params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_IMAGE);
+				} else {
+					params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT);
+					params.putString(QQShare.SHARE_TO_QQ_TARGET_URL,  href); // 链接
+				}
+				if (!TextUtils.isEmpty(imgPath)) {
+					setBundleImgUrl(pWebViewImpl, imgPath, params, true);
+				} else if (!TextUtils.isEmpty(thumbImgPath)) {
+					setBundleImgUrl(pWebViewImpl, thumbImgPath, params, true);
+				}
+			} else if(!TextUtils.isEmpty(type) && type.equals("music")) {
+				if(TextUtils.isEmpty(href)) {
+					callBackError(pWebViewImpl, pCallbackId, DOMException.toString("非纯图片分享必须传递链接地址！"), DOMException.CODE_PARAMETER_ERRORP);
+					return;
+				}
+				params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_AUDIO);
+				params.putString(QQShare.SHARE_TO_QQ_TARGET_URL,  href);
+				params.putString(QQShare.SHARE_TO_QQ_AUDIO_URL, media);
+			} else if(!TextUtils.isEmpty(type)) {
+				callBackError(pWebViewImpl, pCallbackId, DOMException.toString("type参数无法正确识别，请按规范范围填写"), -100);
+				return;
+			} else if(!PdrUtil.isEmpty(href)) {
 		    	// 有链接 默认模式
 				params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT);
 			    params.putString(QQShare.SHARE_TO_QQ_TARGET_URL,  href); // 链接
@@ -158,13 +189,13 @@ public class QQApiManager implements IFShareApi {
 		    	}
 		    } else {
 		    	//无连接 表示图片模式
-			    if (!TextUtils.isEmpty(imgPath)) {
-			    	setBundleImgUrl(pWebViewImpl, imgPath, params, false);
-			    	params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_IMAGE);
-			    } else {
+				if (!TextUtils.isEmpty(imgPath)) {
+					setBundleImgUrl(pWebViewImpl, imgPath, params, false);
+					params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_IMAGE);
+				} else {
 			    	callBackError(pWebViewImpl, pCallbackId, DOMException.toString("非纯图片分享必须传递链接地址！"), DOMException.CODE_PARAMETER_ERRORP);
 			    	return;
-			    }
+				}
 		    }
 		    myIUiListener = new MyIUiListener(pWebViewImpl, pCallbackId);
 		    mTencent.shareToQQ(pWebViewImpl.getActivity(), params, myIUiListener);

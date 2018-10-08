@@ -21,7 +21,7 @@ import io.dcloud.feature.audio.mp3.SimpleLame;
 public class DataEncodeThread extends Thread implements AudioRecord.OnRecordPositionUpdateListener {
 	public static final int PROCESS_STOP = 1;
 	private StopHandler mHandler;
-	private byte[] mMp3Buffer;
+	private byte[] mBuffer;
 	private FileOutputStream mFileOutputStream;
 	private String mFormat;
 	private CountDownLatch mHandlerInitLatch = new CountDownLatch(1);
@@ -57,7 +57,7 @@ public class DataEncodeThread extends Thread implements AudioRecord.OnRecordPosi
 	 */
 	public DataEncodeThread(File file, int bufferSize, String format) throws FileNotFoundException {
 		this.mFileOutputStream = new FileOutputStream(file);
-		mMp3Buffer = new byte[(int) (7200 + (bufferSize * 2 * 1.25))];
+		mBuffer = new byte[(int) (7200 + (bufferSize * 2 * 1.25))];
 		this.mFormat = format;
 
 	}
@@ -111,18 +111,18 @@ public class DataEncodeThread extends Thread implements AudioRecord.OnRecordPosi
 			int encodedSize = 0;
 			if(mFormat.equalsIgnoreCase("aac")) {
 				try {
-					mMp3Buffer = AacEncode.getAacEncode().offerEncoder(task.getByteData());
-					encodedSize = mMp3Buffer.length;
+					mBuffer = AacEncode.getAacEncode().offerEncoder(task.getByteData());
+					encodedSize = mBuffer.length;
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			} else {
-				encodedSize = SimpleLame.encode(buffer, rightData, readSize, mMp3Buffer);
+				encodedSize = SimpleLame.encode(buffer, rightData, readSize, mBuffer);
 			}
 
 			if (encodedSize > 0){
 				try {
-					mFileOutputStream.write(mMp3Buffer, 0, encodedSize);
+					mFileOutputStream.write(mBuffer, 0, encodedSize);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -137,21 +137,21 @@ public class DataEncodeThread extends Thread implements AudioRecord.OnRecordPosi
 	 * Flush all data left in lame buffer to file
 	 */
 	private void flushAndRelease() {
-		//将MP3结尾信息写入buffer中
+		//将结尾信息写入buffer中
 		int flushResult = 0;
 		if(mFormat.equalsIgnoreCase("aac")) {
 			try {
-				mMp3Buffer = AacEncode.getAacEncode().offerEncoder(mMp3Buffer);
-				flushResult = mMp3Buffer.length;
+				mBuffer = AacEncode.getAacEncode().offerEncoder(mBuffer);
+				flushResult = mBuffer.length;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		} else {
-			flushResult = SimpleLame.flush(mMp3Buffer);
+			flushResult = SimpleLame.flush(mBuffer);
 		}
 		if (flushResult > 0) {
 			try {
-				mFileOutputStream.write(mMp3Buffer, 0, flushResult);
+				mFileOutputStream.write(mBuffer, 0, flushResult);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}finally{
@@ -163,9 +163,12 @@ public class DataEncodeThread extends Thread implements AudioRecord.OnRecordPosi
 						e.printStackTrace();
 					}
 				}
-				SimpleLame.close();
-				AacEncode.getAacEncode().close();
 			}
+		}
+		if(mFormat.equalsIgnoreCase("aac")) {
+			AacEncode.getAacEncode().close();
+		} else {
+			SimpleLame.close();
 		}
 	}
 	private List<Task> mTasks = Collections.synchronizedList(new ArrayList<Task>());

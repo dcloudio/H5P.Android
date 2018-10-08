@@ -15,6 +15,7 @@
  */
 package io.dcloud.feature.barcode.camera;
 
+import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.feature.barcode.view.DetectorViewConfig;
 
 import java.util.regex.Pattern;
@@ -111,7 +112,7 @@ final class CameraConfigurationManager {
     Point cameraResolution = null;
 
     if (previewSizeValueString != null) {
-      Log.d(TAG, "preview-size-values parameter: " + previewSizeValueString);
+      Logger.i(TAG, "preview-size-values parameter: " + previewSizeValueString);
       cameraResolution = findBestPreviewSizeValue(previewSizeValueString, screenResolution);
     }
 
@@ -211,6 +212,9 @@ final class CameraConfigurationManager {
 			try {
 				newX = Integer.parseInt(previewSize.substring(0, dimPosition));
 				newY = Integer.parseInt(previewSize.substring(dimPosition + 1));
+				if(newX < newY) {
+				    continue;
+                }
 			} catch (NumberFormatException nfe) {
 				Log.w(TAG, "Bad preview-size: " + previewSize);
 				continue;

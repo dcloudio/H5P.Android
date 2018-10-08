@@ -20,13 +20,18 @@ import com.amap.api.maps.MapView;
 public abstract class JsMapObject {
 	protected MapView mMapView = null;
 	protected IWebview mWebview = null;
-	String mUUID = null; 
+	String mUUID = null;
+	String mJsId = null;
 	protected JsMapObject(IWebview pWebview){
 		mWebview = pWebview;
 	}
 	
 	void setUUID(String uuid){
 		mUUID = uuid;
+	}
+
+	void setJsId(String id) {
+		mJsId = id;
 	}
 	/**
 	 * 

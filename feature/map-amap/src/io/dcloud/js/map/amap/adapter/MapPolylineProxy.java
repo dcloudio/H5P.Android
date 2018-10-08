@@ -47,8 +47,7 @@ public class MapPolylineProxy{
 //	Geometry lineGeometry = null;
 	/**
 	 * 
-	 * Description: 构造函数 
-	 * @param mapview 父类GraphicsOverlay需要MapView
+	 * Description: 构造函数
 	 * @param pMapPoints 
 	 *</pre> Create By: yanglei Email:yanglei@dcloud.io at 2014-5-30 下午04:36:16
 	 */
@@ -77,7 +76,7 @@ public class MapPolylineProxy{
 	/**
 	 * 
 	 * Description:设置折线的顶点坐标
-	 * @param pAryPoint
+	 * @param pMapPoints
 	 *
 	 * <pre><p>ModifiedLog:</p>
 	 * Log ID: 1.0 (Log编号 依次递增)

@@ -5,6 +5,7 @@ import io.dcloud.common.DHInterface.ISysEventListener;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.ui.AdaFrameItem;
 import io.dcloud.common.adapter.ui.AdaFrameItem.LayoutParamsUtil;
+import io.dcloud.common.adapter.ui.AdaFrameView;
 import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.adapter.util.ViewRect;
 import io.dcloud.common.constant.DOMException;
@@ -33,6 +34,7 @@ public class BarcodeProxy implements ISysEventListener {
 	public static Context context = null;
 	BarcodeFrameItem mBarcodeView = null;
 	boolean mIsRegisetedSysEvent = false;
+	public String mId;
 	void execute(IWebview pWebViewImpl, String pActionName,String[] pJsArgs){
 //		IApp _app = pWebViewImpl.obtainApp();
 //		if(_app.checkSelfPermission("android.permission.CAMERA") != 2){
@@ -48,10 +50,11 @@ public class BarcodeProxy implements ISysEventListener {
 		if("start".equals(pActionName)){
 			if(!PdrUtil.isEmpty(mBarcodeView.errorMsg)){
 				String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BARCODE_ERROR,mBarcodeView.errorMsg);
-				JSUtil.execCallback(pWebViewImpl, mBarcodeView.mCallbackId,msg , JSUtil.ERROR, true, true);
+				mBarcodeView.runJsCallBack(msg, JSUtil.ERROR, true, true);
+				//JSUtil.execCallback(pWebViewImpl, mBarcodeView.mCallbackId,msg , JSUtil.ERROR, true, true);
 			}else{
 				boolean _conserve = false;
-				JSONObject args = JSONUtil.createJSONObject(pJsArgs[0]);
+				JSONObject args = JSONUtil.createJSONObject(pJsArgs[1]);
 				if(args != null){
 					_conserve = PdrUtil.parseBoolean(JSONUtil.getString(args, "conserve"), _conserve, false);
 					if(_conserve){
@@ -59,7 +62,8 @@ public class BarcodeProxy implements ISysEventListener {
 						mBarcodeView.mFilename = pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(),_filename);
 						Logger.d("Filename:" + mBarcodeView.mFilename);
 					}
-					mBarcodeView.vibrate = PdrUtil.parseBoolean(JSONUtil.getString(args, "vibrate"), true, false);
+					mBarcodeView.vibrate = PdrUtil.parseBoolean
+							(JSONUtil.getString(args, "vibrate"), true, false);
 					mBarcodeView.playBeep = !TextUtils.equals(JSONUtil.getString(args, "sound"), "none");
 				}
 				mBarcodeView.mConserve = _conserve;
@@ -68,54 +72,57 @@ public class BarcodeProxy implements ISysEventListener {
 		}else if("cancel".equals(pActionName)){
 			mBarcodeView.cancel_scan();
 		}else if("setFlash".equals(pActionName)){
-			mBarcodeView.setFlash(Boolean.parseBoolean(pJsArgs[0]));
+			mBarcodeView.setFlash(Boolean.parseBoolean(pJsArgs[1]));
 //			save = true;
 //			context = pWebViewImpl.getContext();
 		}else if("Barcode".equals(pActionName)){
+			String uuid = pJsArgs[0];
 			if(!mIsRegisetedSysEvent){
 				IApp app = pWebViewImpl.obtainFrameView().obtainApp();
 				app.registerSysEventListener(this, SysEventType.onPause);
 				app.registerSysEventListener(this, SysEventType.onResume);
 				mIsRegisetedSysEvent = true;
 			}
+			//创建barcode系统控件
+			JSONArray filters = null;
+			if(!PdrUtil.isEmpty(pJsArgs[4])){
+				filters = JSONUtil.createJSONArray(pJsArgs[4]);//获取支持扫描
+			}
+			JSONObject styles = null;
+			if(!PdrUtil.isEmpty(pJsArgs[5])){
+				styles = JSONUtil.createJSONObject(pJsArgs[5]);
+			}
 			//解析html控件位置大小
-			JSONArray arr = JSONUtil.createJSONArray(pJsArgs[1]);
-			Rect dvc = DetectorViewConfig.getInstance().gatherRect;
-			dvc.left = PdrUtil.parseInt(JSONUtil.getString(arr, 0), 0);
-			dvc.top = PdrUtil.parseInt(JSONUtil.getString(arr, 1), 0);
-			dvc.right = dvc.left + PdrUtil.parseInt(JSONUtil.getString(arr, 2), 0);
-			dvc.bottom = dvc.top + PdrUtil.parseInt(JSONUtil.getString(arr, 3), 0);
-			
-			float s = pWebViewImpl.getScale();
-			dvc.left *= s;
-			dvc.top *= s;
-			dvc.right *= s; 
-			dvc.bottom *= s;
-			int[] frameLocationOnScreen = new int[2];
-			pWebViewImpl.obtainWebview().getLocationOnScreen(frameLocationOnScreen);
-			dvc.left += frameLocationOnScreen[0];
-			dvc.top += frameLocationOnScreen[1];
-			if(dvc.width() != 0 && dvc.height() != 0){
-				//创建barcode系统控件
-				JSONArray filters = null;
-				if(!PdrUtil.isEmpty(pJsArgs[2])){
-					filters = JSONUtil.createJSONArray(pJsArgs[2]);//获取支持扫描
-				}
-				JSONObject styles = null;
-				if(!PdrUtil.isEmpty(pJsArgs[3])){
-					styles = JSONUtil.createJSONObject(pJsArgs[3]);
-				}
-				AbsoluteLayout.LayoutParams lp = (AbsoluteLayout.LayoutParams)LayoutParamsUtil.createLayoutParams(dvc.left, dvc.top, dvc.width(), dvc.height());
-				mBarcodeView = new BarcodeFrameItem(this,pWebViewImpl,lp,filters,styles);
-				AdaFrameItem frameView = (AdaFrameItem)pWebViewImpl.obtainFrameView();
-				ViewRect frameViewRect = frameView.obtainFrameOptions();
-				mBarcodeView.updateViewRect((AdaFrameItem)pWebViewImpl.obtainFrameView(), new int[]{dvc.left,dvc.top,dvc.width(),dvc.height()}, new int[]{frameViewRect.width,frameViewRect.height});
-				mBarcodeView.mCallbackId = pJsArgs[0];
-				pWebViewImpl.obtainFrameView().addFrameItem(mBarcodeView,lp);
+			JSONArray arr = JSONUtil.createJSONArray(pJsArgs[3]);
+			mId = pJsArgs[2];
+			mBarcodeView = new BarcodeFrameItem(this,pWebViewImpl,uuid,arr,filters,styles);
+			mBarcodeView.addCallBackId(pJsArgs[1], pWebViewImpl.getWebviewUUID());
+			if(arr.length() > 3) {
+				/*Rect dvc = DetectorViewConfig.getInstance().gatherRect;
+				dvc.left = PdrUtil.parseInt(JSONUtil.getString(arr, 0), 0);
+				dvc.top = PdrUtil.parseInt(JSONUtil.getString(arr, 1), 0);
+				dvc.right = dvc.left + PdrUtil.parseInt(JSONUtil.getString(arr, 2), 0);
+				dvc.bottom = dvc.top + PdrUtil.parseInt(JSONUtil.getString(arr, 3), 0);
+				float s = pWebViewImpl.getScale();
+				dvc.left *= s;
+				dvc.top *= s;
+				dvc.right *= s;
+				dvc.bottom *= s;
+				if(dvc.width() != 0 && dvc.height() != 0){
+
+					AbsoluteLayout.LayoutParams lp = (AbsoluteLayout.LayoutParams)LayoutParamsUtil.createLayoutParams(dvc.left, dvc.top, dvc.width(), dvc.height());
+
+					mBarcodeView.updateViewRect((AdaFrameItem)pWebViewImpl.obtainFrameView(), new int[]{dvc.left,dvc.top,dvc.width(),dvc.height()}, new int[]{frameViewRect.width,frameViewRect.height});
+					mBarcodeView.mCallbackId = pJsArgs[0];
+
+
+					pWebViewImpl.obtainFrameView().addFrameItem(mBarcodeView,lp);
 //				pWebViewImpl.addFrameItem(mBarcodeView,lp);
-			}else{
-				Logger.e("Barcode","LayoutParams l=" + dvc.left + ";t=" + dvc.top + ";r=" + dvc.right + ";b=" + dvc.bottom);
-				//创建失败
+				}else{
+					Logger.e("Barcode","LayoutParams l=" + dvc.left + ";t=" + dvc.top + ";r=" + dvc.right + ";b=" + dvc.bottom);
+					//创建失败
+				}*/
+				mBarcodeView.toFrameView();
 			}
 		}else if("scan".equals(pActionName)){
 			String callbackId = pJsArgs[0];
@@ -133,6 +140,15 @@ public class BarcodeProxy implements ISysEventListener {
 			}
 		}else if("close".equals(pActionName)){
 			mBarcodeView.close_scan();
+		} else if("setStyle".equals(pActionName)) {
+			JSONObject styles = JSONUtil.createJSONObject(pJsArgs[1]);
+			if(styles != null) {
+				mBarcodeView.upateStyles(styles);
+			}
+		} else if("addCallBack".equals(pActionName)) {
+			if(mBarcodeView != null) {
+				mBarcodeView.addCallBackId(pJsArgs[1], pWebViewImpl.getWebviewUUID());
+			}
 		}
 	}
 	
@@ -143,7 +159,7 @@ public class BarcodeProxy implements ISysEventListener {
 		}
 		mIsRegisetedSysEvent = false;
 	}
-	
+
 	protected void onPause() {
 		if(mBarcodeView != null)
 			mBarcodeView.onPause();
@@ -162,4 +178,16 @@ public class BarcodeProxy implements ISysEventListener {
 		return false;
 	}
 
+	public void appendToFrameView(AdaFrameView frameView) {
+		if(mBarcodeView != null) {
+			mBarcodeView.appendToFrameView(frameView);
+		}
+	}
+
+	public JSONObject getJsBarcode() {
+		if(mBarcodeView != null) {
+			return mBarcodeView.getJsBarcode();
+		}
+		return null;
+	}
 }

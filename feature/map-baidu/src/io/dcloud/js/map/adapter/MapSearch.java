@@ -343,9 +343,9 @@ public class MapSearch implements OnGetRoutePlanResultListener, OnGetPoiSearchRe
 		sb.append(newJS_Point_Obj(poi.location,ptName));
 		String posName = "pos";
 		MapJsUtil.newJsVar(sb, posName, "plus.maps.Position", ptName);
-		MapJsUtil.assignJsVar(sb, posName, "address", poi.address);
-		MapJsUtil.assignJsVar(sb, posName, "city", poi.city);
-		MapJsUtil.assignJsVar(sb, posName, "name", poi.name);
+		MapJsUtil.assignJsVar(sb, posName, "address",  PdrUtil.makeQueryStringAllRegExp(poi.address));
+		MapJsUtil.assignJsVar(sb, posName, "city",  PdrUtil.makeQueryStringAllRegExp(poi.city));
+		MapJsUtil.assignJsVar(sb, posName, "name", PdrUtil.makeQueryStringAllRegExp(poi.name));
 		MapJsUtil.assignJsVar(sb, posName, "phone", poi.phoneNum);
 		MapJsUtil.assignJsVar(sb, posName, "postcode", poi.postCode);
 		return MapJsUtil.wrapJsEvalString(sb.toString(), posName);

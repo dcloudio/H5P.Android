@@ -1,13 +1,21 @@
 package io.dcloud.js.camera;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.StrictMode;
 import android.provider.MediaStore;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 
 import io.dcloud.common.DHInterface.AbsMgr;
 import io.dcloud.common.DHInterface.IApp;
@@ -21,6 +29,7 @@ import io.dcloud.common.adapter.util.PermissionUtil;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.ThreadPool;
 import io.dcloud.js.camera.CameraManager.CameraOption;
 
 /**
@@ -73,12 +82,27 @@ public class CameraFeatureImpl implements IFeature{
 									 if(pEventType == SysEventType.onActivityResult){
 										 if (requestCode == CameraManager.IMAGE_CAPTURE) {
 											 if (resultCode == Activity.RESULT_OK) {
-												 String backPath = _app.convert2RelPath(filepath);
-												 JSUtil.execCallback(pWebViewImpl, pCallbackId, backPath, JSUtil.OK, false, false);
+												 ThreadPool.self().addThreadTask(new Runnable() {
+													 @Override
+													 public void run() {
+														 final String backPath;
+													 	if(_option.optimize) {
+															String destFilePath = PhotoBitmapUtils.amendRotatePhoto(filepath);
+															backPath = _app.convert2RelPath(destFilePath);
+														} else {
+															backPath = _app.convert2RelPath(filepath);
+														}
+														 _app.getActivity().runOnUiThread(new Runnable() {
+															 @Override
+															 public void run() {
+																 JSUtil.execCallback(pWebViewImpl, pCallbackId, backPath, JSUtil.OK, false, false);
+															 }
+														 });
+													 }
+												 });
 											 }else{
 												 String callMsg = DOMException.toJSON(DOMException.CODE_CAMERA_ERROR,"resultCode is wrong");
 												 JSUtil.execCallback(pWebViewImpl, pCallbackId, callMsg, JSUtil.ERROR, true, false);
-
 											 }
 											 _app.unregisterSysEventListener(this, pEventType);
 										 }
@@ -179,5 +203,130 @@ public class CameraFeatureImpl implements IFeature{
 	@Override
 	public void dispose(String pAppid) {
 	}
+}
 
+
+class PhotoBitmapUtils {
+
+	// 防止实例化
+	private PhotoBitmapUtils() {
+	}
+
+	/**
+	 * 保存Bitmap图片在SD卡中
+	 * 如果没有SD卡则存在手机中
+	 *
+	 * @param mbitmap 需要保存的Bitmap图片
+	 * @return 保存成功时返回图片的路径，失败时返回null
+	 */
+	public static String savePhotoToSD(Bitmap mbitmap, String filePath) {
+		FileOutputStream outStream = null;
+		String fileName = filePath;
+		try {
+			outStream = new FileOutputStream(fileName);
+			// 把数据写入文件，100表示不压缩
+			mbitmap.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+			return fileName;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			try {
+				if (outStream != null) {
+					// 记得要关闭流！
+					outStream.close();
+				}
+				if (mbitmap != null) {
+					mbitmap.recycle();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * 读取图片
+	 *
+	 * @param path 原图的路径
+	 * @return 压缩后的图片
+	 */
+	public static Bitmap getCompressPhoto(String path) {
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		Bitmap bmp = BitmapFactory.decodeFile(path, options);
+		options = null;
+		return bmp;
+	}
+
+	/**
+	 * 处理旋转后的图片
+	 * @param originpath 原图路径
+	 * @return 返回修复完毕后的图片路径
+	 */
+	public static String amendRotatePhoto(String originpath) {
+		// 取得图片旋转角度
+		int angle = readPictureDegree(originpath);
+		if(angle == 0) {
+			return originpath;
+		}
+		// 把原图压缩后得到Bitmap对象
+		Bitmap bmp = getCompressPhoto(originpath);
+		// 修复图片被旋转的角度
+		Bitmap bitmap = rotaingImageView(angle, bmp);
+		// 保存修复后的图片并返回保存后的图片路径
+		return savePhotoToSD(bitmap, originpath);
+	}
+
+	/**
+	 * 读取照片旋转角度
+	 *
+	 * @param path 照片路径
+	 * @return 角度
+	 */
+	public static int readPictureDegree(String path) {
+		int degree = 0;
+		try {
+			ExifInterface exifInterface = new ExifInterface(path);
+			int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+			switch (orientation) {
+				case ExifInterface.ORIENTATION_ROTATE_90:
+					degree = 90;
+					break;
+				case ExifInterface.ORIENTATION_ROTATE_180:
+					degree = 180;
+					break;
+				case ExifInterface.ORIENTATION_ROTATE_270:
+					degree = 270;
+					break;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return degree;
+	}
+
+	/**
+	 * 旋转图片
+	 * @param angle 被旋转角度
+	 * @param bitmap 图片对象
+	 * @return 旋转后的图片
+	 */
+	public static Bitmap rotaingImageView(int angle, Bitmap bitmap) {
+		Bitmap returnBm = null;
+		// 根据旋转角度，生成旋转矩阵
+		Matrix matrix = new Matrix();
+		matrix.postRotate(angle);
+		try {
+			// 将原始图片按照旋转矩阵进行旋转，并得到新的图片
+			returnBm = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+		} catch (OutOfMemoryError e) {
+		}
+		if (returnBm == null) {
+			returnBm = bitmap;
+		}
+		if (bitmap != returnBm) {
+			bitmap.recycle();
+		}
+		return returnBm;
+	}
 }

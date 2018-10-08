@@ -2,25 +2,32 @@ package io.dcloud.feature.barcode;
 
 import io.dcloud.common.DHInterface.AbsMgr;
 import io.dcloud.common.DHInterface.IFeature;
+import io.dcloud.common.DHInterface.IWaiter;
 import io.dcloud.common.DHInterface.IWebview;
 
-public class BarcodeFeatureImpl implements IFeature {
+public class BarcodeFeatureImpl implements IFeature ,IWaiter{
 
-	BarcodeProxy mProxy = null;
+	BarcodeProxyMgr mBProxyMgr;
+
 	@Override
 	public String execute(IWebview pWebViewImpl, String pActionName,
 			String[] pJsArgs) {
-		mProxy.execute(pWebViewImpl, pActionName, pJsArgs);
-		return null;
+		return mBProxyMgr.execute(pWebViewImpl, pActionName, pJsArgs);
 	}
 
 	@Override
 	public void init(AbsMgr pFeatureMgr, String pFeatureName) {
-		mProxy = new BarcodeProxy();
+		mBProxyMgr = BarcodeProxyMgr.getBarcodeProxyMgr();
+		mBProxyMgr.setFeatureMgr(pFeatureMgr);
 	}
 
 	@Override
 	public void dispose(String pAppid) {
-		mProxy.onDestroy();
+		mBProxyMgr.onDestroy();
+	}
+
+	@Override
+	public Object doForFeature(String actionType, Object args) {
+		return mBProxyMgr.doForFeature(actionType, args);
 	}
 }

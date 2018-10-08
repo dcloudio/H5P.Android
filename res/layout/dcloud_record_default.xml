@@ -12,34 +12,50 @@
         android:layout_height="match_parent"
         android:layout_alignParentRight="true">
 
-        <ImageView
-            android:id="@+id/dcloud_record_arrow_left"
-            android:padding="2dp"
-            android:layout_marginTop="15dp"
-            android:layout_marginBottom="15dp"
-            android:layout_marginRight="4dp"
-            android:layout_marginLeft="4dp"
+        <LinearLayout
+            android:id="@+id/dcloud_record_arrow_left_layout"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:src="@drawable/dcloud_left_arrow"></ImageView>
+            android:gravity="center_vertical">
+            <ImageView
+                android:id="@+id/dcloud_record_arrow_left"
+                android:padding="2dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="15dp"
+                android:layout_marginRight="4dp"
+                android:layout_marginLeft="4dp"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:clickable="false"
+                android:longClickable="false"
+                android:src="@drawable/dcloud_left_arrow"/>
+        </LinearLayout>
 
         <View
             android:layout_marginTop="15dp"
             android:layout_marginBottom="15dp"
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="@drawable/dcloud_record_view_line"></View>
+            android:background="@drawable/dcloud_record_view_line"/>
 
-        <ImageView
-            android:padding="2dp"
-            android:id="@+id/dcloud_record_arrow_right"
-            android:layout_marginTop="15dp"
-            android:layout_marginBottom="15dp"
-            android:layout_marginRight="4dp"
-            android:layout_marginLeft="4dp"
+        <LinearLayout
+            android:id="@+id/dcloud_record_arrow_right_layout"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:src="@drawable/dcloud_right_arrow"></ImageView>
+            android:gravity="center_vertical">
+            <ImageView
+                android:padding="2dp"
+                android:id="@+id/dcloud_record_arrow_right"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="15dp"
+                android:layout_marginRight="4dp"
+                android:layout_marginLeft="4dp"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:clickable="false"
+                android:longClickable="false"
+                android:src="@drawable/dcloud_right_arrow"/>
+        </LinearLayout>
     </LinearLayout>
 
     <HorizontalScrollView

@@ -13,14 +13,17 @@ import android.text.TextUtils;
 import android.view.Display;
 import android.widget.Toast;
 
-import com.tencent.mm.sdk.modelbase.BaseResp;
-import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
-import com.tencent.mm.sdk.modelmsg.WXImageObject;
-import com.tencent.mm.sdk.modelmsg.WXMediaMessage;
-import com.tencent.mm.sdk.modelmsg.WXTextObject;
-import com.tencent.mm.sdk.modelmsg.WXWebpageObject;
-import com.tencent.mm.sdk.openapi.IWXAPI;
-import com.tencent.mm.sdk.openapi.WXAPIFactory;
+import com.tencent.mm.opensdk.modelbase.BaseResp;
+import com.tencent.mm.opensdk.modelmsg.SendMessageToWX;
+import com.tencent.mm.opensdk.modelmsg.WXImageObject;
+import com.tencent.mm.opensdk.modelmsg.WXMediaMessage;
+import com.tencent.mm.opensdk.modelmsg.WXMiniProgramObject;
+import com.tencent.mm.opensdk.modelmsg.WXMusicObject;
+import com.tencent.mm.opensdk.modelmsg.WXTextObject;
+import com.tencent.mm.opensdk.modelmsg.WXVideoObject;
+import com.tencent.mm.opensdk.modelmsg.WXWebpageObject;
+import com.tencent.mm.opensdk.openapi.IWXAPI;
+import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,6 +31,7 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -72,6 +76,9 @@ public class WeiXinApiManager implements IFShareApi {
     private static final String TAG = "WeiXinApiManager";
     private IWXAPI api;
     private static String APPID;
+
+    private static int ERROR_NOTYPE = -100;
+    private static int ERROR_NOT_COMPLETE = -101;
 
     @Override
     public void initConfig() {
@@ -142,9 +149,11 @@ public class WeiXinApiManager implements IFShareApi {
             public void run() {
                 try {
                     JSONObject _msg = new JSONObject(pShareMsg);
+                    String type = _msg.optString("type");
                     String _content = _msg.optString("content");
                     String _title = _msg.optString("title");
                     String href = JSONUtil.getString(_msg, "href");
+                    String media = _msg.optString("media");
                     JSONArray _thumbs = _msg.optJSONArray("thumbs");
                     JSONArray _pictures = _msg.optJSONArray("pictures");
                     JSONObject extraInfo = JSONUtil.getJSONObject(_msg, "extra");
@@ -166,19 +175,61 @@ public class WeiXinApiManager implements IFShareApi {
                     String AbsFullPathThumb=null;
                     int mRunningMode=0;
                     try {
-                        if (!PdrUtil.isEmpty(href)) {
-                            reqWebPageMsg(pWebViewImpl, req, href, _thumbs != null ? _thumbs.optString(0, null) : null, _content, _title);
+                        if(!TextUtils.isEmpty(type)) {
+                            if(type.equals("text")) {
+                                isContinue = reqTextMsg(req, _content, _title);
+                            } else if(type.equals("image")) {
+                                if(_pictures == null || _pictures.length() ==0) {
+                                    onSendCallBack(pWebViewImpl, pCallbackId, ERROR_NOT_COMPLETE);
+                                    return;
+                                }
+                                /*pImg = _pictures.optString(0);
+                                pThumbImg = _thumbs == null || _thumbs.isNull(0) ? pImg : _thumbs.optString(0);
+                                AbsFullPath= pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(),pImg);
+                                AbsFullPathThumb= pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(),pThumbImg);
+                                mRunningMode  = pWebViewImpl.obtainFrameView().obtainApp().obtainRunningAppMode();*/
+                                isContinue = reqImageMsg(pWebViewImpl, req, _pictures, _thumbs, _title);
+                            } else if(type.equals("music")) {
+                                if(PdrUtil.isEmpty(media)) {
+                                    onSendCallBack(pWebViewImpl, pCallbackId, ERROR_NOT_COMPLETE);
+                                    return;
+                                }
+                                isContinue = reqMusicMsg(pWebViewImpl, req, media, _thumbs != null ? _thumbs.optString(0, null) : null, _content, _title);
+                            } else if(type.equals("video")) {
+                                if(PdrUtil.isEmpty(media)) {
+                                    onSendCallBack(pWebViewImpl, pCallbackId, ERROR_NOT_COMPLETE);
+                                    return;
+                                }
+                                isContinue = reqVideoMsg(pWebViewImpl, req, media, _thumbs != null ? _thumbs.optString(0, null) : null, _content, _title);
+                            } else if(type.equals("web")) {
+                                if(PdrUtil.isEmpty(href)) {
+                                    onSendCallBack(pWebViewImpl, pCallbackId, ERROR_NOT_COMPLETE);
+                                    return;
+                                }
+                                isContinue = reqWebPageMsg(pWebViewImpl, req, href, _thumbs != null ? _thumbs.optString(0, null) : null, _content, _title);
+                            } else if(type.equals("miniProgram")) {
+                                JSONObject miniProgram = _msg.optJSONObject("miniProgram");
+                                if(miniProgram == null) {
+                                    onSendCallBack(pWebViewImpl, pCallbackId, ERROR_NOT_COMPLETE);
+                                    return;
+                                }
+                                isContinue = reqMiniMsg(pWebViewImpl, req, (_thumbs != null ? _thumbs.optString(0, null) : null), _content, _title, miniProgram);
+                            } else {
+                                onSendCallBack(pWebViewImpl, pCallbackId, ERROR_NOTYPE);
+                                return;
+                            }
+                        } else if (!PdrUtil.isEmpty(href)) {
+                            isContinue = reqWebPageMsg(pWebViewImpl, req, href, _thumbs != null ? _thumbs.optString(0, null) : null, _content, _title);
                         } else if (_pictures != null && _pictures.length() > 0) {
                             pImg = _pictures.optString(0);
                             pThumbImg = _thumbs == null || _thumbs.isNull(0) ? pImg : _thumbs.optString(0);
-                             AbsFullPath= pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(),pImg);
-                             AbsFullPathThumb= pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(),pThumbImg);
-                             mRunningMode  = pWebViewImpl.obtainFrameView().obtainApp().obtainRunningAppMode();
+                            AbsFullPath= pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(),pImg);
+                            AbsFullPathThumb= pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(),pThumbImg);
+                            mRunningMode  = pWebViewImpl.obtainFrameView().obtainApp().obtainRunningAppMode();
                             isContinue = reqImageMsg(pWebViewImpl, req, _pictures, _thumbs, _title);
                         } else {
-                            reqTextMsg(req, _content, _title);
+                            isContinue = reqTextMsg(req, _content, _title);
                         }
-                        isContinue = true;
                     } catch (Exception e) {//如遇到异常需要执行错误回调
                         e.printStackTrace();
                     }
@@ -422,6 +473,10 @@ public class WeiXinApiManager implements IFShareApi {
             errorMsg = "Unsupport error";
         } else if (code == BaseResp.ErrCode.ERR_USER_CANCEL) {
             errorMsg = "User canceled";
+        } else if(code == ERROR_NOT_COMPLETE) {
+            errorMsg = "参数不完整无法正确send";
+        } else if(code == ERROR_NOTYPE) {
+            errorMsg = "type参数无法正确识别，请按规范范围填写";
         }
         if (suc) {//由于调用微信发送接口，会立马回复true，而不是真正分享成功，甚至连微信界面都没有启动，在此延迟回调，以增强体验
             JSUtil.execCallback(pWebViewImpl, pCallbackId, "", JSUtil.OK, false, false);
@@ -429,25 +484,6 @@ public class WeiXinApiManager implements IFShareApi {
             String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_INTERNAL_ERROR, DOMException.toString(code, "Share微信分享", errorMsg, mLink));
             JSUtil.execCallback(pWebViewImpl, pCallbackId, msg, JSUtil.ERROR, true, false);
         }
-    }
-
-    private boolean reqWebPageMsg(IWebview pWebViewImpl, SendMessageToWX.Req req, String webPage, String pThumbImg, String pText, String pTitle) {
-        WXWebpageObject webpage = new WXWebpageObject();
-        webpage.webpageUrl = webPage;
-        WXMediaMessage msg = new WXMediaMessage(webpage);
-        if (!PdrUtil.isEmpty(pTitle)) {//The length should be within 512Bytes
-            msg.title = pTitle;
-        } else if (req.scene == SendMessageToWX.Req.WXSceneTimeline && !TextUtils.isEmpty(pText)) {
-            // 如果为朋友圈分享 title为空 则使用_content未标题
-            msg.title = pText;
-        }
-        msg.description = pText;//The length should be within 1KB
-        if (!PdrUtil.isEmpty(pThumbImg)) {
-            msg.thumbData = buildThumbData(pWebViewImpl, pThumbImg);
-        }
-        req.transaction = buildTransaction("webpage");
-        req.message = msg;
-        return true;
     }
 
     private boolean reqTextMsg(SendMessageToWX.Req req, String pText, String pTitle) {
@@ -473,6 +509,234 @@ public class WeiXinApiManager implements IFShareApi {
 
         return true;
     }
+
+    private boolean reqImageMsg(IWebview pWebViewImpl, SendMessageToWX.Req req, JSONArray pImgs, JSONArray pThumbImgs, String pTitle) {
+        WXMediaMessage msg = new WXMediaMessage();
+        //判断个数，分享情形
+        boolean mul = pImgs.length() > 1;
+        mul = false;//暂只处理单个图片
+        if (!mul) {//单个图片
+//			pImg 内容大小不超过10MB  https://open.weixin.qq.com/zh_CN/htmledition/res/dev/document/sdk/android/index.html
+            if (!(pWebViewImpl.getActivity() instanceof IActivityHandler && ((IActivityHandler) pWebViewImpl.getActivity()).isMultiProcessMode())) {//多进程模式
+                String pImg = pImgs.optString(0);
+                String pThumbImg = pThumbImgs == null || pThumbImgs.isNull(0) ? pImg : pThumbImgs.optString(0);
+                if (PdrUtil.isNetPath(pImg)) {
+                    WXImageObject imgObj = new WXImageObject();
+                    try {
+                        Bitmap bmp = BitmapFactory.decodeStream(new URL(pImg).openStream());
+                        imgObj.imageData = bmpToByteArray(bmp, true);//content size within 10MB.
+                    } catch (MalformedURLException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    msg.mediaObject = imgObj;
+                    pThumbImg = PdrUtil.isEmpty(pThumbImg) ? pImg : pThumbImg;
+                    msg.thumbData = buildThumbData(pWebViewImpl, pThumbImg);
+                } else {//imagePath The length should be within 10KB and content size within 10MB.
+                    String AbsFullPath= pWebViewImpl.obtainFrameView().obtainApp().convert2LocalFullPath(pWebViewImpl.obtainFullUrl(),pImg);
+                    //Bitmap bitmap=scaleLoadPic(pWebViewImpl,AbsFullPath);
+                    WXImageObject imgObj = new WXImageObject();
+                    imgObj.imagePath = AbsFullPath;
+                    //bitmap.recycle();
+//				WXImageObject imgObj = new WXImageObject();
+//				imgObj.imagePath = pImg;//避免将来资源放置在程序私有目录第三方程序无权访问问题
+                    msg.mediaObject = imgObj;
+                    msg.thumbData = buildThumbData(pWebViewImpl, pThumbImg);
+
+                }
+            }
+        } else {
+            String clssName = "com.tencent.mm.ui.tools.ShareToTimeLineUI";
+            switch (req.scene) {
+                case SendMessageToWX.Req.WXSceneSession:
+                    clssName = "com.tencent.mm.ui.chatting.ChattingUI";
+                    break;
+                case SendMessageToWX.Req.WXSceneTimeline://朋友圈
+                    clssName = "com.tencent.mm.ui.tools.ShareToTimeLineUI";
+                    break;
+                case SendMessageToWX.Req.WXSceneFavorite://收藏
+                    clssName = "com.tencent.mm.plugin.favorite.ui.FavoriteIndexUI";
+                    break;
+            }
+            ArrayList<Uri> localArrayList = new ArrayList<Uri>();
+            for (int i = 0; i < pImgs.length(); i++) {
+                String pic = pImgs.optString(i);
+                if (PdrUtil.isNetPath(pic)) {
+                    try {
+                        Bitmap bmp = BitmapFactory.decodeStream(new URL(pic).openStream());
+                        String t_path = pWebViewImpl.obtainApp().obtainAppTempPath() + System.currentTimeMillis() + ".png";
+                        PdrUtil.saveBitmapToFile(bmp, t_path);
+                        localArrayList.add(Uri.fromFile(new File(t_path)));
+                    } catch (MalformedURLException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+//					localArrayList.add(Uri.parse(pic));
+                } else {
+                    pic = pWebViewImpl.obtainApp().convert2LocalFullPath(pWebViewImpl.obtainFullUrl(), pic);
+                    localArrayList.add(Uri.fromFile(new File(pic)));
+                }
+//				String filePath = sdcardDir + "/1/" + pics[i];
+            }
+            sedMultiplePic(pWebViewImpl.getActivity(), localArrayList, clssName);
+            return false;
+        }
+
+//		if(PdrUtil.isNetPath(pImg)){
+//			WXImageObject imgObj = new WXImageObject();
+//			imgObj.imageUrl = pImg;
+//			msg.mediaObject = imgObj;
+//			pThumbImg = PdrUtil.isEmpty( pThumbImg ) ? pImg:pThumbImg;
+//			msg.thumbData = buildThumbData(pWebViewImpl, pThumbImg);
+//		}else{
+//			pImg = pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(), pImg);
+//			Bitmap bmp = BitmapFactory.decodeFile(pImg);
+//			WXImageObject imgObj = new WXImageObject(bmp);
+//			msg.mediaObject = imgObj;
+//			msg.thumbData = buildThumbData(pWebViewImpl, pThumbImg);
+//		}
+
+        if (!PdrUtil.isEmpty(pTitle)) {//The length should be within 512Bytes
+            msg.title = pTitle;
+        }
+        req.transaction = buildTransaction("img");
+        req.message = msg;
+        return true;
+    }
+
+    private boolean reqWebPageMsg(IWebview pWebViewImpl, SendMessageToWX.Req req, String webPage, String pThumbImg, String pText, String pTitle) {
+        WXWebpageObject webpage = new WXWebpageObject();
+        webpage.webpageUrl = webPage;
+        WXMediaMessage msg = new WXMediaMessage(webpage);
+        if (!PdrUtil.isEmpty(pTitle)) {//The length should be within 512Bytes
+            msg.title = pTitle;
+        } else if (req.scene == SendMessageToWX.Req.WXSceneTimeline && !TextUtils.isEmpty(pText)) {
+            // 如果为朋友圈分享 title为空 则使用_content未标题
+            msg.title = pText;
+        }
+        msg.description = pText;//The length should be within 1KB
+        if (!PdrUtil.isEmpty(pThumbImg)) {
+            msg.thumbData = buildThumbData(pWebViewImpl, pThumbImg);
+        }
+        req.transaction = buildTransaction("webpage");
+        req.message = msg;
+        return true;
+    }
+
+    private boolean reqMusicMsg(IWebview pWebViewImpl, SendMessageToWX.Req req, String musicUrl, String pThumbImg, String pText, String pTitle) {
+        WXMusicObject music = new WXMusicObject();
+        music.musicUrl = musicUrl;
+        WXMediaMessage msg = new WXMediaMessage();
+        msg.mediaObject = music;
+        if (!PdrUtil.isEmpty(pTitle)) {
+            msg.title = pTitle;
+        } else if (req.scene == SendMessageToWX.Req.WXSceneTimeline && !TextUtils.isEmpty(pText)) {
+            // 如果为朋友圈分享 title为空 则使用_content未标题
+            msg.title = pText;
+        }
+        if (!PdrUtil.isEmpty(pThumbImg)) {
+            msg.thumbData = buildThumbData(pWebViewImpl, pThumbImg);
+        }
+        msg.description = pText;
+        req.transaction = buildTransaction("music");
+        req.message = msg;
+        return true;
+    }
+
+    private boolean reqVideoMsg(IWebview pWebViewImpl, SendMessageToWX.Req req, String videoUrl, String pThumbImg, String pText, String pTitle) {
+        WXVideoObject video = new WXVideoObject();
+        video.videoUrl = videoUrl;
+        WXMediaMessage msg = new WXMediaMessage();
+        msg.mediaObject = video;
+        if (!PdrUtil.isEmpty(pTitle)) {
+            msg.title = pTitle;
+        } else if (req.scene == SendMessageToWX.Req.WXSceneTimeline && !TextUtils.isEmpty(pText)) {
+            // 如果为朋友圈分享 title为空 则使用_content未标题
+            msg.title = pText;
+        }
+        if (!PdrUtil.isEmpty(pThumbImg)) {
+            msg.thumbData = buildThumbData(pWebViewImpl, pThumbImg);
+        }
+        msg.description = pText;
+        req.transaction = buildTransaction("video");
+        req.message = msg;
+        return true;
+    }
+
+    private boolean reqMiniMsg(IWebview pWebViewImpl, SendMessageToWX.Req req, String pThumbImg, String pText, String pTitle, JSONObject miniProgram) {
+        WXMiniProgramObject miniProgramObj = new WXMiniProgramObject();
+        miniProgramObj.webpageUrl = miniProgram.optString("webUrl");
+        miniProgramObj.miniprogramType = miniProgram.optInt("type");// 正式版:0，测试版:1，体验版:2
+        miniProgramObj.userName = miniProgram.optString("id");     // 小程序原始id
+        miniProgramObj.path = miniProgram.optString("path");            //小程序页面路径
+        WXMediaMessage msg = new WXMediaMessage(miniProgramObj);
+        if (!PdrUtil.isEmpty(pTitle)) {
+            msg.title = pTitle;
+        } else if (req.scene == SendMessageToWX.Req.WXSceneTimeline && !TextUtils.isEmpty(pText)) {
+            // 如果为朋友圈分享 title为空 则使用_content未标题
+            msg.title = pText;
+        }
+        req.scene = SendMessageToWX.Req.WXSceneSession; // 目前支持会话
+        if (!PdrUtil.isEmpty(pThumbImg)) {
+            msg.thumbData = getMiniThumbaData(pWebViewImpl, pThumbImg);
+        }
+        msg.description = pText;
+        req.transaction = buildTransaction("webpage");
+        req.message = msg;
+        return true;
+    }
+
+    private byte[] getMiniThumbaData(IWebview pWebViewImpl, String thumeImgPath) {
+        byte[] ret = null;
+        Bitmap bitmap = null;
+        InputStream is = null;
+        String AbsFullPath= pWebViewImpl.obtainFrameView().obtainApp().convert2LocalFullPath(pWebViewImpl.obtainFullUrl(), thumeImgPath);
+        // The thumeImg size should be within 128KB * 1024 = 131072
+        int maxSize = 131072;
+        boolean isCompress = false;
+        try {
+            if (PdrUtil.isNetPath(thumeImgPath)) {//是网络地址
+                //bitmap=ImageLoaderL.getInstance().loadImageSync(AbsFullPath);
+                try {
+                    is = new URL(thumeImgPath).openStream();
+                    isCompress = is.available() > maxSize;
+                    if(is != null){
+                        bitmap = BitmapFactory.decodeStream(is);
+                    }
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    if(is != null)
+                    is.close();
+                }
+            } else {
+                InputStream stream = new FileInputStream(AbsFullPath);
+                isCompress = stream.available() > maxSize;
+                bitmap= BitmapFactory.decodeStream(stream);
+                if(stream != null)
+                    stream.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Logger.e("buildThumbData Exception=" + e);
+        }
+        if (bitmap == null) {
+            bitmap = BitmapFactory.decodeResource(pWebViewImpl.getActivity().getResources(), RInformation.DRAWABLE_ICON);
+        }
+
+        if (bitmap != null) {
+            if(isCompress) {
+                bitmap=cpBitmap(bitmap);
+            }
+        }
+        ret = bmpToByteArray(bitmap, true);  // 设置缩略图
+        return ret;
+    }
+
     public Bitmap scaleLoadPic(IWebview pWebViewImpl,String path){
         BitmapFactory.Options opts=new BitmapFactory.Options();
         //默认为false，设为true，则decoder返回null，
@@ -533,7 +797,7 @@ public class WeiXinApiManager implements IFShareApi {
         byte[] ret = null;
         Bitmap bitmap = null;
         InputStream is = null;
-        String AbsFullPath= pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(),thumeImgPath);
+        String AbsFullPath= pWebViewImpl.obtainFrameView().obtainApp().convert2LocalFullPath(pWebViewImpl.obtainFullUrl(),thumeImgPath);
         try {
 //			The thumeImg size should be within 32KB * 1024 = 32768
             if (PdrUtil.isNetPath(thumeImgPath)) {//是网络地址
@@ -580,104 +844,10 @@ public class WeiXinApiManager implements IFShareApi {
         act.startActivity(intent);
     }
 
-    private boolean reqImageMsg(IWebview pWebViewImpl, SendMessageToWX.Req req, JSONArray pImgs, JSONArray pThumbImgs, String pTitle) {
-        WXMediaMessage msg = new WXMediaMessage();
-        //判断个数，分享情形
-        boolean mul = pImgs.length() > 1;
-        mul = false;//暂只处理单个图片
-        if (!mul) {//单个图片
-//			pImg 内容大小不超过10MB  https://open.weixin.qq.com/zh_CN/htmledition/res/dev/document/sdk/android/index.html
-            if (!(pWebViewImpl.getActivity() instanceof IActivityHandler && ((IActivityHandler) pWebViewImpl.getActivity()).isMultiProcessMode())) {//多进程模式
-                String pImg = pImgs.optString(0);
-                String pThumbImg = pThumbImgs == null || pThumbImgs.isNull(0) ? pImg : pThumbImgs.optString(0);
-                if (PdrUtil.isNetPath(pImg)) {
-                    WXImageObject imgObj = new WXImageObject();
-                    try {
-                        Bitmap bmp = BitmapFactory.decodeStream(new URL(pImg).openStream());
-                        imgObj.imageData = bmpToByteArray(bmp, true);//content size within 10MB.
-                    } catch (MalformedURLException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    msg.mediaObject = imgObj;
-                    pThumbImg = PdrUtil.isEmpty(pThumbImg) ? pImg : pThumbImg;
-                    msg.thumbData = buildThumbData(pWebViewImpl, pThumbImg);
-                } else {//imagePath The length should be within 10KB and content size within 10MB.
-                    String AbsFullPath= pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(),pImg);
-                    Bitmap bitmap=scaleLoadPic(pWebViewImpl,AbsFullPath);
-                    WXImageObject imgObj = new WXImageObject(bitmap);
-                    bitmap.recycle();
-//				WXImageObject imgObj = new WXImageObject();
-//				imgObj.imagePath = pImg;//避免将来资源放置在程序私有目录第三方程序无权访问问题
-                    msg.mediaObject = imgObj;
-                    msg.thumbData = buildThumbData(pWebViewImpl, pThumbImg);
-
-                }
-            }
-        } else {
-            String clssName = "com.tencent.mm.ui.tools.ShareToTimeLineUI";
-            switch (req.scene) {
-                case SendMessageToWX.Req.WXSceneSession:
-                    clssName = "com.tencent.mm.ui.chatting.ChattingUI";
-                    break;
-                case SendMessageToWX.Req.WXSceneTimeline://朋友圈
-                    clssName = "com.tencent.mm.ui.tools.ShareToTimeLineUI";
-                    break;
-                case SendMessageToWX.Req.WXSceneFavorite://收藏
-                    clssName = "com.tencent.mm.plugin.favorite.ui.FavoriteIndexUI";
-                    break;
-            }
-            ArrayList<Uri> localArrayList = new ArrayList<Uri>();
-            for (int i = 0; i < pImgs.length(); i++) {
-                String pic = pImgs.optString(i);
-                if (PdrUtil.isNetPath(pic)) {
-                    try {
-                        Bitmap bmp = BitmapFactory.decodeStream(new URL(pic).openStream());
-                        String t_path = pWebViewImpl.obtainApp().obtainAppTempPath() + System.currentTimeMillis() + ".png";
-                        PdrUtil.saveBitmapToFile(bmp, t_path);
-                        localArrayList.add(Uri.fromFile(new File(t_path)));
-                    } catch (MalformedURLException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-//					localArrayList.add(Uri.parse(pic));
-                } else {
-                    pic = pWebViewImpl.obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(), pic);
-                    localArrayList.add(Uri.fromFile(new File(pic)));
-                }
-//				String filePath = sdcardDir + "/1/" + pics[i];
-            }
-            sedMultiplePic(pWebViewImpl.getActivity(), localArrayList, clssName);
-            return false;
-        }
-
-//		if(PdrUtil.isNetPath(pImg)){
-//			WXImageObject imgObj = new WXImageObject();
-//			imgObj.imageUrl = pImg;
-//			msg.mediaObject = imgObj;
-//			pThumbImg = PdrUtil.isEmpty( pThumbImg ) ? pImg:pThumbImg;
-//			msg.thumbData = buildThumbData(pWebViewImpl, pThumbImg);
-//		}else{
-//			pImg = pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(), pImg);
-//			Bitmap bmp = BitmapFactory.decodeFile(pImg);
-//			WXImageObject imgObj = new WXImageObject(bmp);
-//			msg.mediaObject = imgObj;
-//			msg.thumbData = buildThumbData(pWebViewImpl, pThumbImg);
-//		}
-
-        if (!PdrUtil.isEmpty(pTitle)) {//The length should be within 512Bytes
-            msg.title = pTitle;
-        }
-        req.transaction = buildTransaction("img");
-        req.message = msg;
-        return true;
-    }
 
     public static byte[] bmpToByteArray(final Bitmap bmp, final boolean needRecycle) {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        bmp.compress(CompressFormat.PNG, 100, output);
+        bmp.compress(CompressFormat.JPEG, 80, output);
         if (needRecycle) {
             bmp.recycle();
         }

@@ -2,6 +2,7 @@ package io.dcloud.feature.speech;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.os.Handler;
 
 import com.iflytek.cloud.InitListener;
 import com.iflytek.cloud.RecognizerResult;

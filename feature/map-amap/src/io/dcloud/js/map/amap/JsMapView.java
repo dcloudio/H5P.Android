@@ -1,6 +1,7 @@
 package io.dcloud.js.map.amap;
 
 import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.common.adapter.ui.AdaFrameView;
 import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
@@ -8,6 +9,8 @@ import io.dcloud.js.map.amap.adapter.DHMapFrameItem;
 import io.dcloud.js.map.amap.adapter.IFJsOverlay;
 
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * <p>Description:JS中的Map对象</p>
@@ -26,10 +29,7 @@ class JsMapView extends JsMapObject implements IFMapDispose{
 	 * DIV id
 	 */
 	private String id;
-	/**
-	 * 对应JS对象ID
-	 */
-	private String mJsId;
+
 	/**
 	 * map的frame
 	 */
@@ -108,6 +108,14 @@ class JsMapView extends JsMapObject implements IFMapDispose{
 			}
 		}else if("getUserLocation".equals(pStrEvent)){
 			String callBackId = JSONUtil.getString(pJsArgs,0);
+			if(pJsArgs.length() > 1) {
+				String uuid = JSONUtil.getString(pJsArgs, 1);
+				IWebview cWebview = JsMapManager.getJsMapManager().findWebviewByUuid(mWebview, uuid);
+				if(cWebview != null) {
+					mMapFrameItem.getUserLocation(cWebview, callBackId);
+					return;
+				}
+			}
 			mMapFrameItem.getUserLocation(mWebview, callBackId);
 		}else if("clearOverlays".equals(pStrEvent)){
 			mMapFrameItem.clearOverlays();
@@ -115,6 +123,14 @@ class JsMapView extends JsMapObject implements IFMapDispose{
 			mMapFrameItem.resize(pJsArgs);
 		} else if ("getCurrentCenter".equals(pStrEvent)) {
 			String callBackId = JSONUtil.getString(pJsArgs,0);
+			if(pJsArgs.length() > 1) {
+				String uuid = JSONUtil.getString(pJsArgs, 1);
+				IWebview cWebview = JsMapManager.getJsMapManager().findWebviewByUuid(mWebview, uuid);
+				if(cWebview != null) {
+					mMapFrameItem.getCurrentCenter(cWebview, callBackId);
+					return;
+				}
+			}
 			mMapFrameItem.getCurrentCenter(mWebview, callBackId);
 		}
 	}
@@ -134,6 +150,9 @@ class JsMapView extends JsMapObject implements IFMapDispose{
 	@Override
 	protected void createObject(JSONArray pJsArgs) {
 		mMapFrameItem.createMap(pJsArgs);
+		if(pJsArgs.length() > 4) {
+			appendToFrameView((AdaFrameView) mWebview.obtainFrameView());
+		}
 	}
 	@Override
 	public void dispose() {
@@ -147,5 +166,35 @@ class JsMapView extends JsMapObject implements IFMapDispose{
 			ret = JSUtil.wrapJsVar(mMapFrameItem.getBounds(),false);
 		}
 		return ret;
+	}
+
+	public void appendToFrameView(AdaFrameView frameView) {
+		mMapFrameItem.appendToFrameView(frameView);
+	}
+
+	public JSONObject getJsJsonMap() {
+		JSONObject object = new JSONObject();
+		if(mMapFrameItem != null) {
+			try {
+				object.put("uuid", mMapFrameItem.mUUID);
+				object.put("options", mMapFrameItem.getMapOptions());
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+			return object;
+		}
+		return null;
+	}
+
+	public void setStyles(JSONObject styles) {
+		if(mMapFrameItem != null) {
+			mMapFrameItem.setStyles(styles);
+		}
+	}
+
+	public void setCallBackWebUuid(String uuid) {
+		if(mMapFrameItem != null && mMapFrameItem.getMapView() != null) {
+			mMapFrameItem.getMapView().addMapCallBackWebUuid(uuid);
+		}
 	}
 }

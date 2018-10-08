@@ -31,8 +31,7 @@ public class JsMapRoute extends JsMapObject implements IFJsOverlay{
 	/**
 	 * Description: 构造函数
 	 * 
-	 * @param pFrameView
-	 * @param pJsId
+	 * @param pWebview
 	 * 
 	 *            <pre>
 	 * <p>ModifiedLog:</p>
@@ -59,8 +58,8 @@ public class JsMapRoute extends JsMapObject implements IFJsOverlay{
 	/**
 	 * Description:设置路径
 	 * 
-	 * @param mapPoint
-	 * @param mapPoint2
+	 * @param pStart
+	 * @param pEnd
 	 * 
 	 *            <pre>
 	 * <p>ModifiedLog:</p>

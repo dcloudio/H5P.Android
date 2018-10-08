@@ -31,8 +31,7 @@ class JsMapMarker extends JsMapObject implements IFJsOverlay {
 	/**
 	 * Description: 构造函数
 	 * 
-	 * @param pFrameView
-	 * @param pJsId
+	 * @param pWebview
 	 * 
 	 *            <pre>
 	 * <p>ModifiedLog:</p>
