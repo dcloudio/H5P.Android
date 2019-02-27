@@ -8,6 +8,7 @@ import io.dcloud.js.map.amap.adapter.MapCircleProxy;
 import org.json.JSONArray;
 
 import com.amap.api.maps.MapView;
+import com.amap.api.maps.TextureMapView;
 
 /**
  * <p>Description:JS中的圆对象</p>
@@ -63,7 +64,7 @@ class JsMapCircle extends JsMapObject implements IFJsOverlay{
 	}
 	
 	@Override
-	public void onAddToMapView(MapView pMapView) {
+	public void onAddToMapView(TextureMapView pMapView) {
 		super.onAddToMapView(pMapView);
 		mMapCircle.initMapCircle(pMapView);
 	}

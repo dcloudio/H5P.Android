@@ -1,14 +1,22 @@
 package io.dcloud.feature.apsGt;
 
-import io.dcloud.common.adapter.util.Logger;
-import io.dcloud.feature.aps.NotificationReceiver;
 import android.content.Context;
 import android.content.Intent;
 
 import com.igexin.sdk.PushManager;
 
+import io.dcloud.common.adapter.util.Logger;
+import io.dcloud.feature.aps.NotificationReceiver;
+
 public class GTNotificationReceiver extends NotificationReceiver{
-	@Override
+    public GTNotificationReceiver() {
+    }
+
+    public GTNotificationReceiver(Context context) {
+        super(context);
+    }
+
+    @Override
 	public void onReceive(Context context, Intent intent)
 	{
 		try {

@@ -3,6 +3,7 @@ package io.dcloud.js.geolocation.baidu;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.baidu.location.BDAbstractLocationListener;
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
@@ -158,19 +159,14 @@ public class BaiduGeoManager extends GeoManagerBase{
             mOption.setIsNeedAddress(isGeocode);
             mOption.setCoorType(getCoorType(coordsType));
             mClient.setLocOption(mOption);
-            mClient.registerLocationListener(new BDLocationListener() {
-                @Override
-                public void onConnectHotSpotMessage(String s, int i) {
-
-                }
-
+            mClient.registerLocationListener(new BDAbstractLocationListener() {
                 @Override
                 public void onReceiveLocation(BDLocation bdLocation) {
 					if(bdLocation.getAddress() != null){
 						FeatureMessageDispatcher.dispatchMessage("record_address",bdLocation.getAddress() != null ? bdLocation.getAddress().address : null);
 					}
-                    Logger.e(TAG,"onReceiveLocation bdLocation=="+bdLocation.toString());
-                    callBack2Front(pWebViewImpl, pCallbackId,bdLocation, getCoorType(coordsType),isDLGeo,continuous);
+					Logger.e(TAG,"onReceiveLocation bdLocation=="+bdLocation.toString());
+					callBack2Front(pWebViewImpl, pCallbackId,bdLocation, getCoorType(coordsType),isDLGeo,continuous);
                 }
             });
             mClient.start();

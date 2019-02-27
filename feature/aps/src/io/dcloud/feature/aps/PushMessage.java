@@ -320,7 +320,11 @@ public class PushMessage implements IReflectAble{
 		b.putString("sound", this.sound);
 		b.putString("appid", this.mMessageAppid);
 		b.putString("uuid", this.mUUID);
-		b.putString("payload", this.mPayload);
+		if (!PdrUtil.isEmpty(mPayloadJSON)) {
+			b.putString("payload", this.mPayloadJSON.toString());
+		}else{
+			b.putString("payload", mPayload);
+		}
 		b.putString("icon", this.mIconPath);
 		b.putBoolean("isstreamapp", this.mIsStreamApp);
 		return b;

@@ -1,12 +1,14 @@
 package io.dcloud.feature.apsGt;
 
 import android.content.Context;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.igexin.sdk.PushManager;
 
 import io.dcloud.common.adapter.util.AndroidResources;
+import io.dcloud.feature.aps.APSFeatureImpl;
 import io.dcloud.feature.aps.AbsPushService;
 
 /**
@@ -23,18 +25,28 @@ import io.dcloud.feature.aps.AbsPushService;
 public class GTPushService extends AbsPushService{
 
 	public static final String ID = "igexin";
+//    private GTNotificationReceiver mNotificationReceiver;
+
 	@Override
 	public void onStart(Context pContext, Bundle pSaveBundle,String[] pArgs) {
 		id=ID;
 		PushManager.getInstance().initialize(pContext.getApplicationContext(),GTNormalPushService.class);
         // GTNormalIntentService 为第三方自定义的推送服务事件接收类
         PushManager.getInstance().registerPushIntentService(pContext.getApplicationContext(),GTNormalIntentService.class);
-
         SharedPreferences _sp = pContext.getSharedPreferences(AbsPushService.CLIENTID + ID, Context.MODE_PRIVATE);
 		clientid = _sp.getString(AbsPushService.PUSH_CLIENT_ID_NAME, clientid);
 		appid = AndroidResources.getMetaValue("PUSH_APPID");
 		appkey = AndroidResources.getMetaValue("PUSH_APPKEY");
 		appsecret = AndroidResources.getMetaValue("PUSH_APPSECRET");
+
+		//单独注册个推的通知
+//        mNotificationReceiver = new GTNotificationReceiver(mApplicationContext);
+//        IntentFilter mFilter = new IntentFilter();
+//        mFilter.addAction(APSFeatureImpl.CLILK_NOTIFICATION);
+//        mFilter.addAction(APSFeatureImpl.CLEAR_NOTIFICATION);
+//        mFilter.addAction(APSFeatureImpl.REMOVE_NOTIFICATION);
+//        mFilter.addAction(APSFeatureImpl.CREATE_NOTIFICATION);
+//        mApplicationContext.registerReceiver(mNotificationReceiver, mFilter);
 	}
 
 	@Override
@@ -45,8 +57,14 @@ public class GTPushService extends AbsPushService{
 		}
 		return super.getClientInfo(context);
 	}
-	
-//	@Override
+
+    @Override
+    public void onStop() {
+        super.onStop();
+//        mApplicationContext.unregisterReceiver(mNotificationReceiver);
+    }
+
+    //	@Override
 //	public boolean setAutoNotification(IWebview pWebViewImpl, JSONArray pJsArgs,
 //			String _appId) throws JSONException {
 //		boolean needPush = super.setAutoNotification(pWebViewImpl, pJsArgs, _appId);

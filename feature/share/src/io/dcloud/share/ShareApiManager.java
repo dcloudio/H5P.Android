@@ -21,6 +21,7 @@ import io.dcloud.common.DHInterface.IMgr.MgrType;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.ui.AdaFrameItem.LayoutParamsUtil;
 import io.dcloud.common.adapter.util.Logger;
+import io.dcloud.common.adapter.util.PlatformUtil;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
@@ -62,44 +63,80 @@ public class ShareApiManager {
      */
     public String execute(IWebview pWebViewImpl, String pActionName,
                           String[] pJsArgs) {
-        if (pActionName.equals("getServices")) {
-            JSUtil.execCallback(pWebViewImpl, pJsArgs[0], getServices(pWebViewImpl)
-                    , 1, true, false);
-        } else if (pActionName.equals("authorize")) {
-            IFShareApi _shareApi = mShareApis.get(pJsArgs[1]);
-            _shareApi.authorize(pWebViewImpl, pJsArgs[0], pJsArgs[2]);
-        } else if (pActionName.equals("forbid")) {
-            IFShareApi _shareApi = mShareApis.get(pJsArgs[0]);
-            _shareApi.forbid(pWebViewImpl);
-        } else if (pActionName.equals("send")) {
-            IFShareApi _shareApi = mShareApis.get(pJsArgs[1]);
-            _shareApi.send(pWebViewImpl, pJsArgs[0], pJsArgs[2]);
-        } else if (pActionName.equals("sendWithSystem")) {
-            sendWithSystem(pWebViewImpl, pJsArgs[0], pJsArgs[1]);
-        } else if (pActionName.equals("create")) {
-            ShareAuthorizeView _view = new ShareAuthorizeView(pWebViewImpl, pJsArgs[1]);
-            if (pJsArgs[2] != null && pJsArgs[1].equals("false")) {
-            } else {
-                float scale = pWebViewImpl.getScale();
-                int _left = (int) (Integer.parseInt(pJsArgs[3]) * scale);
-                int _top = (int) (Integer.parseInt(pJsArgs[4]) * scale);
-                int _width = (int) (Integer.parseInt(pJsArgs[5]) * scale);
-                int _height = (int) (Integer.parseInt(pJsArgs[6]) * scale);
-                pWebViewImpl.addFrameItem(_view, LayoutParamsUtil.createLayoutParams(_left, _top, _width, _height));
+        switch(pActionName) {
+            case "getServices":{
+                JSUtil.execCallback(pWebViewImpl, pJsArgs[0], getServices(pWebViewImpl)
+                        , 1, true, false);
             }
-            mAuthorizeViews.put(pJsArgs[0], _view);
-        } else if (pActionName.equals("load")) {
-            ShareAuthorizeView _view = mAuthorizeViews.get(pJsArgs[0]);
-            _view.load(this, pJsArgs[1]);
-        } else if (pActionName.equals("setVisible")) {
-            ShareAuthorizeView _view = mAuthorizeViews.get(pJsArgs[0]);
-            boolean b = Boolean.parseBoolean(pJsArgs[1]);
-            if (b) {
-                _view.setVisibility(View.VISIBLE);
-            } else {
-                _view.setVisibility(View.GONE);
+            break;
+            case "authorize":{
+                IFShareApi _shareApi = mShareApis.get(pJsArgs[1]);
+                _shareApi.authorize(pWebViewImpl, pJsArgs[0], pJsArgs[2]);
             }
+            break;
+            case "forbid":{
+                IFShareApi _shareApi = mShareApis.get(pJsArgs[0]);
+                _shareApi.forbid(pWebViewImpl);
+            }
+            break;
+            case "send":{
+                IFShareApi _shareApi = mShareApis.get(pJsArgs[1]);
+                _shareApi.send(pWebViewImpl, pJsArgs[0], pJsArgs[2]);
+            }
+            break;
+            case "sendWithSystem":{
+                sendWithSystem(pWebViewImpl, pJsArgs[0], pJsArgs[1]);
+            }
+            break;
+            case "create":{
+                ShareAuthorizeView _view = new ShareAuthorizeView(pWebViewImpl, pJsArgs[1]);
+                if (pJsArgs[2] != null && pJsArgs[1].equals("false")) {
+                } else {
+                    float scale = pWebViewImpl.getScale();
+                    int _left = (int) (Integer.parseInt(pJsArgs[3]) * scale);
+                    int _top = (int) (Integer.parseInt(pJsArgs[4]) * scale);
+                    int _width = (int) (Integer.parseInt(pJsArgs[5]) * scale);
+                    int _height = (int) (Integer.parseInt(pJsArgs[6]) * scale);
+                    pWebViewImpl.addFrameItem(_view, LayoutParamsUtil.createLayoutParams(_left, _top, _width, _height));
+                }
+                mAuthorizeViews.put(pJsArgs[0], _view);
+            }
+            break;
+            case "load":{
+                ShareAuthorizeView _view = mAuthorizeViews.get(pJsArgs[0]);
+                _view.load(this, pJsArgs[1]);
+            }
+            break;
+            case "setVisible":{
+                ShareAuthorizeView _view = mAuthorizeViews.get(pJsArgs[0]);
+                boolean b = Boolean.parseBoolean(pJsArgs[1]);
+                if (b) {
+                    _view.setVisibility(View.VISIBLE);
+                } else {
+                    _view.setVisibility(View.GONE);
+                }
+            }
+            break;
+            case "launchMiniProgram":{
+                String id = pJsArgs[1];
+                IFShareApi _shareApi = mShareApis.get(id);
+                if(!TextUtils.isEmpty(id) && id.equals("weixin")) {
+                    PlatformUtil.invokeMethod("io.dcloud.share.mm.WeiXinApiManager", "launchMiniProgram", _shareApi,
+                            new Class[]{String.class},
+                            new Object[]{pJsArgs[2]});
+                }
+            }
+            break;
         }
+//        if (pActionName.equals("getServices")) {
+//        } else if (pActionName.equals("authorize")) {
+//        } else if (pActionName.equals("forbid")) {
+//        } else if (pActionName.equals("send")) {
+//        }else if (pActionName.equals("sendWithSystem")) {
+//        } else if (pActionName.equals("create")) {
+//        } else if (pActionName.equals("load")) {
+//        } else if (pActionName.equals("setVisible")) {
+//        }
         return null;
     }
 

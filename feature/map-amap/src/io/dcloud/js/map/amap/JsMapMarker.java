@@ -8,6 +8,7 @@ import io.dcloud.js.map.amap.adapter.MapMarker;
 import org.json.JSONArray;
 
 import com.amap.api.maps.MapView;
+import com.amap.api.maps.TextureMapView;
 
 /**
  * <p>
@@ -97,7 +98,7 @@ class JsMapMarker extends JsMapObject implements IFJsOverlay {
 	}
 	
 	@Override
-	public void onAddToMapView(MapView pMapView) {
+	public void onAddToMapView(TextureMapView pMapView) {
 		// TODO Auto-generated method stub
 		super.onAddToMapView(pMapView);
 		mMapMarker.initMapMarker(pMapView);

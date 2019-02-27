@@ -3,6 +3,7 @@ package io.dcloud.js.map.amap.adapter;
 import io.dcloud.common.util.PdrUtil;
 
 import com.amap.api.maps.MapView;
+import com.amap.api.maps.TextureMapView;
 import com.amap.api.maps.model.Circle;
 import com.amap.api.maps.model.CircleOptions;
 
@@ -173,7 +174,7 @@ public class MapCircleProxy {
 		if(mMapCircle != null) mMapCircle.setStrokeWidth((int)pLineWidth);
 	}
 	
-	public void initMapCircle(MapView mapview){
+	public void initMapCircle(TextureMapView mapview){
 		mMapCircle = mapview.getMap().addCircle(getCircleOptions());
 	}
 	

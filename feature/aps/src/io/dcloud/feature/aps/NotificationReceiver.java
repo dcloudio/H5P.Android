@@ -1,9 +1,12 @@
 package io.dcloud.feature.aps;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -45,8 +48,24 @@ import io.dcloud.common.constant.IntentConst;
  * </pre>
  */
 public class NotificationReceiver extends BroadcastReceiver {
+    public NotificationReceiver() {
+    }
 
-	@Override
+    private static final String LOCAL_PUSH_CHANNEL_ID = "DcloudChannelID";
+    private static final String LOCAL_PUSH_GROUP_ID = "DcloudGroupID";
+    public NotificationReceiver(Context context) {
+        if (android.os.Build.VERSION.SDK_INT >= 26) {
+            NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.createNotificationChannelGroup(new NotificationChannelGroup(LOCAL_PUSH_GROUP_ID, "推送消息"));
+            NotificationChannel channel = new NotificationChannel(LOCAL_PUSH_CHANNEL_ID,
+                    "消息推送", NotificationManager.IMPORTANCE_DEFAULT);
+            channel.enableLights(true);
+            channel.setShowBadge(true);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    @Override
 	public void onReceive(Context context, Intent intent) {
 		sOnReceiver(context, intent);
 	}
@@ -57,6 +76,7 @@ public class NotificationReceiver extends BroadcastReceiver {
 		NotificationManager _notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 		String _action = intent.getAction();
 		if (APSFeatureImpl.CREATE_NOTIFICATION.equals(_action)) {
+			boolean isNDR = APSFeatureImpl.isNeedDynamicsReceiver(context);
 			String title = intent.getStringExtra("title");
 			String message = intent.getStringExtra("content");
 			int nId = intent.getIntExtra("nId", 0);
@@ -66,14 +86,28 @@ public class NotificationReceiver extends BroadcastReceiver {
 			String sound = intent.getStringExtra("sound");
 			boolean isstreamapp = intent.getBooleanExtra("isstreamapp",false);
 			Intent i = new Intent(APSFeatureImpl.CLILK_NOTIFICATION);
+			if(isNDR) {
+				i.setComponent(new ComponentName(context.getPackageName(), "io.dcloud.feature.aps.ApsActionService"));
+			}
 //			Bundle b = new Bundle(intent.getExtras());
 			i.putExtras(intent.getExtras());
 			// 创建一个Notification
 			Notification notification ;
 //			// PendingIntent
-			PendingIntent contentIntent = PendingIntent.getBroadcast(context, nId, i, PendingIntent.FLAG_ONE_SHOT);
-			if (android.os.Build.VERSION.SDK_INT >= 16) {
-				Notification.Builder builder = new Notification.Builder(context);
+			PendingIntent contentIntent = null;
+			if(isNDR) {
+				contentIntent = PendingIntent.getService(context, nId, i,PendingIntent.FLAG_ONE_SHOT);
+			} else {
+				contentIntent = PendingIntent.getBroadcast(context, nId, i,PendingIntent.FLAG_ONE_SHOT);
+			}
+
+            if (android.os.Build.VERSION.SDK_INT >= 16){
+				Notification.Builder builder;
+				if (android.os.Build.VERSION.SDK_INT >= 26) {
+					builder = new Notification.Builder(context,LOCAL_PUSH_CHANNEL_ID);
+				} else {
+					builder = new Notification.Builder(context);
+				}
 				Bitmap bitmap = null;
                 try {
                     if(!TextUtils.isEmpty(icon) && DHFile.isExist(icon)) {
@@ -89,11 +123,22 @@ public class NotificationReceiver extends BroadcastReceiver {
 				if(bitmap != null) {
 					builder.setLargeIcon(bitmap);
 				}
-				int id = RInformation.getInt("drawable","push");
-				if(id <= 0){
+				int id_small = RInformation.getInt("drawable","push_small");
+				if(id_small <= 0){
 					builder.setSmallIcon(context.getApplicationInfo().icon); //设置图标
 				}else{
-					builder.setSmallIcon(id); //设置图标
+					builder.setSmallIcon(id_small); //设置图标
+				}
+                int id = RInformation.getInt("drawable","push");
+				if(bitmap == null) {
+					Bitmap largeBitmap;
+					if(id <= 0){
+						largeBitmap = BitmapFactory.decodeResource(context.getResources(),context.getApplicationInfo().icon);
+					}else{
+						largeBitmap = BitmapFactory.decodeResource(context.getResources(),id);
+					}
+					if (null !=largeBitmap)
+						builder.setLargeIcon(largeBitmap);
 				}
 				builder.setContentTitle(title); //设置标题
 				builder.setContentText(message); //消息内容
@@ -155,7 +200,7 @@ public class NotificationReceiver extends BroadcastReceiver {
 			context.startActivity(_intent);
 		}
 	}
-	
+
 	/**
 	 * 当点击了状态栏中消息是执行此方法
 	 * @param context

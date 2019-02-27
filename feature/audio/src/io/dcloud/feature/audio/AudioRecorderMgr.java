@@ -1,14 +1,17 @@
 package io.dcloud.feature.audio;
 
+import android.app.Dialog;
 import android.os.Build;
 
 import io.dcloud.common.adapter.util.PermissionUtil;
 import io.dcloud.common.constant.DOMException;
+import io.dcloud.common.util.ErrorDialogUtil;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.feature.audio.recorder.AbsRecorder;
 import io.dcloud.feature.audio.recorder.AudioRecorder;
 import io.dcloud.feature.audio.recorder.HighGradeRecorder;
 import io.dcloud.feature.audio.recorder.RecordOption;
+import io.dcloud.feature.audio.recorder.RecorderUtil;
 
 public class AudioRecorderMgr extends AbsAudio {
     String mFunId;//成功失败时回调functionid
@@ -30,8 +33,16 @@ public class AudioRecorderMgr extends AbsAudio {
 			public void onGranted(String streamPerName) {
 				if(isPause(mInstance.mOption.mFormat)) {
 					mInstance.mNativeRecorder = new HighGradeRecorder().setRecordOption(mInstance.mOption);
-					if(mInstance.mOption.mFormat.equals("aac") && Build.VERSION.SDK_INT < 16) {
+					if(mInstance.mOption.mFormat.equalsIgnoreCase("aac") && Build.VERSION.SDK_INT < 16) {
 						mInstance.failCallback("当前系统不支持AAC录制！");
+						return;
+					}
+					if(mInstance.mOption.mFormat.equalsIgnoreCase("mp3") && !RecorderUtil.isContainMp3()) {
+						mInstance.failCallback("当前应用配置不支持mp3");
+						Dialog dialog = ErrorDialogUtil.getLossDialog(mInstance.mOption.mWebview, "打包时未添加录音支持mp3格式文件模块，请参考 http://ask.dcloud.net.cn/article/35058", "http://ask.dcloud.net.cn/article/35058", "audio");
+						if (dialog != null) {
+							dialog.show();
+						}
 						return;
 					}
 					try {

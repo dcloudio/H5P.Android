@@ -97,7 +97,7 @@ public class JsMapPluginImpl implements IWaiter, IFeature{
 				String uuid = JSONUtil.getString(_arrs,1);
 				JsMapObject _jsMapObject = mMapManager.getJsObject(uuid);
 				if(_jsMapObject != null){
-					((IFMapDispose)_jsMapObject).dispose();
+					((IFMapDispose)_jsMapObject).close();
 					mMapManager.removeJsObject(pWebViewImpl.obtainApp().obtainAppId(), uuid);
 				}
 			}

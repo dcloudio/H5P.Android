@@ -44,8 +44,10 @@ import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationConfiguration.LocationMode;
 import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.map.Text;
+import com.baidu.mapapi.map.TextureMapView;
 import com.baidu.mapapi.model.LatLng;
-import com.baidu.vi.VMsg;
+import com.baidu.mapsdkvi.VMsg;
+
 
 public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClickListener, OnMapStatusChangeListener
 		,OnMarkerDragListener, OnMapDoubleClickListener, OnMapLongClickListener{
@@ -63,7 +65,7 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
 
 	public String mUUID = null;
 	private String flag="";
-	private MapView mMapView;
+	private TextureMapView mMapView;
 	private BaiduMap mBaiduMap;
 	// 定位图标 默认为空
 	BitmapDescriptor mCurrentMarker;
@@ -99,7 +101,7 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
 		BaiduMapOptions options = new BaiduMapOptions();
 		MapStatus status = new MapStatus.Builder().target(center).zoom(zoom).build();
 		options.mapStatus(status);
-		mMapView = new MapView(pContext, options);
+		mMapView = new TextureMapView(pContext, options);
 		mMapView.showZoomControls(zoomControls);
 		VMsg.init();
 		initMap();
@@ -126,7 +128,7 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
 	public IWebview getWebview() {
 		return mWebView;
 	}
-	public MapView getMapView() {
+	public TextureMapView getMapView() {
 		return mMapView;
 	}
 
@@ -500,16 +502,6 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
         	}*/
 		}
 
-		@Override
-		public void onConnectHotSpotMessage(String s, int i) {
-
-		}
-
-		public void onReceivePoi(BDLocation poiLocation) {
-			if (poiLocation == null){
-				return ;
-			}
-		}
 	}
 
 	// 标记 是否需要还原定位服务 用于页面暂停在回来时的逻辑
@@ -605,6 +597,11 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
 	@Override
 	public void onMapStatusChangeStart(MapStatus arg0) {
 		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onMapStatusChangeStart(MapStatus mapStatus, int i) {
 
 	}
 

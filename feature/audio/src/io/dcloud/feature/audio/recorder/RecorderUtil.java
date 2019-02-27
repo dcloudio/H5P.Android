@@ -5,6 +5,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 
+import io.dcloud.common.adapter.util.PlatformUtil;
+
 public class RecorderUtil {
 
     public static Context getContext() {
@@ -49,9 +51,9 @@ public class RecorderUtil {
         });
     }
 
-
-
-
+    public static boolean isContainMp3() {
+       return PlatformUtil.checkClass("io.dcloud.feature.audio.mp3.mp3Impl");
+    }
 
 
 }

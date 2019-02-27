@@ -267,6 +267,8 @@ public static final String TAG=UploadNetWork.class.getSimpleName();
 			responseHeaders = getResponseHeaders();
 		} catch (Exception e) {
 			Logger.d("upload is ERROR:" + e.getLocalizedMessage());
+            mResponseText = e.getMessage();
+            mReqListener.onNetStateChanged(NetState.NET_ERROR,isAbort);
 			e.printStackTrace();
 			long _nextconnecttime = System.currentTimeMillis() + mRetryIntervalTime * (1<<mTimes)/2;
 			if(mTimes < MAX_TIMES){
@@ -487,6 +489,9 @@ public static final String TAG=UploadNetWork.class.getSimpleName();
 	
 	public String getResponseHeaders() {
 		try {
+			if(mRequest == null) {
+				return "";
+			}
 			Map<String, List<String>> headers = mRequest.getHeaderFields();
 			Map<String, String> map = new HashMap<String, String>();
 			for(Map.Entry<String,List<String>> entry : headers.entrySet()){

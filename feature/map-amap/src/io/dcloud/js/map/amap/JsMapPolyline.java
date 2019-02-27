@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import org.json.JSONArray;
 
 import com.amap.api.maps.MapView;
+import com.amap.api.maps.TextureMapView;
 
 /**
  * <p>
@@ -77,7 +78,7 @@ class JsMapPolyline extends JsMapObject implements IFJsOverlay{
 	}
 	
 	@Override
-	public void onAddToMapView(MapView pMapView) {
+	public void onAddToMapView(TextureMapView pMapView) {
 		super.onAddToMapView(pMapView);
 		mPolyline.initMapPolyline(pMapView);
 	}

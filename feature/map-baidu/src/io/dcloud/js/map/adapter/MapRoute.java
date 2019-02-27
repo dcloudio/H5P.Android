@@ -1,15 +1,16 @@
 package io.dcloud.js.map.adapter;
 
 import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.js.map.adapter.overlayutil.DrivingRouteOverlay;
+import io.dcloud.js.map.adapter.overlayutil.TransitRouteOverlay;
+import io.dcloud.js.map.adapter.overlayutil.WalkingRouteOverlay;
+
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Cap;
 import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
 
-import com.baidu.mapapi.overlayutil.DrivingRouteOverlay;
-import com.baidu.mapapi.overlayutil.TransitRouteOverlay;
-import com.baidu.mapapi.overlayutil.WalkingRouteOverlay;
 import com.baidu.mapapi.search.route.DrivingRouteLine;
 import com.baidu.mapapi.search.route.TransitRouteLine;
 import com.baidu.mapapi.search.route.WalkingRouteLine;

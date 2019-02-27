@@ -12,6 +12,7 @@ import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
 
 import com.amap.api.maps.MapView;
+import com.amap.api.maps.TextureMapView;
 import com.amap.api.maps.model.PolylineOptions;
 import com.amap.api.services.route.BusPath;
 import com.amap.api.services.route.DrivePath;
@@ -35,7 +36,7 @@ public class MapRoute {
 	MapPoint mEnd;
 	
 	IWebview mWebview;
-	MapView mMapview;
+	TextureMapView mMapview;
 	
 	private Object overlay;
 	/**
@@ -71,7 +72,7 @@ public class MapRoute {
 		mEnd = pEnd;
 	}
 
-	public void initMapRoute(IWebview pWebview, MapView mapview) {
+	public void initMapRoute(IWebview pWebview, TextureMapView mapview) {
 		mWebview = pWebview;
 		mMapview = mapview;
 		if (mRoute instanceof WalkPath) { // 步行路线方案

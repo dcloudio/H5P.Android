@@ -8,6 +8,7 @@ import io.dcloud.js.map.amap.adapter.MapRoute;
 import org.json.JSONArray;
 
 import com.amap.api.maps.MapView;
+import com.amap.api.maps.TextureMapView;
 
 /**
  * <p>
@@ -87,7 +88,7 @@ public class JsMapRoute extends JsMapObject implements IFJsOverlay{
 		return mMapRoute;
 	}
 	@Override
-	public void onAddToMapView(MapView pMapView) {
+	public void onAddToMapView(TextureMapView pMapView) {
 		super.onAddToMapView(pMapView);
 		mMapRoute.initMapRoute(mWebview,pMapView);
 	}

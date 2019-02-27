@@ -25,7 +25,7 @@
 		<basename property="antfile.dir" file="${basedir}"/>
 
 		<echo>outdir:"${outdir-classes}" android-jar:"${android-jar}"  external:"${external-libs}" </echo>
-        <javac encoding="UTF-8" target="1.6" debug="true" extdirs="" destdir="${outdir-classes}" bootclasspath="${android-jar}">
+        <javac encoding="UTF-8" source="1.7" target="1.7" debug="true" extdirs="" destdir="${outdir-classes}" bootclasspath="${android-jar}">
 			<src path="src" />
 			<classpath>
 				<fileset dir="${external-libs}" includes="*.jar" />

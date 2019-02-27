@@ -21,6 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.amap.api.maps.MapView;
+import com.amap.api.maps.TextureMapView;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.LatLng;
@@ -113,7 +114,7 @@ public class MapMarker {
 	 * 生成marker 直接显示到map上
 	 * @param mapView
 	 */
-	public void initMapMarker(MapView mapView) {
+	public void initMapMarker(TextureMapView mapView) {
 		mMarker = mapView.getMap().addMarker(getMapMarkOptions());
 		if (isToTop) {
 			bringToTop();

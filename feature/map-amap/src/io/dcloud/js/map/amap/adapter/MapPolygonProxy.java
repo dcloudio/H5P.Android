@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.amap.api.maps.MapView;
+import com.amap.api.maps.TextureMapView;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Polygon;
 import com.amap.api.maps.model.PolygonOptions;
@@ -66,7 +67,7 @@ public class MapPolygonProxy {
 	public Polygon getPolygon() {
 		return mMapPolygonImpl;
 	}
-	public void initMapPolygon(MapView mapview){
+	public void initMapPolygon(TextureMapView mapview){
 		mMapPolygonImpl = mapview.getMap().addPolygon(getPolygonOptions());
 	}
 	

@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.amap.api.maps.MapView;
+import com.amap.api.maps.TextureMapView;
 
 /**
  * <p>
@@ -120,7 +121,7 @@ class JsMapSearch extends JsMapObject {
 	}
 	
 	@Override
-	public void onAddToMapView(MapView pMapView) {
+	public void onAddToMapView(TextureMapView pMapView) {
 		super.onAddToMapView(pMapView);
 		mMapSearch.setMapView(pMapView);
 	}

@@ -25,6 +25,7 @@ import com.baidu.mapapi.search.poi.OnGetPoiSearchResultListener;
 import com.baidu.mapapi.search.poi.PoiBoundSearchOption;
 import com.baidu.mapapi.search.poi.PoiCitySearchOption;
 import com.baidu.mapapi.search.poi.PoiDetailResult;
+import com.baidu.mapapi.search.poi.PoiDetailSearchResult;
 import com.baidu.mapapi.search.poi.PoiIndoorResult;
 import com.baidu.mapapi.search.poi.PoiNearbySearchOption;
 import com.baidu.mapapi.search.poi.PoiResult;
@@ -665,7 +666,7 @@ public class MapSearch implements OnGetRoutePlanResultListener, OnGetPoiSearchRe
 		}
 		if (result.error == SearchResult.ERRORNO.NO_ERROR) {
 			int error = 0;
-			TransitRouteLine line = result.getRouteLines().get(0);
+			TransitRouteLine line = result.getRouteLines().get(1);
 			route_callback_js(line.getStarting().getLocation(), line.getTerminal().getLocation(), 
 					result.getRouteLines().size(), error, ROUTESEARCH_TYPE, toRouteArray(result));
 		}
@@ -715,7 +716,12 @@ public class MapSearch implements OnGetRoutePlanResultListener, OnGetPoiSearchRe
 		
 	}
 
-    @Override
+	@Override
+	public void onGetPoiDetailResult(PoiDetailSearchResult poiDetailSearchResult) {
+
+	}
+
+	@Override
     public void onGetPoiIndoorResult(PoiIndoorResult poiIndoorResult) {
 
     }

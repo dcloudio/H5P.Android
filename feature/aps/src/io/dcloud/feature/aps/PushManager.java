@@ -1,9 +1,19 @@
 package io.dcloud.feature.aps;
 
+import android.content.Context;
+import android.content.Intent;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
+
 import io.dcloud.common.DHInterface.BaseFeature;
 import io.dcloud.common.DHInterface.BaseFeature.BaseModule;
 import io.dcloud.common.DHInterface.IEventCallback;
-import io.dcloud.common.DHInterface.ISysEventListener;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.ui.AdaFrameItem;
 import io.dcloud.common.adapter.ui.AdaFrameView;
@@ -12,18 +22,6 @@ import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.BaseInfo;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 
 /**
  * <p>
@@ -129,22 +127,6 @@ class PushManager {
 						return super.toJSONObject();
 					}
 				};
-				IntentFilter mFilter = new IntentFilter();
-				mFilter.addAction(APSFeatureImpl.CLILK_NOTIFICATION);
-				mFilter.addAction(APSFeatureImpl.CLEAR_NOTIFICATION);
-				mFilter.addAction(APSFeatureImpl.REMOVE_NOTIFICATION);
-				mFilter.addAction(APSFeatureImpl.CREATE_NOTIFICATION);
-				final NotificationReceiver mNotificationReceiver = new NotificationReceiver();
-				_context.registerReceiver(mNotificationReceiver,mFilter);
-				pWebViewImpl.obtainApp().registerSysEventListener(new ISysEventListener() {
-					@Override
-					public boolean onExecute(SysEventType pEventType, Object pArgs) {
-						if(pEventType == ISysEventListener.SysEventType.onWebAppStop){
-							_context.unregisterReceiver(mNotificationReceiver);
-						}
-						return false;
-					}
-				}, ISysEventListener.SysEventType.onWebAppStop);
 			}
 			channel = mBaseAbsPushService;
 		}

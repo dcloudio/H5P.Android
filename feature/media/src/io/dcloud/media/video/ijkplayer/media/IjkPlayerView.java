@@ -11,12 +11,13 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.PointF;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.LayerDrawable;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.Settings;
 import android.support.annotation.IntDef;
 import android.support.v4.view.MotionEventCompat;
 import android.text.TextUtils;
@@ -290,6 +291,16 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         mTvReload.setOnClickListener(this);
     }
 
+    private void setSeekBarColor(){
+        LayerDrawable drawable = (LayerDrawable) mPlayerSeek.getProgressDrawable();
+        drawable.findDrawableByLayerId(android.R.id.background).setColorFilter(Color.parseColor("#ff00ff"),PorterDuff.Mode.SRC_ATOP);
+        drawable.findDrawableByLayerId(android.R.id.secondaryProgress).setColorFilter(Color.parseColor("#ffff00"),PorterDuff.Mode.SRC_ATOP);
+        drawable.findDrawableByLayerId(android.R.id.progress).setColorFilter(Color.parseColor("#00ffff"),PorterDuff.Mode.SRC_ATOP);
+        mPlayerSeek.getThumb().setColorFilter(Color.parseColor("#0000ff"),PorterDuff.Mode.SRC_ATOP);
+    }
+
+
+    private float defaultScreenBrightness;
     /**
      * 初始化
      */
@@ -300,16 +311,9 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             // 声音
             mAudioManager = (AudioManager) mAttachActivity.getSystemService(Context.AUDIO_SERVICE);
             mMaxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-            // 亮度
-            try {
-                int e = Settings.System.getInt(mAttachActivity.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
-                float progress = 1.0F * (float) e / 255.0F;
-                WindowManager.LayoutParams layout = mAttachActivity.getWindow().getAttributes();
-                layout.screenBrightness = progress;
-                mAttachActivity.getWindow().setAttributes(layout);
-            } catch (Settings.SettingNotFoundException var7) {
-                var7.printStackTrace();
-            }
+            // 保存初始进来的亮度，原方法当设置为自动亮度时，亮度显示不准确
+            WindowManager.LayoutParams lp = mAttachActivity.getWindow().getAttributes();
+            defaultScreenBrightness = lp.screenBrightness;
             // 进度
             mPlayerSeek.setMax(MAX_VIDEO_SEEK);
             mPlayerSeek.setOnSeekBarChangeListener(mSeekListener);
@@ -402,6 +406,10 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         mAttachActivity.unregisterReceiver(mNetReceiver);
         // 关闭屏幕常亮
         mAttachActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        // 退出时亮度调回默认值
+        WindowManager.LayoutParams lp = mAttachActivity.getWindow().getAttributes();
+        lp.screenBrightness = defaultScreenBrightness;
+        mAttachActivity.getWindow().setAttributes(lp);
         return curPosition;
     }
 
@@ -475,6 +483,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     public IjkPlayerView switchVideoPath(Uri uri) {
         reset();
         _setControlBarVisible(true);
+        duration = -1;
         return setVideoPath(uri);
     }
 
@@ -606,6 +615,13 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                     seekTo(mInterruptPosition);
                     mInterruptPosition = 0;
                 }
+            } else {
+                if (null != mOnPlayerChangedListener) {
+                    mOnPlayerChangedListener.onChanged("error", "{message:'network error'}");
+                    mFlReload.setVisibility(VISIBLE);
+                    mLoadingView.setVisibility(GONE);
+                }
+                return;
             }
         } else {
             mVideoView.release(false);
@@ -1731,7 +1747,11 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                 if (mVideoView.getDuration() == -1 ||
                         (mVideoView.getInterruptPosition() + INTERVAL_TIME < mVideoView.getDuration())) {
                     mInterruptPosition = Math.max(mVideoView.getInterruptPosition(), mInterruptPosition);
-                    Toast.makeText(mAttachActivity, "网络异常", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(mAttachActivity, "网络异常", Toast.LENGTH_SHORT).show();
+                    if (null != mOnPlayerChangedListener) {
+                        mOnPlayerChangedListener.onChanged("error", "{message:'network error'}");
+                        mFlReload.setVisibility(VISIBLE);
+                    }
                 } else {
                     mIsPlayComplete = true;
                     if (mCompletionListener != null) {

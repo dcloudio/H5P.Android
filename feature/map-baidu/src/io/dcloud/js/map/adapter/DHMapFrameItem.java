@@ -476,7 +476,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 				ViewRect webParentViewRect = frameView.obtainFrameOptions();
 				LayoutParams _lp = getMapLayoutParams(webParentViewRect, JSONUtil.getJSONObject(mOptions, 0), mOptions);
 				if(styles.has("position")) {
-					String position = styles.optString("position");
+					String position = styles.optString("position", mPosition);
 					if(!position.equals(mPosition)) {
 						if(mPosition.equals("absolute")) {
 							mContainerWebview.obtainFrameView().removeFrameItem(DHMapFrameItem.this);
@@ -585,7 +585,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 		//AdaFrameItem frameView = (AdaFrameItem)mContainerWebview.obtainFrameView();
 		//ViewRect webParentViewRect = frameView.obtainFrameOptions();
 		JSONObject option = jsonArray.optJSONObject(0);
-		mPosition = option.optString("position");
+		mPosition = option.optString("position", mPosition);
 		//LayoutParams _lp = getMapLayoutParams(webParentViewRect, option, jsonArray);
 		LatLng center = null;
 		if (option.optJSONObject("center") != null) {

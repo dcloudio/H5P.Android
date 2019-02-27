@@ -1,7 +1,6 @@
 package io.dcloud.media.video.ijkplayer;
 
 import android.app.Activity;
-import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.view.ViewGroup;
@@ -94,30 +93,12 @@ public class VideoPlayerView extends FrameLayout implements IVideoPlayer{
     public void initOptionsPlayerView(IjkPlayerView playerView, JSONObject options) {
         mOptions = options;
         String url = mOptions.optString("src");
-        if (url.startsWith("_www")|| url.startsWith("_doc")||url.startsWith("_documents")||url.startsWith("_downloads")) {
+        if (!PdrUtil.isNetPath(url)) {
             url = mIWebview.obtainApp().convert2AbsFullPath(mIWebview.obtainFullUrl(),url);
         }
         if(TextUtils.isEmpty(url)) {
             return;
         }
-        if(TextUtils.isEmpty(mUrl)) {
-            mPlayerView.setVideoPath(url);
-            int seek = mOptions.optInt("initial-time");
-            playerView.seekTo(seek * 1000);
-            mPlayerView.clearDanma();
-        } else if(!mUrl.equalsIgnoreCase(url)){
-            mPlayerView.switchVideoPath(url);
-            int seek = mOptions.optInt("initial-time");
-            playerView.seekTo(seek * 1000);
-            mPlayerView.clearDanma();
-        } else {
-            if (!isPlaying()){
-                int seek = mOptions.optInt("initial-time");
-                playerView.seekTo(seek * 1000);
-            }
-        }
-        mUrl = url;
-
         isAutoPlay = mOptions.optBoolean("autoplay", isAutoPlay);
         isLoopPlay = mOptions.optBoolean("loop", isLoopPlay);
         setPoster(mOptions.optString("poster"));
@@ -135,10 +116,25 @@ public class VideoPlayerView extends FrameLayout implements IVideoPlayer{
         playerView.setmDanmuList(mOptions.optString("danmu-list"));
         playerView.setScaleType(mOptions.optString("objectFit","contain"));
         playerView.setCenterPlayBntVisibility(mOptions.optBoolean("show-center-play-btn", true));
-        playerView.setDuration(mOptions.optInt("duration",-1)*1000);
-        if(isAutoPlay) {
-            play();
+
+        if(TextUtils.isEmpty(mUrl)) {
+            mPlayerView.setVideoPath(url);
+            resetSeek(playerView);
+        } else if(!mUrl.equalsIgnoreCase(url)){
+            mPlayerView.switchVideoPath(url);
+            resetSeek(playerView);
         }
+
+        playerView.setDuration(mOptions.optInt("duration",-1)*1000);
+        mUrl = url;
+    }
+
+    private void resetSeek(IjkPlayerView playerView) {
+        int seek = mOptions.optInt("initial-time");
+        playerView.seekTo(seek * 1000);
+        mPlayerView.clearDanma();
+        if (isAutoPlay)
+            play();
     }
 
     @Override

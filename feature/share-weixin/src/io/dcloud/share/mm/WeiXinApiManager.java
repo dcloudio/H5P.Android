@@ -14,6 +14,7 @@ import android.view.Display;
 import android.widget.Toast;
 
 import com.tencent.mm.opensdk.modelbase.BaseResp;
+import com.tencent.mm.opensdk.modelbiz.WXLaunchMiniProgram;
 import com.tencent.mm.opensdk.modelmsg.SendMessageToWX;
 import com.tencent.mm.opensdk.modelmsg.WXImageObject;
 import com.tencent.mm.opensdk.modelmsg.WXMediaMessage;
@@ -929,6 +930,27 @@ public class WeiXinApiManager implements IFShareApi {
             return true;
         } catch (ClassNotFoundException e) {
             return false;
+        }
+    }
+
+    /**
+     * 打开微信小程序
+     * 此方法会反射调用 查看shareApiManager.java
+     * @param pOptions
+     */
+    public void launchMiniProgram(String pOptions) {
+        try {
+            JSONObject optionsJson = new JSONObject(pOptions);
+            String id = optionsJson.optString("id");
+            String path = optionsJson.optString("path");
+            int type = optionsJson.optInt("type", 0);
+            WXLaunchMiniProgram.Req req = new WXLaunchMiniProgram.Req();
+            req.userName = id;
+            req.path = path;
+            req.miniprogramType = type;
+            api.sendReq(req);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 

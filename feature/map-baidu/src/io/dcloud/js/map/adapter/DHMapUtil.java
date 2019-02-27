@@ -1,11 +1,5 @@
 package io.dcloud.js.map.adapter;
 
-import io.dcloud.common.DHInterface.IWebview;
-import io.dcloud.common.constant.DOMException;
-import io.dcloud.common.util.JSUtil;
-
-import java.util.Locale;
-
 import android.content.Intent;
 import android.net.Uri;
 import android.text.TextUtils;
@@ -22,6 +16,12 @@ import com.baidu.mapapi.utils.AreaUtil;
 import com.baidu.mapapi.utils.CoordinateConverter;
 import com.baidu.mapapi.utils.CoordinateConverter.CoordType;
 import com.baidu.mapapi.utils.DistanceUtil;
+
+import java.util.Locale;
+
+import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.common.constant.DOMException;
+import io.dcloud.common.util.JSUtil;
 
 
 
@@ -125,7 +125,6 @@ public class DHMapUtil {
 			lng = convertCoordinates(webview, point, coordType, null);
 		}
 		GeoCoder geoCoder = GeoCoder.newInstance();
-		geoCoder.reverseGeoCode(new ReverseGeoCodeOption().location(lng));
 		geoCoder.setOnGetGeoCodeResultListener(new OnGetGeoCoderResultListener() {
 			
 			@Override
@@ -158,6 +157,7 @@ public class DHMapUtil {
 				
 			}
 		});
+        geoCoder.reverseGeoCode(new ReverseGeoCodeOption().location(lng));
 	}
 	/**
 	 * 百度系坐标转换

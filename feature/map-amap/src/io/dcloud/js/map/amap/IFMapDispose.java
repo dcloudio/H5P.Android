@@ -14,5 +14,10 @@ package io.dcloud.js.map.amap;
 public interface IFMapDispose {
 
 	public void dispose();
+
+	/**
+	 * 此函数仅供地图close API调用 自动出入栈的dispose不可以使用此函数
+	 */
+	public void close();
 	
 }

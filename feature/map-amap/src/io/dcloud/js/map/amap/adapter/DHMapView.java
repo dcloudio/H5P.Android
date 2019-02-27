@@ -1,17 +1,5 @@
 package io.dcloud.js.map.amap.adapter;
 
-import io.dcloud.common.DHInterface.IWebview;
-import io.dcloud.common.adapter.util.PlatformUtil;
-import io.dcloud.js.map.amap.IFMapDispose;
-import io.dcloud.js.map.amap.JsMapManager;
-import io.dcloud.js.map.amap.MapJsUtil;
-import io.dcloud.common.constant.DOMException;
-import io.dcloud.common.util.PdrUtil;
-import com.amap.api.location.AMapLocationClient;
-import com.amap.api.location.AMapLocationClientOption;
-import java.util.ArrayList;
-import java.util.Locale;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -21,8 +9,11 @@ import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.amap.api.location.AMapLocation;
+import com.amap.api.location.AMapLocationClient;
+import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMap.InfoWindowAdapter;
@@ -36,13 +27,24 @@ import com.amap.api.maps.CameraUpdate;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.LocationSource.OnLocationChangedListener;
-import com.amap.api.maps.MapView;
+import com.amap.api.maps.TextureMapView;
 import com.amap.api.maps.model.CameraPosition;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.VisibleRegion;
 
-public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickListener, OnInfoWindowClickListener
+import java.util.ArrayList;
+import java.util.Locale;
+
+import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.common.adapter.util.PlatformUtil;
+import io.dcloud.common.constant.DOMException;
+import io.dcloud.common.util.PdrUtil;
+import io.dcloud.js.map.amap.IFMapDispose;
+import io.dcloud.js.map.amap.JsMapManager;
+import io.dcloud.js.map.amap.MapJsUtil;
+
+public class DHMapView extends TextureMapView implements IFMapDispose , OnMarkerClickListener, OnInfoWindowClickListener
       , OnCameraChangeListener, OnMarkerDragListener, InfoWindowAdapter, OnMapClickListener, OnMapLongClickListener,AMapLocationListener{
 	public boolean mAutoPopFromStack = false;
 	static int aaaaaaaaaaa = 0;
@@ -78,11 +80,14 @@ public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickLi
 	private String flag="";
 
 	private ArrayList<String> mMapCallBackWebUuids;
+	//地图包裹根view
+	private LinearLayout mRootView;
 
-	public DHMapView(Context pContext,IWebview pWebView,LatLng center, int zoom, int mapType, boolean traffic, boolean zoomControls) {
+	public DHMapView(Context pContext,IWebview pWebView,LatLng center, int zoom, int mapType, boolean traffic, boolean zoomControls, LinearLayout rootView) {
 		super(pContext);flag = "我是编号：" + aaaaaaaaaaa++;
 		mWebView = pWebView;
 		mMapCallBackWebUuids = new ArrayList<String>();
+		mRootView = rootView;
 		addMapCallBackWebUuid(pWebView.getWebviewUUID());
 		onResume();
 		initMap();
@@ -163,6 +168,11 @@ public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickLi
 		clearMapCallBack();
 	}
 
+	@Override
+	public void close() {
+
+	}
+
 	/**
 	 * 
 	 * Description:设置地图中心点
@@ -208,9 +218,16 @@ public class DHMapView extends MapView implements IFMapDispose , OnMarkerClickLi
 	 */
 	protected void setVisible(boolean pIsVisible){
 		if (pIsVisible) {
+			mRootView.setVisibility(View.VISIBLE);
 			DHMapView.this.setVisibility(View.VISIBLE);
 		}else {
-			DHMapView.this.setVisibility(View.GONE);
+			mRootView.setVisibility(View.GONE);
+			mRootView.post(new Runnable() {
+				@Override
+				public void run() {
+					DHMapView.this.setVisibility(View.GONE);
+				}
+			});
 		}
 	}
 	

@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.amap.api.maps.MapView;
+import com.amap.api.maps.TextureMapView;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
@@ -60,7 +61,7 @@ public class MapPolylineProxy{
 		return mMapPolylineImpl;
 	}
 	
-	public void initMapPolyline(MapView mapView){
+	public void initMapPolyline(TextureMapView mapView){
 		mMapPolylineImpl = mapView.getMap().addPolyline(getNewGraphic());
 	}
 	

@@ -1,5 +1,23 @@
 package io.dcloud.js.map.amap.adapter;
 
+import android.content.Context;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.view.View;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.LinearLayout;
+
+import com.amap.api.maps.AMap;
+import com.amap.api.maps.model.LatLng;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
 import io.dcloud.common.DHInterface.IApp;
 import io.dcloud.common.DHInterface.ISysEventListener;
 import io.dcloud.common.DHInterface.ITypeofAble;
@@ -15,24 +33,6 @@ import io.dcloud.common.util.PdrUtil;
 import io.dcloud.js.map.amap.IFMapDispose;
 import io.dcloud.js.map.amap.JsMapManager;
 import io.dcloud.js.map.amap.JsMapObject;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.content.Context;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.view.View;
-import android.view.ViewGroup.LayoutParams;
-
-import com.amap.api.maps.AMap;
-import com.amap.api.maps.model.LatLng;
 
 
 /**
@@ -80,6 +80,8 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 	 * 显示的地图对象
 	 */
 	private DHMapView mMapView;
+	//地图包裹根view
+	private LinearLayout mRootView;
 	/**
 	 * 地图内handler（用来处理map的UI）
 	 */
@@ -125,6 +127,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 		mWebview = pWebview;
 		mContainerWebview = pWebview;
 		mJsMapView = jsMapObject;
+		mRootView = new LinearLayout(pContext);
 		mMapHandler = new MapHandler(Looper.getMainLooper());
 		mOverlaysId = new ArrayList<Object>();
 		IApp app = mWebview.obtainFrameView().obtainApp(); 
@@ -168,7 +171,8 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 	 */
 	private void setMapView(DHMapView pMapView){
 		mMapView = pMapView;
-		setMainView(mMapView);
+		mRootView.addView(mMapView);
+		setMainView(mRootView);
 		mJsMapView.onAddToMapView(mMapView);
 		mMapView.onCreate(null);
 	}
@@ -490,7 +494,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 				ViewRect webParentViewRect = frameView.obtainFrameOptions();
 				LayoutParams _lp = getMapLayoutParams(webParentViewRect, JSONUtil.getJSONObject(mOptions, 0), mOptions);
 				if(styles.has("position")) {
-					String position = styles.optString("position");
+					String position = styles.optString("position", mPosition);
 					if(!position.equals(mPosition)) {
 						if(mPosition.equals("absolute")) {
 							mContainerWebview.obtainFrameView().removeFrameItem(DHMapFrameItem.this);
@@ -596,7 +600,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 			center = new LatLng(option.optJSONObject("center").optDouble("latitude"),
 					option.optJSONObject("center").optDouble("longitude"));
 		}
-		mPosition = option.optString("position");
+		mPosition = option.optString("position", mPosition);
 		int zoom = option.optInt("zoom");
 		boolean isTraffic = option.optBoolean("traffic");
 		boolean isZoomControls = option.optBoolean("zoomControls");
@@ -604,7 +608,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 		if (option.optString("type").equals("MAPTYPE_SATELLITE")) {
 			type = AMap.MAP_TYPE_SATELLITE;
 		}
-		DHMapView _mapView = new DHMapView(getActivity(),mWebview, center, zoom, type, isTraffic, isZoomControls);
+		DHMapView _mapView = new DHMapView(getActivity(),mWebview, center, zoom, type, isTraffic, isZoomControls, mRootView);
 		_mapView.mUUID = mUUID;
 		setMapView(_mapView);
 	}
@@ -674,7 +678,8 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 	public void dispose() {
         if (!PdrUtil.isEmpty(mMapView)) {
             mMapView.dispose();
-            mMapView.setVisible(false);
+//            mMapView.setVisible(false);
+			mRootView.setVisibility(View.GONE);
             mMapView.onDestroy();
 			JsMapManager.getJsMapManager().removeJsMapView(mContainerWebview.obtainApp().obtainAppId(), mUUID);
 			if(mPosition.equals("static")) {
@@ -686,6 +691,35 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 			mMapView = null;
 			mContainerWebview = null;
         }
+	}
+
+
+	/**
+	 * 此处关闭会规避关闭闪黑，适用于API主动调用close调用  自动出入栈逻辑不可以使用此函数 会有崩溃 注意
+	 */
+	@Override
+	public void close() {
+		if (!PdrUtil.isEmpty(mMapView)) {
+			mMapView.dispose();
+//            mMapView.setVisible(false);
+			mRootView.setVisibility(View.GONE);
+			mRootView.post(new Runnable() {
+				@Override
+				public void run() {
+					mMapView.onDestroy();
+					JsMapManager.getJsMapManager().removeJsMapView(mContainerWebview.obtainApp().obtainAppId(), mUUID);
+					if(mPosition.equals("static")) {
+						mContainerWebview.removeFrameItem(DHMapFrameItem.this);
+					} else {
+						mContainerWebview.obtainFrameView().removeFrameItem(DHMapFrameItem.this);
+					}
+					mMapView.mAutoPopFromStack = false;
+					mMapView = null;
+					mContainerWebview = null;
+				}
+			});
+
+		}
 	}
 
 	public String getBounds() {

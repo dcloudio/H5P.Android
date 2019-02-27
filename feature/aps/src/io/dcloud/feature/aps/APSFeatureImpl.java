@@ -1,16 +1,20 @@
 package io.dcloud.feature.aps;
 
-import io.dcloud.common.DHInterface.AbsMgr;
-import io.dcloud.common.DHInterface.BaseFeature;
-import io.dcloud.common.DHInterface.IWebview;
-
-import java.util.ArrayList;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Build;
+import android.os.Bundle;
 
 import org.json.JSONArray;
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import io.dcloud.common.DHInterface.AbsMgr;
+import io.dcloud.common.DHInterface.BaseFeature;
+import io.dcloud.common.DHInterface.IMgr;
+import io.dcloud.common.DHInterface.IWebview;
 
 /**
  * <p>
@@ -66,6 +70,8 @@ public class APSFeatureImpl extends BaseFeature  {
 	
 	protected PushManager mPushManager;
 
+	private NotificationReceiver mNotificationReceiver;
+
 	@Override
 	public String execute(IWebview pWebViewImpl, String pActionName, JSONArray pJsArgs) {
 		try {
@@ -82,9 +88,32 @@ public class APSFeatureImpl extends BaseFeature  {
 		Context context = pFeatureMgr.getContext();
 		mPushManager = PushManager.getInstance(context);
 		initNotification(context);
+
+        //修改广播注册，android 8.0之后广播必须通过代码注册，个推的单独注册
+//        HashMap<String, String> channels = (HashMap<String, String>)mFeatureMgr.processEvent(IMgr.MgrType.FeatureMgr, IMgr.MgrEvent.OBTAIN_FEATURE_EXT_HASHMAP, mFeatureName);
+//        if (channels != null && !channels.isEmpty()) {
+//            if (!channels.containsKey("igexin")) {
+//                registReceiver(context);
+//            }
+//        } else {
+//            registReceiver(context);
+//        }
+		registReceiver(context);
 	}
 
-	public static void initNotification(Context context){
+    private void registReceiver(Context context) {
+		if(isNeedDynamicsReceiver(context)) {
+			mNotificationReceiver = new NotificationReceiver(mApplicationContext);
+			IntentFilter mFilter = new IntentFilter();
+			mFilter.addAction(APSFeatureImpl.CLILK_NOTIFICATION);
+			mFilter.addAction(APSFeatureImpl.CLEAR_NOTIFICATION);
+			mFilter.addAction(APSFeatureImpl.REMOVE_NOTIFICATION);
+			mFilter.addAction(APSFeatureImpl.CREATE_NOTIFICATION);
+			mApplicationContext.registerReceiver(mNotificationReceiver, mFilter);
+		}
+    }
+
+    public static void initNotification(Context context){
 		if(PRE == null){
 			PRE = context.getPackageName();
 		}
@@ -118,6 +147,9 @@ public class APSFeatureImpl extends BaseFeature  {
 	}
 	@Override
 	public void dispose(String pAppid) {
+		if(mNotificationReceiver != null) {
+			mApplicationContext.unregisterReceiver(mNotificationReceiver);
+		}
 		ArrayList<BaseModule> modules =  loadModules();
 		if(modules != null && !modules.isEmpty()){
 			for(BaseModule bm : modules){
@@ -151,5 +183,12 @@ public class APSFeatureImpl extends BaseFeature  {
 	public static void addNeedExecMessage(Context context,
 			PushMessage pushMessage) {
 		PushManager.getInstance(context).addNeedExecMessage(pushMessage);
+	}
+
+	public static boolean isNeedDynamicsReceiver(Context context) {
+		if(Build.VERSION.SDK_INT >= 26) {
+			return true;
+		}
+		return false;
 	}
 }

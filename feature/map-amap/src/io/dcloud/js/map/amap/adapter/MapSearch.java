@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Message;
 
 import com.amap.api.maps.MapView;
+import com.amap.api.maps.TextureMapView;
 import com.amap.api.services.core.AMapException;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.core.PoiItem;
@@ -707,9 +708,9 @@ public class MapSearch {
 		MapJsUtil.assignJsVar(sb, routeName, "pointList", ptsArr);*/
 		return MapJsUtil.wrapJsEvalString(sb.toString(),routeName);
 	}
-	
-	MapView mMapView = null;
-	public void setMapView(MapView pMapView) {
+
+	TextureMapView mMapView = null;
+	public void setMapView(TextureMapView pMapView) {
 		mMapView = pMapView;
 	}
 

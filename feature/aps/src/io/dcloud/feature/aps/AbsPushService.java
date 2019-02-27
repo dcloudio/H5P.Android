@@ -1,25 +1,24 @@
 package io.dcloud.feature.aps;
 
-import io.dcloud.common.DHInterface.IReflectAble;
-import io.dcloud.common.DHInterface.IWebview;
-import io.dcloud.common.DHInterface.BaseFeature.BaseModule;
-import io.dcloud.common.adapter.util.MessageHandler;
-import io.dcloud.common.adapter.util.MessageHandler.IMessages;
-import io.dcloud.common.util.BaseInfo;
-import io.dcloud.common.util.JSUtil;
-import io.dcloud.common.util.PdrUtil;
-
-import java.util.ArrayList;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
+import io.dcloud.common.DHInterface.BaseFeature.BaseModule;
+import io.dcloud.common.DHInterface.IReflectAble;
+import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.common.adapter.util.MessageHandler;
+import io.dcloud.common.adapter.util.MessageHandler.IMessages;
+import io.dcloud.common.util.BaseInfo;
+import io.dcloud.common.util.JSUtil;
 
 public abstract class AbsPushService extends BaseModule implements IReflectAble{
 
@@ -45,10 +44,12 @@ public abstract class AbsPushService extends BaseModule implements IReflectAble{
 	public void onStop() {
 		
 	}
-	@Override
-	public void init(Context context){
-		initClientId(context);
-	}
+
+    @Override
+    public void init(Context context) {
+        super.init(context);
+        initClientId(context);
+    }
 	public String getClientInfo(Context context){
 		String json = String.format(CLIENT_INFO_TEMPLATE, id,clientid, clientid, appid, appkey);
 		return JSUtil.wrapJsVar(json, false);
