@@ -7,6 +7,7 @@ import io.dcloud.common.adapter.util.PermissionUtil;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.ErrorDialogUtil;
 import io.dcloud.common.util.JSUtil;
+import io.dcloud.common.util.StringUtil;
 import io.dcloud.feature.audio.recorder.AbsRecorder;
 import io.dcloud.feature.audio.recorder.AudioRecorder;
 import io.dcloud.feature.audio.recorder.HighGradeRecorder;
@@ -81,7 +82,7 @@ public class AudioRecorderMgr extends AbsAudio {
 	}
 
 	private void failCallback(String msg){
-		String error_json = String.format(DOMException.JSON_ERROR_INFO,DOMException.CODE_RECORDER_ERROR,msg);
+		String error_json = StringUtil.format(DOMException.JSON_ERROR_INFO,DOMException.CODE_RECORDER_ERROR,msg);
 		JSUtil.excCallbackError(mOption.mWebview, AudioRecorderMgr.this.mFunId, error_json,true);
 	}
 

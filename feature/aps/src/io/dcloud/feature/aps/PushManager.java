@@ -17,6 +17,7 @@ import io.dcloud.common.DHInterface.IEventCallback;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.ui.AdaFrameItem;
 import io.dcloud.common.adapter.ui.AdaFrameView;
+import io.dcloud.common.adapter.ui.AdaUniWebView;
 import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.BaseInfo;
@@ -162,14 +163,18 @@ class PushManager {
 		}
 		return _ret;
 	}
-	
-	protected static final String EVENT_TEMPLATE = "window.__Mkey__Push__.execCallback_Push('%s', '%s', %s);";
 
 	protected void dispatchEvent(IWebview webview, String callBackId, String evtType) {
+		String evnetMsg = "__Mkey__Push__.execCallback_Push('%s', '%s', %s);";
+		String eventJs = "window." + evnetMsg;
+		if(webview instanceof AdaUniWebView) {
+			eventJs = "plus.push." + evnetMsg;
+		}
 		if ("click".equals(evtType)) {
 			if (!mNeedExecMessages.isEmpty()) {// 存在需要立即执行的消息
 				for (PushMessage _message : mNeedExecMessages) {
-					String _json = String.format(EVENT_TEMPLATE, callBackId, evtType, _message.toJSON());
+
+					String _json = String.format(eventJs, callBackId, evtType, _message.toJSON());
                     webview.executeScript(_json);
 				}
 				//删除操作在for循环会导致ConcurrentModificationException异常
@@ -178,7 +183,7 @@ class PushManager {
 		} else if ("receive".equals(evtType)) {
 			if (!mNeedExecMessages_receive.isEmpty()) {// 存在需要立即执行的消息
 				for (PushMessage _message : mNeedExecMessages_receive) {
-					String _json = String.format(EVENT_TEMPLATE, callBackId, evtType, _message.toJSON());
+					String _json = String.format(eventJs, callBackId, evtType, _message.toJSON());
 					webview.executeScript(_json);
 				}
 				//删除操作在for循环会导致ConcurrentModificationException异常
@@ -406,19 +411,23 @@ class PushManager {
 	 * </pre>
 	 */
 	public boolean execScript(String pEventType, String pMessage) {
-		String _json = "window.__Mkey__Push__.execCallback_Push('%s', '%s', %s);";
+		String evnetMsg = "__Mkey__Push__.execCallback_Push('%s', '%s', %s);";
 		boolean _ret = false;
 		for (IWebview _webView : mWebViewCallbackIds.keySet()) {
 			if(((AdaFrameItem)_webView).isDisposed()) continue;
+			String eventJs = "window." + evnetMsg;
+			if(_webView instanceof AdaUniWebView) {
+				eventJs = "plus.push." + evnetMsg;
+			}
 			ArrayList<String> _callbacks = mWebViewCallbackIds.get(_webView).get(pEventType);// 获得pEventType事件的集合
 			if(_callbacks != null) {
 				int length = _callbacks.size();
 				String _callbackId = null;
 				for (int i = length - 1; i >= 0; i--) {
 					_callbackId = _callbacks.get(i);
-					_json = String.format(_json, _callbackId, pEventType, pMessage);
+					String scriptJs = String.format(eventJs, _callbackId, pEventType, pMessage);
 					if (_callbackId.startsWith(pEventType)) {
-						_webView.executeScript(_json);
+						_webView.executeScript(scriptJs);
 						_ret = true;
 					}
 				}

@@ -174,7 +174,7 @@ public class MapCircleProxy {
 		if(mMapCircle != null) mMapCircle.setStrokeWidth((int)pLineWidth);
 	}
 	
-	public void initMapCircle(TextureMapView mapview){
+	public void initMapCircle(DHMapView mapview){
 		mMapCircle = mapview.getMap().addCircle(getCircleOptions());
 	}
 	

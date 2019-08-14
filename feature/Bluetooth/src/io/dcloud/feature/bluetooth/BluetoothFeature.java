@@ -7,6 +7,7 @@ import org.json.JSONArray;
 import io.dcloud.common.DHInterface.AbsMgr;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.DHInterface.StandardFeature;
+import io.dcloud.common.adapter.util.PermissionUtil;
 
 public class BluetoothFeature extends StandardFeature {
 
@@ -16,9 +17,9 @@ public class BluetoothFeature extends StandardFeature {
     @Override
     public void init(AbsMgr pFeatureMgr, String pFeatureName) {
         super.init(pFeatureMgr, pFeatureName);
-        if (Build.VERSION.SDK_INT > 21) {
+        /*if (Build.VERSION.SDK_INT > 21) {
             bluetoothF = new BluetoothOver21();
-        } else if (Build.VERSION.SDK_INT > 18 && Build.VERSION.SDK_INT < 21) {
+        } else*/ if (Build.VERSION.SDK_INT > 18) {
             bluetoothF = new BluetoothUnder21();
         } else {
             bluetoothF = new BluetoothBaseAdapter();
@@ -53,8 +54,25 @@ public class BluetoothFeature extends StandardFeature {
         bluetoothF.getConnectedBluetoothDevices(pwebview, args);
     }
 
-    public void startBluetoothDevicesDiscovery(IWebview pwebview, JSONArray args) {
-        bluetoothF.startBluetoothDevicesDiscovery(pwebview, args);
+    public void startBluetoothDevicesDiscovery(final IWebview pwebview, final JSONArray args) {
+        PermissionUtil.useSystemPermissions(pwebview.getActivity(), new String[]{"android.permission.ACCESS_FINE_LOCATION", "android.permission.ACCESS_COARSE_LOCATION"}, new PermissionUtil.Request() {
+            int times = 0;
+            @Override
+            public void onGranted(String streamPerName) {
+                times++;
+                if (times == 2) {
+                    bluetoothF.startBluetoothDevicesDiscovery(pwebview, args);
+                }
+            }
+
+            @Override
+            public void onDenied(String streamPerName) {
+                times++;
+                if (times == 2) {
+                    bluetoothF.startBluetoothDevicesDiscovery(pwebview, args);
+                }
+            }
+        });
     }
 
     public void stopBluetoothDevicesDiscovery(IWebview pwebview, JSONArray args) {

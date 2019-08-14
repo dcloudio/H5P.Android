@@ -36,7 +36,7 @@ public class MapRoute {
 	MapPoint mEnd;
 	
 	IWebview mWebview;
-	TextureMapView mMapview;
+	DHMapView mMapview;
 	
 	private Object overlay;
 	/**
@@ -72,7 +72,7 @@ public class MapRoute {
 		mEnd = pEnd;
 	}
 
-	public void initMapRoute(IWebview pWebview, TextureMapView mapview) {
+	public void initMapRoute(IWebview pWebview, DHMapView mapview) {
 		mWebview = pWebview;
 		mMapview = mapview;
 		if (mRoute instanceof WalkPath) { // 步行路线方案

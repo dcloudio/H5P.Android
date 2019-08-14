@@ -7,6 +7,7 @@ import io.dcloud.common.DHInterface.IMgr.MgrEvent;
 import io.dcloud.common.DHInterface.IMgr.MgrType;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.JSUtil;
+import io.dcloud.common.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,7 +50,7 @@ public class PaymentFeatureImpl implements IFeature {
 				paymentChannel.updateWebview(pWebViewImpl);
 				paymentChannel.request(statement, callbackId);
 			}else{
-				String msg = String.format(DOMException.JSON_ERROR_INFO, 62009,"not found channel");
+				String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, 62009,"not found channel");
 				JSUtil.execCallback(pWebViewImpl, callbackId, msg, JSUtil.ERROR, true, false);
 			}
 		}else if("installService".equals(pActionName)){//安装支付模块所需的安全服务

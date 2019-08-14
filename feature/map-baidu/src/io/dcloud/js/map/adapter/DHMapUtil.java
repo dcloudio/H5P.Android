@@ -75,13 +75,11 @@ public class DHMapUtil {
 	public static void geocode(final IWebview webview, String address, String coordType, String city, final String callBackId) {
 
 		GeoCoder geoCoder = GeoCoder.newInstance();
-		geoCoder.geocode(new GeoCodeOption().address(address).city(city));
 		geoCoder.setOnGetGeoCodeResultListener(new OnGetGeoCoderResultListener() {
 			
 			@Override
 			public void onGetReverseGeoCodeResult(ReverseGeoCodeResult arg0) {
 				// TODO Auto-generated method stub
-				
 			}
 			
 			@Override
@@ -108,6 +106,7 @@ public class DHMapUtil {
 				}
 			}
 		});
+		geoCoder.geocode(new GeoCodeOption().address(address).city(city));
 	}
 	
 	

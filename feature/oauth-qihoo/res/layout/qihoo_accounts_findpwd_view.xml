@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 手机找回密码页面 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/qihoo_accounts_findpwd_view"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/qihoo_accounts_bg"
+    android:orientation="vertical" >
+
+    <!-- 手机找回密码Title -->
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+
+        <include layout="@layout/qihoo_accounts_top_title" />
+    </LinearLayout>
+
+    <!-- 输入手机号 -->
+
+    <LinearLayout
+        android:id="@+id/qihoo_accounts_findpwd_step1_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:visibility="gone" >
+
+        <include layout="@layout/qihoo_accounts_findpwd_mobile_view" />
+    </LinearLayout>
+
+    <!-- 手机短信验证码 -->
+
+    <LinearLayout
+        android:id="@+id/qihoo_accounts_findpwd_step2_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:visibility="gone" >
+
+        <include layout="@layout/qihoo_accounts_findpwd_mobile_captcha_view" />
+    </LinearLayout>
+
+    <!-- 保存新密码 -->
+
+    <LinearLayout
+        android:id="@+id/qihoo_accounts_findpwd_step3_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:visibility="gone" >
+
+        <include layout="@layout/qihoo_accounts_findpwd_save_pwd_view" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -709,8 +709,8 @@ public class MapSearch {
 		return MapJsUtil.wrapJsEvalString(sb.toString(),routeName);
 	}
 
-	TextureMapView mMapView = null;
-	public void setMapView(TextureMapView pMapView) {
+	DHMapView mMapView = null;
+	public void setMapView(DHMapView pMapView) {
 		mMapView = pMapView;
 	}
 

@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.logging.Logger;
 
+import io.dcloud.common.util.StringUtil;
+
 /**
  * Changes the timescale of a track by wrapping the track.
  */
@@ -169,7 +171,7 @@ public class ChangeTimeScaleTrack implements Track {
                 // we are at the sample before sync point
                 if (syncSampleTimes[ssIndex] != summedDurations) {
                     long correction = syncSampleTimes[ssIndex] - (summedDurations + x);
-                    LOG.finest(String.format("Sample %d %d / %d - correct by %d", i, summedDurations, syncSampleTimes[ssIndex], correction));
+                    LOG.finest(StringUtil.format("Sample %d %d / %d - correct by %d", i, summedDurations, syncSampleTimes[ssIndex], correction));
                     x += correction;
                 }
             }

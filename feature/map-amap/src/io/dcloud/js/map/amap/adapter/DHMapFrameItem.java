@@ -128,6 +128,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 		mContainerWebview = pWebview;
 		mJsMapView = jsMapObject;
 		mRootView = new LinearLayout(pContext);
+		setMainView(mRootView);
 		mMapHandler = new MapHandler(Looper.getMainLooper());
 		mOverlaysId = new ArrayList<Object>();
 		IApp app = mWebview.obtainFrameView().obtainApp(); 
@@ -172,7 +173,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 	private void setMapView(DHMapView pMapView){
 		mMapView = pMapView;
 		mRootView.addView(mMapView);
-		setMainView(mRootView);
+
 		mJsMapView.onAddToMapView(mMapView);
 		mMapView.onCreate(null);
 	}
@@ -442,10 +443,11 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 			removeMapFrameItem(mContainerWebview);
 		}
 		mContainerWebview = frameView.obtainWebView();
-		Message m = Message.obtain();
+		addToFrameItem(mOptions);
+		/*Message m = Message.obtain();
 		m.what = MSG_APPEND;
 		m.obj = mOptions;
-		mMapHandler.sendMessage(m);
+		mMapHandler.sendMessage(m);*/
 	}
 
 	public void removeMapFrameItem(IWebview pFrame) {
@@ -472,9 +474,9 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 			}
 
 			if(styles.has("type")) {
-				int type = AMap.MAP_TYPE_NORMAL;
+				int type = DHMapView.MAPTYPE_NORMAL;
 				if (styles.optString("type").equals("MAPTYPE_SATELLITE")) {
-					type = AMap.MAP_TYPE_SATELLITE;
+					type = DHMapView.MAPTYPE_SATELLITE;
 				}
 				mMapView.setMapType(type);
 			}
@@ -615,9 +617,6 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 
 	private void addToFrameItem(Object obj) {
 		JSONArray jsonArray = (JSONArray)obj;
-		if(getMapView() == null) {
-			createMapFrameItem(jsonArray);
-		}
 		JSONObject option = jsonArray.optJSONObject(0);
 		AdaFrameItem frameView = (AdaFrameItem)mContainerWebview.obtainFrameView();
 		ViewRect webParentViewRect = frameView.obtainFrameOptions();
@@ -631,7 +630,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 			Logger.d(Logger.MAP_TAG,"addMapView webview_name=" + mWebview.obtainFrameId());
 		}else{//默认为"static",也可能为其它非法字符串
 			if(DeviceInfo.sDeviceSdkVer >= 11){//使用系统默认View硬件加速，可能引起闪屏，LAYER_TYPE_HARDWARE无效
-				mContainerWebview.obtainWebview().setLayerType(View.LAYER_TYPE_NONE, null);
+				mContainerWebview.obtainWindowView().setLayerType(View.LAYER_TYPE_NONE, null);
 			}
 			mContainerWebview.addFrameItem(DHMapFrameItem.this,_lp);
 		}

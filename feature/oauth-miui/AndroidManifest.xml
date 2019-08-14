@@ -1,0 +1,12 @@
+<manifest package="io.dcloud.feature" xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="com.xiaomi.permission.AUTH_SERVICE"/>
+    <application>
+        <meta-data android:value="_${plus.oauth.xiaomi.appid_android}"
+            android:name="MIUI_APPID"/>
+        <meta-data android:value="plus.oauth.xiaomi.appsecret_android}"
+            android:name="MIUI_APPSECRET"/>
+        <meta-data android:value="plus.oauth.xiaomi.redirect_uri_android}"
+            android:name="MIUI_REDIRECT_URI"/>
+        <activity android:name="com.xiaomi.account.openauth.AuthorizeActivity"/>
+    </application>
+</manifest>

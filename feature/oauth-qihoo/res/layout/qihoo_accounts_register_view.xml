@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 注册页面 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/qihoo_accounts_bg"
+    android:orientation="vertical" >
+
+    <!-- 360账号注册Title -->
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+        <include layout="@layout/qihoo_accounts_top_title" />
+    </LinearLayout>
+
+    <!-- 下行短信验证码 -->
+
+    <LinearLayout
+        android:id="@+id/qihoo_accounts_register_down_sms_captcha_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:visibility="gone" >
+
+        <include layout="@layout/qihoo_accounts_register_down_sms_captcha_view" />
+    </LinearLayout>
+
+    <!-- 手机下行注册页面 -->
+
+    <LinearLayout
+        android:id="@+id/qihoo_accounts_register_down_sms_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:visibility="gone" >
+
+        <include layout="@layout/qihoo_accounts_register_down_sms_view" />
+    </LinearLayout>
+
+    <!-- 手机上行注册页面 -->
+
+    <LinearLayout
+        android:id="@+id/qihoo_accounts_register_up_sms_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:visibility="gone" >
+
+        <include layout="@layout/qihoo_accounts_register_up_sms_view" />
+    </LinearLayout>
+
+    <!-- 邮箱注册页面 -->
+
+    <LinearLayout
+        android:id="@+id/qihoo_accounts_register_email_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:visibility="gone" >
+
+        <include layout="@layout/qihoo_accounts_register_email_view" />
+    </LinearLayout>
+
+    <!-- 邮箱注册激活页面 -->
+
+    <LinearLayout
+        android:id="@+id/qihoo_accounts_register_email_active_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:visibility="gone" >
+
+        <include layout="@layout/qihoo_accounts_register_email_active_view" />
+    </LinearLayout>
+
+</LinearLayout>

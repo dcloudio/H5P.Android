@@ -61,7 +61,7 @@ public class MapPolylineProxy{
 		return mMapPolylineImpl;
 	}
 	
-	public void initMapPolyline(TextureMapView mapView){
+	public void initMapPolyline(DHMapView mapView){
 		mMapPolylineImpl = mapView.getMap().addPolyline(getNewGraphic());
 	}
 	

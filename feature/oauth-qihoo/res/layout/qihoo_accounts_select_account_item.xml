@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="@dimen/qihoo_accounts_select_item_height"
+    android:background="@drawable/qihoo_accounts_select_item_selector"
+    android:clickable="false"
+    android:focusable="false"
+    android:paddingLeft="@dimen/qihoo_accounts_select_item_padding"
+    android:paddingRight="@dimen/qihoo_accounts_select_item_padding" >
+
+    <ImageView
+        android:id="@+id/select_item_bt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/qihoo_account_select_account_title"
+        android:src="@drawable/qihoo_accounts_select_item_allow" />
+
+    <TextView
+        android:id="@+id/select_item_username_textview"
+        style="@style/qihoo_accounts_account_text_style"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_centerVertical="true"
+        android:gravity="center"
+        android:text="" />
+
+</RelativeLayout>

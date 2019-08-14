@@ -56,6 +56,7 @@ import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 import io.dcloud.feature.barcode.camera.CameraManager;
 import io.dcloud.feature.barcode.decoding.CaptureActivityHandler;
 import io.dcloud.feature.barcode.decoding.IBarHandler;
@@ -569,10 +570,10 @@ class BarcodeFrameItem extends AdaFrameItem implements Callback,IBarHandler{
 			 }
 			 String relPath =  mWebViewImpl.obtainFrameView().obtainApp().convert2RelPath(mFilename);
 			 Logger.d("Filename:" + mFilename + ";relPath:" + relPath);
-			 json = String.format(message, num,JSONUtil.toJSONableString(obj.getText()),relPath); 
+			 json = StringUtil.format(message, num,JSONUtil.toJSONableString(obj.getText()),relPath);
 		 }else{
 			 String message = "{type:%d,message:%s}";
-			 json = String.format(message, num,JSONUtil.toJSONableString(obj.getText())); 
+			 json = StringUtil.format(message, num,JSONUtil.toJSONableString(obj.getText()));
 		 }
 		 runJsCallBack(json, JSUtil.OK, true, true);
 		 cancel();//start一次只能有一次结果，所以成功之后需要停止

@@ -26,6 +26,7 @@ import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.NetTool;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 import io.dcloud.js.geolocation.GeoManagerBase;
 
 public class AMapGeoManager extends GeoManagerBase {
@@ -38,7 +39,6 @@ public class AMapGeoManager extends GeoManagerBase {
 
     AMapLocationClient mClient = null;
     AMapLocationClientOption mOption = null;
-    boolean continuous;
 
     HashMap<String, AMapLocationClient> mContinuousMap = new HashMap<String, AMapLocationClient>();
     HashMap<String, AMapLocationClient> mSingleTimeMap = new HashMap<String, AMapLocationClient>();
@@ -81,7 +81,7 @@ public class AMapGeoManager extends GeoManagerBase {
             if (pActionName.startsWith("getCurrentPosition")) {
                 isGeocode = Boolean.parseBoolean(pJsArgs[5]);
                 boolean _enableHighAccuracy = Boolean.parseBoolean(pJsArgs[1]);
-                startLocating(pWebViewImpl, pJsArgs[0], null, _enableHighAccuracy, timeout, -1, pActionName.endsWith("DLGEO"));
+                startLocating(pWebViewImpl, pJsArgs[0], null, _enableHighAccuracy, timeout, -1, pActionName.endsWith("DLGEO"), false);
             } else if (pActionName.startsWith("watchPosition")) {
                 isGeocode = Boolean.parseBoolean(pJsArgs[5]);
                 boolean _enableHighAccuracy = Boolean.parseBoolean(pJsArgs[2]);
@@ -95,12 +95,15 @@ public class AMapGeoManager extends GeoManagerBase {
                         return null;
                     }
                 });
-                startLocating(pWebViewImpl, pJsArgs[0], pJsArgs[1], _enableHighAccuracy, timeout, interval, pActionName.endsWith("DLGEO"));
+                startLocating(pWebViewImpl, pJsArgs[0], pJsArgs[1], _enableHighAccuracy, timeout, interval, pActionName.endsWith("DLGEO"), true);
             } else if (pActionName.startsWith("clearWatch")) {
                 //mContinuousMap.get(pJsArgs[0]).stopLocation();
                 keySet.remove(pJsArgs[0]);
-                mContinuousMap.remove(pJsArgs[0]).stopLocation();
-
+                AMapLocationClient client = mContinuousMap.remove(pJsArgs[0]);
+                if(client != null) {
+                    client.setLocationListener(null);
+                    client.stopLocation();
+                }
             }
             return result;
         } catch (Exception e) {
@@ -109,17 +112,15 @@ public class AMapGeoManager extends GeoManagerBase {
         }
     }
 
-    public void startLocating(final IWebview pWebViewImpl, final String pCallbackId, final String key, boolean enableHighAccuracy, int timeOut, int intervals, final boolean isDLGeo) {
+    public void startLocating(final IWebview pWebViewImpl, final String pCallbackId, final String key, boolean enableHighAccuracy, int timeOut, int intervals, final boolean isDLGeo, final boolean continuous) {
         if (hasAppkey) {
             mClient = new AMapLocationClient(pWebViewImpl.getContext());
             mOption = new AMapLocationClientOption();
             mOption.setOnceLocationLatest(false);
             if (PdrUtil.isEmpty(key)) {
-                continuous = false;
                 mOption.setOnceLocation(true);
                 mSingleTimeMap.put(pCallbackId, mClient);
             } else {
-                continuous = true;
                 mOption.setInterval(intervals);
                 keySet.add(key);
                 mContinuousMap.put(key, mClient);
@@ -157,71 +158,15 @@ public class AMapGeoManager extends GeoManagerBase {
                     if(aMapLocation.getAddress() != null){
                         FeatureMessageDispatcher.dispatchMessage("record_address",aMapLocation.getAddress() != null ? aMapLocation.getAddress() : null);
                     }
-                    callBack2Front(aMapLocation, pWebViewImpl, pCallbackId, isDLGeo);
+                    callBack2Front(aMapLocation, pWebViewImpl, pCallbackId, isDLGeo, continuous);
                 }
             });
             mClient.startLocation();
-
         } else {
-            String _json = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_GEOLOCATION_HASNT_BAIDU_APPKEY, DOMException.MSG_GEOLOCATION_HASNT_AMAP_KEY);
+            String _json = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_GEOLOCATION_HASNT_BAIDU_APPKEY, DOMException.MSG_GEOLOCATION_HASNT_AMAP_KEY);
             JSUtil.execCallback(pWebViewImpl, pCallbackId, _json, JSUtil.ERROR, true, false);
         }
 
-    }
-
-    /**
-     * 开始定位
-     * @param enableHighAccuracy
-     * @param timeOut
-     * @param aMapLocationListener
-     */
-    public AMapLocationClient startLocating( boolean enableHighAccuracy,long timeOut,AMapLocationListener aMapLocationListener) {
-        if (hasAppkey) {
-            mClient = new AMapLocationClient(mContext);
-            mOption = new AMapLocationClientOption();
-            mOption.setOnceLocationLatest(true);
-            //设置是否返回地址信息（默认返回地址信息）
-            mOption.setNeedAddress(true);
-            mOption.setOnceLocation(true);
-            if (NetTool.isNetworkAvailable(mContext)) {
-                if (enableHighAccuracy) {
-                    //设置定位模式为AMapLocationMode.Hight_Accuracy，高精度模式。需要连接网络，否则无法定位
-                    mOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
-                    mOption.setOnceLocationLatest(true);
-                } else {
-                    //低功耗定位模式：不会使用GPS和其他传感器，只会使用网络定位（Wi-Fi和基站定位）；
-                    mOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Battery_Saving);
-                    mOption.setOnceLocationLatest(false);
-
-                    //不需要连接网络，只使用GPS进行定位，这种模式下不支持室内环境的定位，自 v2.9.0 版本支持返回地址描述信息。
-                    //mOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Device_Sensors);
-                }
-                mOption.setLocationCacheEnable(false);
-                mOption.setHttpTimeOut(timeOut);
-            }else{
-                mOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Device_Sensors);
-                mOption.setOnceLocationLatest(false);
-                if (Integer.MAX_VALUE==timeOut) {
-                    mOption.setHttpTimeOut(3000);
-                }else{
-                    mOption.setHttpTimeOut(timeOut);
-                }
-            }
-            mClient.setLocationOption(mOption);
-            mClient.setLocationListener(aMapLocationListener);
-            mClient.startLocation();
-            return mClient;
-        }
-        return null;
-    }
-
-    /**
-     * 停止定位
-     */
-    public void stopLocating(){
-        if(null!=mClient){
-            mClient.stopLocation();
-        }
     }
 
     /**
@@ -292,7 +237,7 @@ public class AMapGeoManager extends GeoManagerBase {
      * @param pWebViewImpl
      * @param callbackId
      */
-    private void callBack2Front(AMapLocation location, IWebview pWebViewImpl, String callbackId, boolean isDLGeo) {
+    private void callBack2Front(AMapLocation location, IWebview pWebViewImpl, String callbackId, boolean isDLGeo,boolean continuous) {
         if (!continuous) {//非持续定位，得到定位结果后，停止
             if (!PdrUtil.isEmpty(mSingleTimeMap.get(callbackId))) {
                 mSingleTimeMap.get(callbackId).stopLocation();
@@ -305,10 +250,10 @@ public class AMapGeoManager extends GeoManagerBase {
             String _json = null;
             if (location == null) {
                 String message = DOMException.toString(DOMException.CODE_GEOLOCATION_PROVIDER_ERROR, "geolocation", DOMException.MSG_GEOLOCATION_PROVIDER_ERROR, null);
-                _json = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_GEOLOCATION_PROVIDER_ERROR, message);
+                _json = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_GEOLOCATION_PROVIDER_ERROR, message);
             } else {
                 String message = DOMException.toString(location.getErrorCode(), "geolocation", location.getErrorInfo(), null);
-                _json = String.format(DOMException.JSON_ERROR_INFO, convertGeolocationErrorCode(location.getErrorCode()), message);
+                _json = StringUtil.format(DOMException.JSON_ERROR_INFO, convertGeolocationErrorCode(location.getErrorCode()), message);
             }
             callback(pWebViewImpl, callbackId, _json, JSUtil.ERROR, true, continuous, isDLGeo);
         }

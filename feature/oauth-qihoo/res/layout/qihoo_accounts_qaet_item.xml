@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android" 
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="0dp"
+    android:paddingTop="@dimen/qihoo_accounts_autocomplete_item_top"
+    android:paddingLeft="@dimen/qihoo_accounts_input_type_style_padding_left"
+    android:paddingBottom="@dimen/qihoo_accounts_autocomplete_item_top"
+    android:textColor="#595e63"
+    android:textSize="@dimen/qihoo_accounts_textsize_normal"
+    android:background="@null" />

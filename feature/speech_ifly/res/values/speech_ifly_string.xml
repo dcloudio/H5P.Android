@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sp_ifly_error_tips">当前运行环境无法正常运行讯飞语音识别!</string>
+</resources>

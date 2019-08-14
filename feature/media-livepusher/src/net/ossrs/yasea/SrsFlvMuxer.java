@@ -14,6 +14,8 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.dcloud.common.util.StringUtil;
+
 /**
  * Created by winlin on 5/2/15.
  * Updated by leoma on 4/1/16.
@@ -172,7 +174,7 @@ public class SrsFlvMuxer {
         }
 
         if (frame.is_keyframe()) {
-            Log.i(TAG, String.format("worker: send frame type=%d, dts=%d, size=%dB",
+            Log.i(TAG, StringUtil.format("worker: send frame type=%d, dts=%d, size=%dB",
                     frame.type, frame.dts, frame.tag.size));
         }
 
@@ -279,7 +281,7 @@ public class SrsFlvMuxer {
      */
     public void writeSampleData(int trackIndex, ByteBuffer byteBuf, MediaCodec.BufferInfo bufferInfo) throws IllegalArgumentException {
         if (bufferInfo.offset > 0) {
-            Log.w(TAG, String.format("encoded frame %dB, offset=%d pts=%dms",
+            Log.w(TAG, StringUtil.format("encoded frame %dB, offset=%d pts=%dms",
                     bufferInfo.size, bufferInfo.offset, bufferInfo.presentationTimeUs / 1000
             ));
         }
@@ -1097,7 +1099,7 @@ public class SrsFlvMuxer {
             h264_sps_changed = false;
             h264_pps_changed = false;
             h264_sps_pps_sent = true;
-            Log.i(TAG, String.format("flv: h264 sps/pps sent, sps=%dB, pps=%dB", h264_sps.array().length, h264_pps.array().length));
+            Log.i(TAG, StringUtil.format("flv: h264 sps/pps sent, sps=%dB, pps=%dB", h264_sps.array().length, h264_pps.array().length));
         }
 
         private void write_h264_ipb_frame(ArrayList<SrsFlvFrameBytes> ibps, int frame_type, int dts, int pts) {

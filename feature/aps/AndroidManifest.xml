@@ -1,0 +1,8 @@
+<manifest package="io.dcloud.feature.push"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <service
+            android:name="io.dcloud.feature.aps.ApsActionService"
+            android:exported="true"/>
+    </application>
+</manifest>

@@ -28,11 +28,9 @@ import java.util.UUID;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 
 public class BluetoothBaseAdapter {
-
-    private IWebview statusChangeWebview;
-    private String statusChangecallbackId;
 
     boolean allowDuplicatesDevice = false;
 
@@ -40,10 +38,6 @@ public class BluetoothBaseAdapter {
 
     private IWebview createBLEConnectionWebview;
     private String createBLEConnectionCallbackId;
-
-    IWebview deviceFoundWeview;
-    String deviceFoundCallbackId;
-
 
     boolean isInit = false;
 
@@ -53,31 +47,40 @@ public class BluetoothBaseAdapter {
 
     String STATUS_ACTION = "io.dcloud.bluetooth.sendsearch";
 
+    private Map<String, HashMap<String, IWebview>> callbacks;
+    private static String CALLBACK_ADAPTER_STATUS_CHANGED = "callback_adapter_status_changed";
+    static String CALLBACK_DEVICE_FOUND = "callback_device_found";
+    private static String CALLBACK_BLECHARACTERISTIC_VALUE_CHANGE = "callback_blecharacteristicvaluechange";
+    private static String CALLBACK_CONNECTION_STATUS_CHANGED = "callback_connection_status_change";
+
     private BTBluetoothGattCallback gattCallback;
 
     public void openBluetoothAdapter(IWebview pwebview, JSONArray args) {
         String callbackid = args.optString(0);
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         if (Build.VERSION.SDK_INT < 18 || !pwebview.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10009, "system not support"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10009, "system not support"), JSUtil.ERROR, true, false);
             return;
         } else if (adapter == null) {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10010, "unsupport"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10010, "unsupport"), JSUtil.ERROR, true, false);
             return;
         } else if (!adapter.isEnabled()) {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10001, "not available"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10001, "not available"), JSUtil.ERROR, true, false);
             return;
         }
         adapter.enable();
         isInit = true;
         gattCallback = new BTBluetoothGattCallback();
-        JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
+        JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
     }
 
     public void dispose(String pAppid) {
-        if (statusChangeWebview != null) {
-            statusChangeWebview.getContext().unregisterReceiver(bluetoothStatuReceiver);
+        HashMap<String, IWebview> adapters = getStringIWebviewHashMap(CALLBACK_ADAPTER_STATUS_CHANGED);
+        for (String key : adapters.keySet()) {
+            if (null != adapters.get(key))
+                adapters.get(key).getContext().unregisterReceiver(bluetoothStatuReceiver);
         }
+        callbacks.clear();
         isInit = false;
         if (bleConnected != null && bleConnected.size() > 0) {
             for (String key : bleConnected.keySet()) {
@@ -93,13 +96,13 @@ public class BluetoothBaseAdapter {
         String callbackid = args.optString(0);
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         if (Build.VERSION.SDK_INT < 18 || !pwebview.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10009, "system not support"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10009, "system not support"), JSUtil.ERROR, true, false);
             return;
         } else if (adapter == null) {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10010, "unsupport"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10010, "unsupport"), JSUtil.ERROR, true, false);
             return;
         } else if (!adapter.isEnabled()) {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10001, "not available"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10001, "not available"), JSUtil.ERROR, true, false);
             return;
         }
         isInit = false;
@@ -111,22 +114,24 @@ public class BluetoothBaseAdapter {
             }
             bleConnected.clear();
         }
-        JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
+        JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
     }
 
 
     public void getBluetoothAdapterState(IWebview pwebview, JSONArray args) {
         String callbackid = args.optString(0);
         if (isInit) {
-            JSUtil.execCallback(pwebview, callbackid, String.format("{discovering:%b,available:true}", isSearchBTDevice), JSUtil.OK, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format("{discovering:%b,available:true}", isSearchBTDevice), JSUtil.OK, true, false);
         } else {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
         }
     }
 
     public void onBluetoothDeviceFound(IWebview pwebview, JSONArray args) {
-        deviceFoundCallbackId = args.optString(0);
-        deviceFoundWeview = pwebview;
+        HashMap<String, IWebview> adapter = getStringIWebviewHashMap(CALLBACK_DEVICE_FOUND);
+        adapter.put(args.optString(0), pwebview);
+        callbacks.put(CALLBACK_DEVICE_FOUND, adapter);
+
     }
 
     public void getBluetoothDevices(IWebview pwebview, JSONArray args) {
@@ -142,17 +147,29 @@ public class BluetoothBaseAdapter {
     }
 
     public void onBluetoothAdapterStateChange(IWebview pwebview, JSONArray args) {
-        statusChangeWebview = pwebview;
-        statusChangecallbackId = args.optString(0);
+        HashMap<String, IWebview> adapter = getStringIWebviewHashMap(CALLBACK_ADAPTER_STATUS_CHANGED);
+        adapter.put(args.optString(0), pwebview);
+        callbacks.put(CALLBACK_ADAPTER_STATUS_CHANGED, adapter);
 
         IntentFilter stateChangeFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         IntentFilter connectedFilter = new IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED);
         IntentFilter disConnectedFilter = new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         IntentFilter statusFilter = new IntentFilter(STATUS_ACTION);
-        statusChangeWebview.getContext().registerReceiver(bluetoothStatuReceiver, statusFilter);
-        statusChangeWebview.getContext().registerReceiver(bluetoothStatuReceiver, stateChangeFilter);
-        statusChangeWebview.getContext().registerReceiver(bluetoothStatuReceiver, connectedFilter);
-        statusChangeWebview.getContext().registerReceiver(bluetoothStatuReceiver, disConnectedFilter);
+        pwebview.getContext().registerReceiver(bluetoothStatuReceiver, statusFilter);
+        pwebview.getContext().registerReceiver(bluetoothStatuReceiver, stateChangeFilter);
+        pwebview.getContext().registerReceiver(bluetoothStatuReceiver, connectedFilter);
+        pwebview.getContext().registerReceiver(bluetoothStatuReceiver, disConnectedFilter);
+    }
+
+    private HashMap<String, IWebview> getStringIWebviewHashMap(String key) {
+        if (null == callbacks) {
+            callbacks = new HashMap<>();
+        }
+        HashMap<String, IWebview> adapter = callbacks.get(key);
+        if (null == adapter) {
+            adapter = new HashMap<>();
+        }
+        return adapter;
     }
 
     public void getConnectedBluetoothDevices(IWebview pwebview, JSONArray args) {
@@ -179,7 +196,7 @@ public class BluetoothBaseAdapter {
                 JSUtil.execCallback(pwebview, callbackid, String.format("{devices:%s}", array.toString()), JSUtil.OK, true, false);
             }
         } else {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
         }
     }
 
@@ -197,7 +214,7 @@ public class BluetoothBaseAdapter {
             try {
                 BluetoothDevice device = adapter.getRemoteDevice(deviceid);
                 if (bleConnected.containsKey(deviceid) && bleConnected.get(deviceid) != null) {
-                    JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, -1, "already connect"), JSUtil.ERROR, true, false);
+                    JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, -1, "already connect"), JSUtil.ERROR, true, false);
                     return;
                 }
                 if (gattCallback.isSearching()) {
@@ -206,17 +223,17 @@ public class BluetoothBaseAdapter {
                 }
                 BluetoothGatt gatt = null;//设备出现的时候不自动连接
                 if (android.os.Build.VERSION.SDK_INT >= 23) {
-                    gatt = device.connectGatt(pwebview.getContext(), false, gattCallback,2);
+                    gatt = device.connectGatt(pwebview.getContext(), false, gattCallback, 2);
                 } else {
                     gatt = device.connectGatt(pwebview.getContext(), false, gattCallback);
                 }
                 if (gatt != null)
                     gattCallback.setSearching(true);
             } catch (Exception e) {
-                JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10002, "not device"), JSUtil.ERROR, true, false);
+                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10002, "not device"), JSUtil.ERROR, true, false);
             }
         } else {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
         }
 
     }
@@ -234,15 +251,15 @@ public class BluetoothBaseAdapter {
                 bleConnected.get(deviceid).disconnect();
                 bleConnected.get(deviceid).close();
                 bleConnected.remove(deviceid);
-                JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
+                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
                 return;
             } else {
                 if (!gattCallback.isSearching()) {
-                    JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10006, "no connection"), JSUtil.OK, true, false);
+                    JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10006, "no connection"), JSUtil.OK, true, false);
                 }
             }
         } else {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
         }
     }
 
@@ -256,7 +273,7 @@ public class BluetoothBaseAdapter {
             if (bleConnected != null && bleConnected.containsKey(deviceid) && bleConnected.get(deviceid) != null) {
                 BluetoothGattService currentService = bleConnected.get(deviceid).getService(UUID.fromString(serviceId));
                 if (currentService == null) {
-                    JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10004, "no service"), JSUtil.ERROR, true, false);
+                    JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10004, "no service"), JSUtil.ERROR, true, false);
                     return;
                 }
                 List<BluetoothGattCharacteristic> characteristics = currentService.getCharacteristics();
@@ -266,7 +283,7 @@ public class BluetoothBaseAdapter {
                     JSONObject characteristicItem = null;
                     try {
                         characteristicItem = new JSONObject();
-                        characteristicItem.put("uuid", characteristic.getUuid().toString());
+                        characteristicItem.put("uuid", characteristic.getUuid().toString().toUpperCase());
                         JSONObject properties = new JSONObject();
                         int property = characteristic.getProperties();
                         properties.put("read", (property & BluetoothGattCharacteristic.PROPERTY_READ) > 0);
@@ -280,10 +297,10 @@ public class BluetoothBaseAdapter {
                 }
                 JSUtil.execCallback(pwebview, callbackid, String.format("{'characteristics':%s}", characteristicArray.toString()), JSUtil.OK, true, false);
             } else {
-                JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10004, "no service"), JSUtil.ERROR, true, false);
+                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10004, "no service"), JSUtil.ERROR, true, false);
             }
         } else {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
         }
     }
 
@@ -294,12 +311,12 @@ public class BluetoothBaseAdapter {
         if (isInit) {
             BluetoothGatt gatt = getBluetoothGatt(deviceid);
             if (null != gatt) {
-                List<BluetoothGattService> services = bleConnected.get(deviceid).getServices();
+                List<BluetoothGattService> services = gatt.getServices();
                 JSONArray serviceArray = new JSONArray();
                 for (BluetoothGattService service : services) {
                     JSONObject serviceObject = new JSONObject();
                     try {
-                        serviceObject.put("uuid", service.getUuid().toString());
+                        serviceObject.put("uuid", service.getUuid().toString().toUpperCase());
                         serviceObject.put("isPrimary", service.getType() == 0);
                     } catch (JSONException e) {
                     }
@@ -307,10 +324,10 @@ public class BluetoothBaseAdapter {
                 }
                 JSUtil.execCallback(pwebview, callbackid, String.format("{'services':%s}", serviceArray.toString()), JSUtil.OK, true, false);
             } else {
-                JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10004, "no service"), JSUtil.ERROR, true, false);
+                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10004, "no service"), JSUtil.ERROR, true, false);
             }
         } else {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
         }
     }
 
@@ -331,7 +348,7 @@ public class BluetoothBaseAdapter {
                         // 设置Characteristic通知
                         BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicId));
                         if (characteristic == null) {
-                            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10005, "no characteristic"), JSUtil.ERROR, true, false);
+                            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10005, "no characteristic"), JSUtil.ERROR, true, false);
                             return;
                         }
                         boolean notification = gatt.setCharacteristicNotification(characteristic, true);
@@ -343,16 +360,16 @@ public class BluetoothBaseAdapter {
                                 write = gatt.writeDescriptor(descriptor);
                             }
                         if (/*write && */notification)
-                            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
+                            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
                         else
-                            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10011, "notify fail"), JSUtil.ERROR, true, false);
+                            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10011, "notify fail"), JSUtil.ERROR, true, false);
                     } else {
-                        JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10004, "no service"), JSUtil.ERROR, true, false);
+                        JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10004, "no service"), JSUtil.ERROR, true, false);
                     }
                 }
             }
         } else {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
         }
     }
 
@@ -364,20 +381,17 @@ public class BluetoothBaseAdapter {
         return null;
     }
 
-    IWebview bleCharacteristicValueChangeWebview;
-    String bleCharacteristicValueChangeCallbackId;
-
     public void onBLECharacteristicValueChange(IWebview pwebview, JSONArray args) {
-        bleCharacteristicValueChangeCallbackId = args.optString(0);
-        bleCharacteristicValueChangeWebview = pwebview;
+
+        HashMap<String, IWebview> adapter = getStringIWebviewHashMap(CALLBACK_BLECHARACTERISTIC_VALUE_CHANGE);
+        adapter.put(args.optString(0), pwebview);
+        callbacks.put(CALLBACK_BLECHARACTERISTIC_VALUE_CHANGE, adapter);
     }
 
-    private IWebview bleConnectionStateChangeWebview;
-    private String bleConnectionStateChangeCallbackId;
-
     public void onBLEConnectionStateChange(IWebview pwebview, JSONArray args) {
-        bleConnectionStateChangeWebview = pwebview;
-        bleConnectionStateChangeCallbackId = args.optString(0);
+        HashMap<String, IWebview> adapter = getStringIWebviewHashMap(CALLBACK_CONNECTION_STATUS_CHANGED);
+        adapter.put(args.optString(0), pwebview);
+        callbacks.put(CALLBACK_CONNECTION_STATUS_CHANGED, adapter);
     }
 
     public void readBLECharacteristicValue(IWebview pwebview, JSONArray args) {
@@ -394,13 +408,13 @@ public class BluetoothBaseAdapter {
                 if (service != null) {
                     BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicId));
                     if (characteristic == null) {
-                        JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10005, "no characteristic"), JSUtil.ERROR, true, false);
+                        JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10005, "no characteristic"), JSUtil.ERROR, true, false);
                         return;
                     }
                     if (gatt.readCharacteristic(characteristic)) {
-                        JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
+                        JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
                     } else {
-                        JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10007, "property not support"), JSUtil.ERROR, true, false);
+                        JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10007, "property not support"), JSUtil.ERROR, true, false);
                     }
                 }
             }
@@ -445,14 +459,14 @@ public class BluetoothBaseAdapter {
                 if (service != null) {
                     BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicId));
                     if (characteristic == null) {
-                        JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10005, "no characteristic"), JSUtil.ERROR, true, false);
+                        JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10005, "no characteristic"), JSUtil.ERROR, true, false);
                         return;
                     }
                     characteristic.setValue(value);
                     if (gatt.writeCharacteristic(characteristic)) {
-                        JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
+                        JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
                     } else {
-                        JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10007, "property not support"), JSUtil.ERROR, true, false);
+                        JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10007, "property not support"), JSUtil.ERROR, true, false);
                     }
                 }
             }
@@ -462,8 +476,18 @@ public class BluetoothBaseAdapter {
     void checkNull(IWebview pwebview, String callbackid, String... param) {
         for (String p : param) {
             if (PdrUtil.isEmpty(p)) {
-                JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10013, "invalid data,please check parameters"), JSUtil.ERROR, true, false);
+                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10013, "invalid data,please check parameters"), JSUtil.ERROR, true, false);
                 return;
+            }
+        }
+    }
+
+    protected void execJsCallback(String type, String msg) {
+        if (callbacks == null) return;
+        HashMap<String, IWebview> jscallback = callbacks.get(type);
+        if (jscallback != null) {
+            for (String key : jscallback.keySet()) {
+                JSUtil.execCallback(jscallback.get(key), key, msg, JSUtil.OK, true, true);
             }
         }
     }
@@ -496,8 +520,8 @@ public class BluetoothBaseAdapter {
             if (status == 0 && newState == 2) {
                 gatt.discoverServices(); //启动服务发现
                 bleConnected.put(deviceid, gatt);
-                JSUtil.execCallback(createBLEConnectionWebview, createBLEConnectionCallbackId, String.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, true);
-                JSUtil.execCallback(bleConnectionStateChangeWebview, bleConnectionStateChangeCallbackId, String.format("{deviceId:'%s',connected:%b}", deviceid, true), JSUtil.OK, true, true);
+                JSUtil.execCallback(createBLEConnectionWebview, createBLEConnectionCallbackId, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, true);
+                execJsCallback(CALLBACK_CONNECTION_STATUS_CHANGED, StringUtil.format("{deviceId:'%s',connected:%b}", deviceid, true));
             } else {
                 if (null != bleConnected && bleConnected.containsKey(deviceid)) {
                     bleConnected.get(deviceid).disconnect();
@@ -505,9 +529,9 @@ public class BluetoothBaseAdapter {
                     bleConnected.remove(deviceid);
                 }
                 if (newState == 0) {
-                    JSUtil.execCallback(createBLEConnectionWebview, createBLEConnectionCallbackId, String.format(_JS_FUNCTION, 10012, "operate time out"), JSUtil.OK, true, true);
+                    JSUtil.execCallback(createBLEConnectionWebview, createBLEConnectionCallbackId, StringUtil.format(_JS_FUNCTION, 10012, "operate time out"), JSUtil.OK, true, true);
                 }
-                JSUtil.execCallback(bleConnectionStateChangeWebview, bleConnectionStateChangeCallbackId, String.format("{deviceId:'%s',connected:%b}", deviceid, false), JSUtil.OK, true, true);
+                execJsCallback(CALLBACK_CONNECTION_STATUS_CHANGED, StringUtil.format("{deviceId:'%s',connected:%b}", deviceid, false));
             }
             isSearching = false;
         }
@@ -520,12 +544,12 @@ public class BluetoothBaseAdapter {
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-            JSUtil.execCallback(bleCharacteristicValueChangeWebview, bleCharacteristicValueChangeCallbackId, String.format("{deviceId:'%s',serviceId:'%s',characteristicId:'%s',value:'%s'}", gatt.getDevice().getAddress(), characteristic.getService().getUuid().toString(), characteristic.getUuid().toString(), bytesToHexString(characteristic.getValue())), JSUtil.OK, true, true);
+            execJsCallback(CALLBACK_BLECHARACTERISTIC_VALUE_CHANGE, String.format("{deviceId:'%s',serviceId:'%s',characteristicId:'%s',value:'%s'}", gatt.getDevice().getAddress().toUpperCase(), characteristic.getService().getUuid().toString().toUpperCase(), characteristic.getUuid().toString().toUpperCase(), bytesToHexString(characteristic.getValue())));
         }
 
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            JSUtil.execCallback(bleCharacteristicValueChangeWebview, bleCharacteristicValueChangeCallbackId, String.format("{deviceId:'%s',serviceId:'%s',characteristicId:'%s',value:'%s'}", gatt.getDevice().getAddress(), characteristic.getService().getUuid().toString(), characteristic.getUuid().toString(), bytesToHexString(characteristic.getValue())), JSUtil.OK, true, true);
+            execJsCallback(CALLBACK_BLECHARACTERISTIC_VALUE_CHANGE, String.format("{deviceId:'%s',serviceId:'%s',characteristicId:'%s',value:'%s'}", gatt.getDevice().getAddress().toUpperCase(), characteristic.getService().getUuid().toString().toUpperCase(), characteristic.getUuid().toString().toUpperCase(), bytesToHexString(characteristic.getValue())));
         }
 
         @Override
@@ -540,9 +564,9 @@ public class BluetoothBaseAdapter {
             String action = intent.getAction();
             if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                 int blueState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, 0);
-                JSUtil.execCallback(statusChangeWebview, statusChangecallbackId, String.format("{discovering:%b,available:%b}", isSearchBTDevice, blueState == BluetoothAdapter.STATE_ON), JSUtil.OK, true, true);
+                execJsCallback(CALLBACK_ADAPTER_STATUS_CHANGED, String.format("{discovering:%b,available:%b}", isSearchBTDevice, blueState == BluetoothAdapter.STATE_ON));
             } else if (action.equalsIgnoreCase(STATUS_ACTION)) {
-                JSUtil.execCallback(statusChangeWebview, statusChangecallbackId, String.format("{discovering:%b,available:%b}", isSearchBTDevice, true), JSUtil.OK, true, true);
+                execJsCallback(CALLBACK_ADAPTER_STATUS_CHANGED, String.format("{discovering:%b,available:%b}", isSearchBTDevice, true));
             }
         }
     };

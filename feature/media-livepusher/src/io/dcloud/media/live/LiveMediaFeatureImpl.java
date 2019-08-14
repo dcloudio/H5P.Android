@@ -7,8 +7,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import io.dcloud.common.DHInterface.AbsMgr;
@@ -19,6 +21,7 @@ import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.DHInterface.StandardFeature;
 import io.dcloud.common.adapter.ui.AdaFrameItem;
 import io.dcloud.common.adapter.ui.AdaFrameView;
+import io.dcloud.common.adapter.util.PermissionUtil;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.media.live.push.LivePusher;
@@ -67,33 +70,84 @@ public class LiveMediaFeatureImpl extends StandardFeature implements IWaiter,ISy
 
 
 
-    public void LivePusher(IWebview pWebview, JSONArray objectArray) {
+    public void LivePusher(final IWebview pWebview, final JSONArray objectArray) {
         String pluginID = null;
-        LivePusher pusherObject = null;
+        final LivePusher[] pusherObject = {null};
         JSONArray functionArguments = objectArray.optJSONArray(1);
         if (objectArray != null){
             pluginID = objectArray.optString(0);
         }
 
         if (pusherList != null && pluginID != null){
-            pusherObject = pusherList.get(pluginID);
+            pusherObject[0] = pusherList.get(pluginID);
         }
 
-        if (pusherObject == null) {
-            pusherObject = new LivePusher(pWebview,objectArray);
-            if (pusherObject != null) {
-                if (pusherList == null) {
-                    pusherList = new HashMap<String, LivePusher>();
-                }
-                initOptions = objectArray;
-                pusherList.put(pluginID, pusherObject);
-                pusherObject.setStatusListener(new LivePusherStateListener() {
-                    @Override
-                    public void onRtmpStopped(String pusherid) {
-                        pusherList.remove(pusherid);
+        if (pusherObject[0] == null) {
+            final String finalPluginID = pluginID;
+            PermissionUtil.StreamPermissionRequest request = new PermissionUtil.StreamPermissionRequest(pWebview.obtainApp()) {
+                private List<String> gramtPermission = new ArrayList<>();
+                @Override
+                public void onGranted(String streamPerName) {
+                    gramtPermission.add(streamPerName);
+                    if (gramtPermission.size() < this.getSystemRequestPermission().length) {
+                        return;
                     }
-                });
-            }
+                    pusherObject[0] = new LivePusher(pWebview,objectArray);
+                    if (pusherObject[0] != null) {
+                        if (pusherList == null) {
+                            pusherList = new HashMap<String, LivePusher>();
+                        }
+                        initOptions = objectArray;
+                        pusherList.put(finalPluginID, pusherObject[0]);
+                        pusherObject[0].setStatusListener(new LivePusherStateListener() {
+                            @Override
+                            public void onRtmpStopped(String pusherid) {
+                                pusherList.remove(pusherid);
+                            }
+                        });
+                    }
+                    if (listeners.containsKey(finalPluginID)) {
+                        Map<JSONArray,IWebview> callback = listeners.get(finalPluginID);
+                        for (JSONArray array : callback.keySet()) {
+                            pusherObject[0].addEventListener(callback.get(array),array);
+                        }
+                        listeners.remove(finalPluginID);
+                    }
+
+                    if (appendView.containsKey(finalPluginID)){
+                        appendLivePusher(finalPluginID,appendView.get(finalPluginID));
+                        appendView.remove(finalPluginID);
+                    }
+                    if (previewMap.containsKey(finalPluginID)) {
+                        pusherObject[0].preview(previewMap.get(finalPluginID));
+                        previewMap.remove(finalPluginID);
+                    }
+                    if (pusherOptions.containsKey(finalPluginID)) {
+                        Map<IWebview,JSONObject> option = pusherOptions.get(finalPluginID);
+                        for (IWebview key : option.keySet()) {
+                            pusherObject[0].setOptions(key, option.get(key));
+                        }
+                        pusherOptions.remove(finalPluginID);
+                    }
+                    if (startMap.containsKey(finalPluginID)) {
+                        if(!pusherObject[0].isInited){
+                            pusherObject[0].initLivePusher(pWebview, initOptions);
+                        }
+                        Map<String,Object> startItem = startMap.get(finalPluginID);
+                        IWebview pwebviewImpl = (IWebview) startItem.get("webView");
+                        JSONArray array = (JSONArray) startItem.get("array");
+                        pusherObject[0].start(pwebviewImpl, array);
+                        activePusher = pusherObject[0];
+                        startMap.remove(finalPluginID);
+                    }
+                }
+
+                @Override
+                public void onDenied(String streamPerName) {
+                }
+            };
+            request.setRequestPermission("android.permission.CAMERA","android.permission.RECORD_AUDIO");
+            PermissionUtil.useSystemPermissions(pWebview.getActivity(), new String[]{"android.permission.CAMERA","android.permission.RECORD_AUDIO"}, request);
         }
     }
 
@@ -113,6 +167,7 @@ public class LiveMediaFeatureImpl extends StandardFeature implements IWaiter,ISy
         return null;
     }
 
+    private Map<String,Map<String,Object>> startMap = new HashMap<>();
     public void start(IWebview pWebview, JSONArray array){
         LivePusher pusherObject = null;
         String pluginID = array.optString(0);
@@ -128,6 +183,14 @@ public class LiveMediaFeatureImpl extends StandardFeature implements IWaiter,ISy
             }
             pusherObject.start(pWebview, array);
             activePusher = pusherObject;
+        }else {
+            Map<String,Object> startparams = new HashMap<>();
+            if (startMap.containsKey(pluginID)) {
+                startparams = startMap.get(pluginID);
+            }
+            startparams.put("webView",pWebview);
+            startparams.put("array",array);
+            startMap.put(pluginID,startparams);
         }
     }
 
@@ -144,6 +207,7 @@ public class LiveMediaFeatureImpl extends StandardFeature implements IWaiter,ISy
         }
     }
 
+    private Map<String,IWebview> previewMap = new HashMap<>();
     public void preview(IWebview pWebview, JSONArray array){
         LivePusher pusherObject = null;
         String pluginID = array.optString(0);
@@ -153,6 +217,8 @@ public class LiveMediaFeatureImpl extends StandardFeature implements IWaiter,ISy
 
         if (pusherObject != null){
             pusherObject.preview(pWebview);
+        } else {
+            previewMap.put(pluginID,pWebview);
         }
     }
 
@@ -182,6 +248,7 @@ public class LiveMediaFeatureImpl extends StandardFeature implements IWaiter,ISy
         }
     }
 
+    private Map<String,Map<IWebview,JSONObject>> pusherOptions = new HashMap<>();
     public void setOptions(IWebview pWebview, JSONArray array){
         LivePusher pusherObject = null;
         String pluginID = array.optString(0);
@@ -194,6 +261,13 @@ public class LiveMediaFeatureImpl extends StandardFeature implements IWaiter,ISy
 //                initOptions = joinOptions(initOptions, array);
 //            }
             pusherObject.setOptions(pWebview, array.optJSONObject(1));
+        } else {
+            Map<IWebview,JSONObject> options = new HashMap<>();
+            if (pusherOptions.containsKey(pluginID)) {
+                options = pusherOptions.get(pluginID);
+            }
+            options.put(pWebview,array.optJSONObject(1));
+            pusherOptions.put(pluginID,options);
         }
     }
 
@@ -221,6 +295,7 @@ public class LiveMediaFeatureImpl extends StandardFeature implements IWaiter,ISy
         }
     }
 
+    private Map<String,Map<JSONArray,IWebview>> listeners = new HashMap<>();
     public void addEventListener(IWebview pWebview, JSONArray array){
         LivePusher pusherObject = null;
         String pluginID = array.optString(0);
@@ -230,6 +305,13 @@ public class LiveMediaFeatureImpl extends StandardFeature implements IWaiter,ISy
 
         if (pusherObject != null){
             pusherObject.addEventListener(pWebview, array);
+        } else {
+            Map<JSONArray,IWebview> callbacks = new HashMap<>();
+            if (listeners.containsKey(array.optString(0))) {
+                callbacks = listeners.get(array.optString(0));
+            }
+            callbacks.put(array,pWebview);
+            listeners.put(array.optString(0),callbacks);
         }
     }
 
@@ -310,6 +392,7 @@ public class LiveMediaFeatureImpl extends StandardFeature implements IWaiter,ISy
         return target;
     }
 
+    private Map<String,IFrameView> appendView = new HashMap<>();
     private AdaFrameItem appendLivePusher(String id,IFrameView mFrameView){
         LivePusher pusherObject = null;
         if (pusherList != null && id != null){
@@ -320,7 +403,9 @@ public class LiveMediaFeatureImpl extends StandardFeature implements IWaiter,ISy
                 pusherObject.initLivePusher(mFrameView.obtainWebView(), initOptions);
             }
             pusherObject.appendLivePusher("",mFrameView);
-
+        } else {
+            if (id != null)
+                appendView.put(id,mFrameView);
         }
 
         return pusherObject;

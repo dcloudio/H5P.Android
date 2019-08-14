@@ -1,6 +1,7 @@
 package io.dcloud.js.map.amap;
 
 import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.common.adapter.ui.AdaUniWebView;
 import io.dcloud.common.util.PdrUtil;
 
 import org.json.JSONArray;
@@ -11,7 +12,11 @@ public class MapJsUtil {
 
 	public static void  execCallback(IWebview pWebViewImpl, String pCallbackId, String pMessage) {
 		if(pWebViewImpl!=null){//尚不清楚pWebViewImpl为什么会为null
-			pWebViewImpl.executeScript("var p=((window.__html5plus__&&__html5plus__.isReady)?__html5plus__:(navigator.plus&&navigator.plus.isReady)?navigator.plus:window.plus);p.maps.__bridge__.execCallback('" + pCallbackId +"',"+ pMessage + ");");
+			String jsFrom = "var p=((window.__html5plus__&&__html5plus__.isReady)?__html5plus__:(navigator.plus&&navigator.plus.isReady)?navigator.plus:window.plus);";
+			if(pWebViewImpl instanceof AdaUniWebView) {
+				jsFrom = "var p = plus;";
+			}
+			pWebViewImpl.executeScript(jsFrom + "p.maps.__bridge__.execCallback('" + pCallbackId +"',"+ pMessage + ");");
 		}
 	}
 	

@@ -10,6 +10,7 @@ import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.util.PermissionUtil;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.JSUtil;
+import io.dcloud.common.util.StringUtil;
 
 /**
  * 语音特征Feature实现类
@@ -37,7 +38,7 @@ public class SpeechFeatureImpl implements IFeature {
 			public void onDenied(String streamPerName) {
 				if("startRecognize".equals(pActionName)) {//启动语音识别
 					String callbackId = pJsArgs[0];
-					String msg =  String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_RECORDER_ERROR, DOMException.MSG_NO_PERMISSION);
+					String msg =  StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_RECORDER_ERROR, DOMException.MSG_NO_PERMISSION);
 					JSUtil.execCallback(pWebViewImpl, callbackId, msg, JSUtil.ERROR, true, false);
 				}
 			}

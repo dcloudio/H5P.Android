@@ -1,0 +1,21 @@
+<manifest package="io.dcloud.feature"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <application>
+        <meta-data android:value="${plus.weixin.appsecret}" android:name="WX_SECRET"/>
+        <meta-data android:value="${plus.weixin.appid}" android:name="WX_APPID"/>
+        <!--微信包名要拼在最外层，无法修改-->
+        <!--<activity android:name="${plus.weixin.packagename}.wxapi.WXEntryActivity"-->
+            <!--android:label="@string/app_name"-->
+            <!--android:exported="true"-->
+            <!--android:launchMode="singleTop"-->
+            <!--android:theme="@android:style/Theme.Translucent.NoTitleBar">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.VIEW"/>-->
+                <!--<category android:name="android.intent.category.DEFAULT"/>-->
+                <!--<data android:scheme="${plus.weixin.appid}"/>-->
+            <!--</intent-filter>-->
+        <!--</activity>-->
+
+</application>
+</manifest>

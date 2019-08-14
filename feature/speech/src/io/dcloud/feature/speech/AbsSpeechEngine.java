@@ -15,6 +15,7 @@ import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
+import io.dcloud.common.util.StringUtil;
 
 /**
  * 语音识别抽象类
@@ -134,7 +135,7 @@ public abstract class AbsSpeechEngine implements IReflectAble{
 				String[] objs = (String[])args;
 				int error_code = Integer.parseInt(objs[0]);
 				String error_msg = String.valueOf(objs[1]);
-				String msg =  String.format(DOMException.JSON_ERROR_INFO,error_code,error_msg);
+				String msg =  StringUtil.format(DOMException.JSON_ERROR_INFO,error_code,error_msg);
 				//msg = JSONUtil.toJSONableString(msg);
 				JSUtil.execCallback(mWebview, mCallbackId, msg, JSUtil.ERROR, true, false);
                 manager.eventListener("error",msg, JSUtil.OK,true);

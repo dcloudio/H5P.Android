@@ -2,6 +2,7 @@ package io.dcloud.js.map.amap;
 
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.util.JSONUtil;
+import io.dcloud.js.map.amap.adapter.DHMapView;
 import io.dcloud.js.map.amap.adapter.IFJsOverlay;
 import io.dcloud.js.map.amap.adapter.MapMarker;
 
@@ -98,7 +99,7 @@ class JsMapMarker extends JsMapObject implements IFJsOverlay {
 	}
 	
 	@Override
-	public void onAddToMapView(TextureMapView pMapView) {
+	public void onAddToMapView(DHMapView pMapView) {
 		// TODO Auto-generated method stub
 		super.onAddToMapView(pMapView);
 		mMapMarker.initMapMarker(pMapView);

@@ -1,0 +1,13 @@
+<manifest package="io.dcloud.feature"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <application>
+        <meta-data android:value="${plus.weixin.appid}" android:name="WX_APPID"/>
+<!--
+        <activity android:name="%packagename%.wxapi.WXPayEntryActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+-->
+    </application>
+</manifest>

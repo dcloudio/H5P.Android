@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="cancel">取消</string>
+    <string name="ok">确定</string>
+
+    <string name="life_title">生活助手</string>
+    <string name="life_add_phone_tip">亲，完善信息才能享受更多的优惠哦!</string>
+    <string name="life_input_phone">请输入手机号码</string>
+    <string name="life_input_verify_code">请输入验证码</string>
+    <string name="life_get_verify_code">获取验证码</string>
+    <string name="life_verify_code_empty">验证码不能为空</string>
+    <string name="life_add_phone_title">完善手机号信息</string>
+    <string name="life_add_phone_success">完善手机号信息成功!</string>
+    <string name="life_send_verify_code_success">验证码已发送，请注意查收!</string>
+    <string name="life_phone_empty">手机号码不能为空</string>
+    <string name="life_invalid_phone">您输入的电话号码不合法</string>
+    <string name="life_loading_get_valid">验证码努力获取中...</string>
+    <string name="life_bind_phone_num">正在绑定手机号码...</string>
+    <string name="life_open_nfc_tip">使用公交卡查询充值业务，需要开启手机的NFC功能。</string>
+    <string name="life_open_nfc">打开NFC</string>
+    <string name="nfc_loading_tip">请勿移开卡片...</string>
+    <string name="life_my_order">我的订单</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+</resources>

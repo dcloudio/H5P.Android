@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- web view title -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/qihoo_accounts_top_title_style" >
+
+    <TextView
+        android:id="@+id/qihoo_accounts_webview_top_title"
+        style="@style/qihoo_accounts_top_title_text_style"
+        android:text="@string/qihoo_accounts_webview_findpwd" />
+
+    <Button
+        android:id="@+id/webview_top_back"
+        style="@style/qihoo_accounts_top_title_back_style"
+        android:layout_alignParentLeft="true"
+        android:background="@drawable/qihoo_accounts_btn_top_back_selector" />
+
+    <Button
+        android:id="@+id/webview_top_close"
+        android:layout_width="@dimen/qihoo_accounts_title_close_width"
+        android:layout_height="fill_parent"
+        android:layout_alignParentRight="true"
+        android:background="@drawable/qihoo_accounts_btn_top_action_selector"
+        android:gravity="center"
+        android:text="@string/qihoo_accounts_webview_close"
+        android:textColor="@color/qihoo_accounts_white"
+        android:textSize="@dimen/qihoo_accounts_textsize_normal" />
+   
+    <!-- 旋转图标 -->
+    <ImageView
+        android:id="@+id/webview_rotate_image"
+        android:layout_width="@dimen/qihoo_accounts_dialog_doing_icon_witdh"
+        android:layout_height="@dimen/qihoo_accounts_dialog_doing_icon_height"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:background="@drawable/qihoo_accounts_webview_loading"
+        android:gravity="center"
+        android:layout_marginRight="@dimen/qihoo_accounts_dialog_doing_padding"
+        android:visibility="gone" />
+
+</RelativeLayout>

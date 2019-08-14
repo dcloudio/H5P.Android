@@ -179,12 +179,20 @@ public class DHVideoFrameItem extends AdaFrameItem implements ISysEventListener 
         if(mPlayerView != null) {
             styles = JSONUtil.combinJSONObject(styles, options);
             if (mPlayerView.isFullScreen()) {
-                //全屏状态下不允许设置属性。
-                mPlayerView.setFullScreenOptions(styles);//保存属性到Player中，这样设置不会改变view的宽高
+                //全屏状态下不允许设置与位置相关属性。
+                try {
+                    JSONObject fullscreenStyle = new JSONObject(styles.toString());
+                    fullscreenStyle.remove("top");
+                    fullscreenStyle.remove("left");
+                    fullscreenStyle.remove("width");
+                    fullscreenStyle.remove("height");
+                    fullscreenStyle.remove("position");
+                    mPlayerView.setOptions(fullscreenStyle);
+                } catch (JSONException e) {
+                }
                 return;
             }
             if(options.has("top") || options.has("left") || options.has("width") || options.has("height") || options.has("position")) {
-//                position = options.optString("position");
                 try {
                     rect.put(0, JSONUtil.getString(options, StringConst.JSON_KEY_LEFT));
                     rect.put(1, JSONUtil.getString(options, StringConst.JSON_KEY_TOP));

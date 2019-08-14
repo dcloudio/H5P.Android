@@ -17,12 +17,13 @@ import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.adapter.util.MessageHandler;
 import io.dcloud.common.adapter.util.MessageHandler.IMessages;
 import io.dcloud.common.constant.DOMException;
+import io.dcloud.common.util.BaseInfo;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.feature.audio.recorder.RecordOption;
 
 
-public class AudioFeatureImpl implements IFeature,IMessages {
+public class AudioFeatureImpl implements IFeature, IMessages {
 
     HashMap<String, ArrayList> mAppsAudioObj = null;
     static final String TAG = "AudioFeatureImpl";
@@ -36,23 +37,53 @@ public class AudioFeatureImpl implements IFeature,IMessages {
         if ("AudioSyncExecMethod".equals(pActionName)) {
             String _methodName = pJsArgs[0];//函数名字
             JSONArray _args = JSONUtil.createJSONArray(pJsArgs[1]);
-            if ("getDuration".equals(_methodName)) {
-                AudioPlayer _player = null;
-                String _uuid_ = JSONUtil.getString(_args, 0);
-                _player = ((AudioPlayer) findAppObj(_appid, _uuid_));
-                _ret = String.valueOf(_player.getDuration());
-            } else if ("getPosition".equals(_methodName)) {
-                AudioPlayer _player = null;
-                String _uuid_ = JSONUtil.getString(_args, 0);
-                _player = ((AudioPlayer) findAppObj(_appid, _uuid_));
-                _ret = String.valueOf(_player.getPosition());
-            } else if ("CreatePlayer".equals(_methodName)) {
-                String _uuid_ = JSONUtil.getString(_args, 0);
-                String _path = JSONUtil.getString(_args, 1);
-                AudioPlayer _player = AudioPlayer.createAudioPlayer(_path);
-                _player.mUuid = _uuid_;
-                _player.mWebview = pWebViewImpl;
-                putAppObjList(pWebViewImpl.obtainFrameView().obtainApp().obtainAppId(), _player);
+            switch (_methodName) {
+                case "getDuration": {
+                    AudioPlayer _player = null;
+                    String _uuid_ = JSONUtil.getString(_args, 0);
+                    _player = ((AudioPlayer) findAppObj(_appid, _uuid_));
+                    _ret = String.valueOf(_player.getDuration());
+                    break;
+                }
+                case "getPosition": {
+                    AudioPlayer _player = null;
+                    String _uuid_ = JSONUtil.getString(_args, 0);
+                    _player = ((AudioPlayer) findAppObj(_appid, _uuid_));
+                    _ret = String.valueOf(_player.getPosition());
+                    break;
+                }
+                case "CreatePlayer": {
+                    String _uuid_ = JSONUtil.getString(_args, 0);
+                    JSONObject _path = JSONUtil.getJSONObject(_args, 1);
+                    AudioPlayer _player = AudioPlayer.createAudioPlayer(_path, pWebViewImpl);
+                    _player.mUuid = _uuid_;
+                    putAppObjList(pWebViewImpl.obtainFrameView().obtainApp().obtainAppId(), _player);
+                    break;
+                }
+                case "getPaused": {
+                    AudioPlayer _player = null;
+                    String _uuid_ = JSONUtil.getString(_args, 0);
+                    _player = ((AudioPlayer) findAppObj(_appid, _uuid_));
+                    _ret = _player.isPause();
+                    break;
+                }
+                case "getBuffered": {
+                    AudioPlayer _player = null;
+                    String _uuid_ = JSONUtil.getString(_args, 0);
+                    _player = ((AudioPlayer) findAppObj(_appid, _uuid_));
+                    _ret = _player.getBuffer();
+                    break;
+                }
+                case "getStyles": {
+                    AudioPlayer _player = null;
+                    String _uuid_ = JSONUtil.getString(_args, 0);
+                    _player = ((AudioPlayer) findAppObj(_appid, _uuid_));
+                    String key = null;
+                    if (_args.length()>1)
+                        key = JSONUtil.getString(_args, 1);
+                    _ret = _player.getStyles(key);
+                    break;
+                }
             }
         } else {
             MessageHandler.sendMessage(this, new Object[]{pWebViewImpl, pActionName, pJsArgs});
@@ -136,7 +167,7 @@ public class AudioFeatureImpl implements IFeature,IMessages {
                     ar.stop();
                     ar.successCallback();
                     removeAppObjFromList(_appid, ar);
-                } else if("resume".equals(_methodName)) {
+                } else if ("resume".equals(_methodName)) {
                     ((AudioRecorderMgr) findAppObj(_appid, _uuid)).resume();
                 }
             } catch (Exception e) {
@@ -147,48 +178,82 @@ public class AudioFeatureImpl implements IFeature,IMessages {
             AudioPlayer _player = null;
             try {
                 _player = ((AudioPlayer) findAppObj(_appid, _uuid));
-                if ("play".equals(_methodName)) {
-                    String _funId = JSONUtil.getString(_args, 1);
-                    _player.mFunId = _funId;
-                    _player.play();
-                } else if ("pause".equals(_methodName)) {
-                    _player.pause();
-                } else if ("resume".equals(_methodName)) {
-                    _player.resume();
-                } else if ("stop".equals(_methodName)) {
-                    _player.stop();
-                    removeAppObjFromList(_appid, _player);
-                } else if ("seekTo".equals(_methodName)) {
-                    int position = 0;
-                    try {
-                        position = Integer.parseInt(JSONUtil.getString(_args, 1));//能转为int 说明传入的是整数
-                        if (position > 0) {
-                            _player.seekTo(position * 1000);
+                switch (_methodName) {
+                    case "play": {
+                        String _funId = JSONUtil.getString(_args, 1);
+                        _player.mFunId = _funId;
+                        _player.play();
+                        break;
+                    }
+                    case "pause": {
+                        _player.pause();
+                        break;
+                    }
+                    case "resume": {
+                        if (BaseInfo.isUniAppAppid(_app)) {
+                            _player.mFunId = "";
+                            _player.play();
+                        } else {
+                            /*与uni统一*/
+                            _player.resume();
                         }
-                    } catch (Exception e) {
+                        break;
+                    }
+                    case "stop": {
+                        _player.stop();
+                        break;
+                    }
+                    case "close": {
+                        _player.destory();
+                        removeAppObjFromList(_appid, _player);
+                        break;
+                    }
+                    case "seekTo": {
+                        int position = 0;
                         try {
-                            position = (int) (Double.parseDouble(JSONUtil.getString(_args, 1)) * 1000);//否则传入的是小数
+                            position = Integer.parseInt(JSONUtil.getString(_args, 1));//能转为int 说明传入的是整数
                             if (position > 0) {
-                                _player.seekTo(position);
+                                _player.seekTo(position * 1000);
                             }
-                        } catch (Exception e2) {
-                            //当传入值非法时候应该不做处理
+                        } catch (Exception e) {
+                            try {
+                                position = (int) (Double.parseDouble(JSONUtil.getString(_args, 1)) * 1000);//否则传入的是小数
+                                if (position > 0) {
+                                    _player.seekTo(position);
+                                }
+                            } catch (Exception e2) {
+                                //当传入值非法时候应该不做处理
+                            }
                         }
+                        break;
                     }
-                } else if ("setRoute".equals(_methodName)) {
-                    Context context = pWebViewImpl.getContext();
-                    AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-                    int aRoute = Integer.parseInt(JSONUtil.getString(_args, 1));
-                    if (aRoute == 1) {//听筒
-                        setSpeakerphoneOn(am, false);
-                    } else {//喇叭
-                        setSpeakerphoneOn(am, true);
+                    case "setRoute": {
+                        Context context = pWebViewImpl.getContext();
+                        AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+                        int aRoute = Integer.parseInt(_args.optString(1));
+                        if (aRoute == 1) {//听筒
+                            setSpeakerphoneOn(am, false);
+                        } else {//喇叭
+                            setSpeakerphoneOn(am, true);
+                        }
+                        break;
                     }
+                    case "addEventListener":
+                        _player.addEventListener(_args.optString(1), _args.optString(2));
+                        break;
+                    case "removeEventListener":
+                        _player.removeEventListener(_args.optString(1));
+                        break;
+                    case "setStyles":
+                        _player.setStyle(_args.optJSONObject(1));
+                        break;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                if (_player != null)
+                if (_player != null) {
                     _player.failCallback(DOMException.CODE_PARAMETER_ERRORP, DOMException.MSG_PARAMETER_ERROR);
+                    _player.execEvents("onError",DOMException.toJSON(DOMException.CODE_PARAMETER_ERRORP, DOMException.MSG_PARAMETER_ERROR));
+                }
             }
         }
     }

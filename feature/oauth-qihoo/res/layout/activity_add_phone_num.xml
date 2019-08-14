@@ -1,0 +1,122 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/qihoo_accounts_title_height"
+        android:layout_alignParentTop="true"
+        android:background="@color/qihoo_accounts_green" >
+
+        <ImageView
+            android:id="@+id/cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:paddingRight="13dp"
+            android:src="@drawable/qihoo_accounts_btn_back" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:gravity="center_vertical"
+            android:text="@string/life_add_phone_title"
+            android:textColor="#ffffff"
+            android:textSize="17dp" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="30dp" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp" >
+
+            <TextView 
+                android:textColor="#888686"
+                android:text="@string/life_add_phone_tip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"></TextView>
+            <RelativeLayout
+                android:id="@+id/linearLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/improve_tip"
+                android:layout_alignRight="@+id/improve_tip"
+                android:layout_below="@+id/input_phone_num"
+                android:layout_marginBottom="14dp"
+                android:layout_marginTop="15dp"
+                android:gravity="center"
+				>
+
+                <Button
+                    android:id="@+id/btn_verify_code"
+                    android:layout_width="95dp"
+                    android:layout_height="35dp"
+                    android:layout_alignParentRight="true"
+                    android:background="@drawable/qihoo_border_bg"
+                    android:enabled="false"
+                    android:text="@string/life_get_verify_code"
+                    android:textColor="@color/qihoo_accounts_green"
+                    android:textSize="13dp" />
+                
+                <EditText
+                    android:id="@+id/input_phone_num"
+                    android:layout_width="match_parent"
+                    android:layout_height="35dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_alignParentLeft="true"
+                    android:background="@drawable/input_phone_num_normal"
+                    android:layout_toLeftOf="@id/btn_verify_code"
+                    android:hint="@string/life_input_phone"
+                    android:inputType="number"
+                    android:maxLength="11"
+                    android:singleLine="true"
+                    android:paddingLeft="10dp"
+                    android:textColor="#333333"
+                    android:textColorHint="#bdbdbd"
+                    android:textSize="13dp" >
+                </EditText>
+
+                
+            </RelativeLayout>
+
+            <EditText
+                android:id="@+id/input_verify_code"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                android:layout_weight="0.5"
+                android:background="@drawable/input_phone_num_normal"
+                android:enabled="false"
+                android:hint="@string/life_input_verify_code"
+                android:inputType="number"
+                android:paddingLeft="10dp"
+                android:singleLine="true"
+                android:textColor="#333333"
+                android:textColorHint="#bdbdbd"
+                android:textSize="13dp" />
+
+            <Button
+                android:layout_marginTop="40dp"
+                android:id="@+id/submit"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="@drawable/qihoo_btn_bg"
+                android:enabled="false"
+                android:text="立即绑定"
+                android:textColor="#ffffff"
+                android:textSize="15dp" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

@@ -114,7 +114,7 @@ public class MapMarker {
 	 * 生成marker 直接显示到map上
 	 * @param mapView
 	 */
-	public void initMapMarker(TextureMapView mapView) {
+	public void initMapMarker(DHMapView mapView) {
 		mMarker = mapView.getMap().addMarker(getMapMarkOptions());
 		if (isToTop) {
 			bringToTop();

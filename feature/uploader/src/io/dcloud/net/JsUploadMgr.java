@@ -125,7 +125,7 @@ public class JsUploadMgr {
 			try {
 				_jsonObject = new JSONObject(pJsArgs[2]);
 				String filePath = pWebViewImpl.obtainFrameView().obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(),pJsArgs[1]);
-				_upload.addFile(filePath, _jsonObject);
+				_upload.addFile(pWebViewImpl, filePath, _jsonObject);
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}

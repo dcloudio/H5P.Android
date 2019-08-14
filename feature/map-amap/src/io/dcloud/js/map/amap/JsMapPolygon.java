@@ -3,6 +3,7 @@ package io.dcloud.js.map.amap;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.js.map.amap.adapter.DHMapView;
 import io.dcloud.js.map.amap.adapter.IFJsOverlay;
 import io.dcloud.js.map.amap.adapter.MapPoint;
 import io.dcloud.js.map.amap.adapter.MapPolygonProxy;
@@ -82,7 +83,7 @@ class JsMapPolygon extends JsMapObject implements IFJsOverlay {
 	}
 	
 	@Override
-	public void onAddToMapView(TextureMapView pMapView) {
+	public void onAddToMapView(DHMapView pMapView) {
 		super.onAddToMapView(pMapView);
 		mPolygon.initMapPolygon(pMapView);
 	}

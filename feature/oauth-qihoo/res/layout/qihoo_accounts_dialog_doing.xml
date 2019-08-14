@@ -1,0 +1,31 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dialog_rotate_layout"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/qihoo_accounts_doing_dialog_background"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="@dimen/qihoo_accounts_dialog_doing_padding" >
+
+    <!-- 正在doing的dialog -->
+    <!-- 旋转图标 -->
+
+    <ImageView
+        android:id="@+id/dialog_rotate_image"
+        android:layout_width="@dimen/qihoo_accounts_dialog_doing_icon_witdh"
+        android:layout_height="@dimen/qihoo_accounts_dialog_doing_icon_height"
+        android:layout_marginRight="@dimen/qihoo_accounts_dialog_doing_icon_right"
+        android:background="@drawable/qihoo_accounts_dialog_logining" />
+
+    <!-- 正在doing提示消息 -->
+
+    <TextView
+        android:id="@+id/dialog_rotate_text"
+        style="@style/qihoo_accounts_note_text_style"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:text="" />
+
+</LinearLayout>

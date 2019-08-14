@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 通用登录注册activity -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#FFFFFF" >
+
+    <!-- 注册页面 -->
+    <LinearLayout
+        android:id="@+id/qihoo_accounts_register"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical" 
+        android:visibility="gone">
+
+        <include layout="@layout/qihoo_accounts_register_view" />
+    </LinearLayout>
+
+    <!-- 登录页面 -->
+    <LinearLayout
+        android:id="@+id/qihoo_accounts_login"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:visibility="gone" >
+
+        <include layout="@layout/qihoo_accounts_login_view" />
+    </LinearLayout>
+    
+    <!-- 手机“找回密码”页面 -->
+    <LinearLayout
+        android:id="@+id/qihoo_accounts_findpwd_view"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:visibility="gone" >
+
+        <include layout="@layout/qihoo_accounts_findpwd_view" />
+    </LinearLayout>
+</FrameLayout>

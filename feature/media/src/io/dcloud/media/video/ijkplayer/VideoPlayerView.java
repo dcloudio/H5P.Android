@@ -8,17 +8,17 @@ import android.widget.FrameLayout;
 
 import com.nostra13.dcloudimageloader.core.ImageLoaderL;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.HashMap;
 
+import io.dcloud.common.DHInterface.IVideoPlayer;
 import io.dcloud.common.DHInterface.IWebview;
-import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
-import io.dcloud.common.DHInterface.IVideoPlayer;
 import io.dcloud.media.video.VideoPlayerMgr;
+import io.dcloud.media.video.ijkplayer.media.AssetsDataSourceProvider;
 import io.dcloud.media.video.ijkplayer.media.IjkPlayerView;
 import io.dcloud.media.video.ijkplayer.media.MediaPlayerParams;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
@@ -51,6 +51,10 @@ public class VideoPlayerView extends FrameLayout implements IVideoPlayer{
         mPlayerView.setOnInfoListener(new IMediaPlayer.OnInfoListener() {
             @Override
             public boolean onInfo(IMediaPlayer iMediaPlayer, int status, int extra) {
+                //防止mIWebview容器已销毁导致空指针问题
+                if(mIWebview.obtainApp() == null) {
+                    return false;
+                }
                 if(status == MediaPlayerParams.STATE_COMPLETED) {
                     statusChanged("ended", "");
                     if(isLoopPlay) {
@@ -72,17 +76,6 @@ public class VideoPlayerView extends FrameLayout implements IVideoPlayer{
         mPlayerView.setOnPlayerChangedListener(new OnPlayerChangedListener() {
             @Override
             public void onChanged(String type, String msg) {
-                if (type.equals("fullscreenchange")){
-                    try {
-                        JSONObject object = new JSONObject(msg);
-                        if (object.optBoolean("fullScreen")){
-                        } else {
-                            if (null != fullScreenOptions)
-                                setOptions(fullScreenOptions);
-                        }
-                    } catch (JSONException e) {
-                    }
-                }
                 statusChanged(type, msg);
             }
         });
@@ -93,17 +86,27 @@ public class VideoPlayerView extends FrameLayout implements IVideoPlayer{
     public void initOptionsPlayerView(IjkPlayerView playerView, JSONObject options) {
         mOptions = options;
         String url = mOptions.optString("src");
-        if (!PdrUtil.isNetPath(url)) {
-            url = mIWebview.obtainApp().convert2AbsFullPath(mIWebview.obtainFullUrl(),url);
-        }
         if(TextUtils.isEmpty(url)) {
             return;
+        }
+        AssetsDataSourceProvider fd = null;// ijkplayer 无法播放assets下的视频资源
+        if (!PdrUtil.isNetPath(url)) {
+            url = mIWebview.obtainApp().convert2AbsFullPath(mIWebview.obtainFullUrl(),url);
+            if (url.startsWith("/android_asset/")) {
+                url = url.replace("/android_asset/","");
+            } else if (url.startsWith("android_asset/")) {
+                url = url.replace("android_asset/","");
+            }
+            if(!PdrUtil.isDeviceRootDir(url) && !TextUtils.isEmpty(url)) {
+                try {
+                    fd = new AssetsDataSourceProvider(mIWebview.getActivity().getAssets().openFd(url));
+                } catch (IOException ignored) { }
+            }
         }
         isAutoPlay = mOptions.optBoolean("autoplay", isAutoPlay);
         isLoopPlay = mOptions.optBoolean("loop", isLoopPlay);
         setPoster(mOptions.optString("poster"));
         playerView.setMutePlayer(mOptions.optBoolean("muted", false));
-        playerView.setControls(mOptions.optBoolean("controls", true));
         playerView.setPageGesture(mOptions.optBoolean("page-gesture", false));
         playerView.setProgressVisibility(mOptions.optBoolean("show-progress", true));
         playerView.setFullscreenBntVisibility(mOptions.optBoolean("show-fullscreen-btn", true));
@@ -111,19 +114,26 @@ public class VideoPlayerView extends FrameLayout implements IVideoPlayer{
         playerView.setIsEnableProgressGesture(mOptions.optBoolean("enable-progress-gesture", true));
         int orientation = mOptions.optInt("direction", -90);
         playerView.setDirection(orientation);
-        playerView.enableDanmaku(mOptions.optBoolean("enable-danmu",false));
-        playerView.enableDanmuBtn(mOptions.optBoolean("danmu-btn",false));
         playerView.setmDanmuList(mOptions.optString("danmu-list"));
         playerView.setScaleType(mOptions.optString("objectFit","contain"));
-        playerView.setCenterPlayBntVisibility(mOptions.optBoolean("show-center-play-btn", true));
-
+        if (mOptions.has("codec")) { // 软硬解码
+            playerView.isUseMediaCodec(mOptions.optString("codec").equals("hardware"));
+        }
         if(TextUtils.isEmpty(mUrl)) {
+            if (fd == null)
             mPlayerView.setVideoPath(url);
+            else
+                mPlayerView.setVideoFileDescriptor(fd);
             resetSeek(playerView);
         } else if(!mUrl.equalsIgnoreCase(url)){
-            mPlayerView.switchVideoPath(url);
+            if (fd == null)
+                mPlayerView.switchVideoPath(url);
+            else
+                mPlayerView.switchVideoFileDescriptor(fd);
             resetSeek(playerView);
         }
+        playerView.setCenterPlayBntVisibility(mOptions.optBoolean("show-center-play-btn", true));
+        playerView.setControls(mOptions.optBoolean("controls", true));
 
         playerView.setDuration(mOptions.optInt("duration",-1)*1000);
         mUrl = url;
@@ -133,6 +143,8 @@ public class VideoPlayerView extends FrameLayout implements IVideoPlayer{
         int seek = mOptions.optInt("initial-time");
         playerView.seekTo(seek * 1000);
         mPlayerView.clearDanma();
+        playerView.enableDanmaku(mOptions.optBoolean("enable-danmu",false));
+        playerView.enableDanmuBtn(mOptions.optBoolean("danmu-btn",false));
         if (isAutoPlay)
             play();
     }
@@ -154,11 +166,12 @@ public class VideoPlayerView extends FrameLayout implements IVideoPlayer{
 
     @Override
     public void stop() {
-        statusChanged("waiting", "stop");
+        statusChanged("waiting", ""/*"{message:'stop'}"*/);
         if(mPlayerView != null) {
             if(TextUtils.isEmpty(mUrl)) {
                 //mPlayerView.stop();
             } else {
+                mPlayerView.clearDanma();/*暂停时清除弹幕*/
                 mPlayerView.switchVideoPath(mUrl);
             }
         }
@@ -166,7 +179,7 @@ public class VideoPlayerView extends FrameLayout implements IVideoPlayer{
 
     @Override
     public void close() {
-        statusChanged("waiting", "close");
+        statusChanged("waiting", ""/*"{message:'close'}"*/);
         if(mPlayerView != null) {
             mPlayerView.stop();
             mPlayerView.onDestroy();
@@ -293,7 +306,6 @@ public class VideoPlayerView extends FrameLayout implements IVideoPlayer{
 
     @Override
     public boolean isPointInRect(float x, float y) {
-        Logger.e("当前的容器："+this+"；x:"+x+"；y:"+y);
         if (rect!=null) {
             if (x>rect[0]&&x<rect[2]&&y>rect[1]&&y<rect[3]){
                 return true;

@@ -24,7 +24,7 @@ public class GTNotificationReceiver extends NotificationReceiver{
 			if(_action != null) {
 				if (_action.equals(Intent.ACTION_BOOT_COMPLETED)) {
 					Logger.d("ACTION_BOOT_COMPLETED:开机初始化.");
-					PushManager.getInstance().initialize(context.getApplicationContext(), GTNormalPushService.class);
+					PushManager.getInstance().initialize(context.getApplicationContext(), null);
 					PushManager.getInstance().registerPushIntentService(context.getApplicationContext(), GTNormalIntentService.class);
 				} else {
 					super.onReceive(context, intent);

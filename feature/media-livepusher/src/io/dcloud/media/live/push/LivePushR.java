@@ -1,13 +1,13 @@
 package io.dcloud.media.live.push;
 
-import io.dcloud.RInformation;
 import io.dcloud.common.DHInterface.IReflectAble;
 
 public interface LivePushR extends IReflectAble {
-    public static int LIVEPUSH_RAW_whitecat = RInformation.getInt("raw","whitecat");
-    public static int LIVEPUSH_RAW_beauty = RInformation.getInt("raw","beauty");
-    public static int LIVEPUSH_RAW_default_fragment = RInformation.getInt("raw","default_fragment");
-    public static int LIVEPUSH_RAW_default_vertex = RInformation.getInt("raw","default_vertex");
+
+    public static int LIVEPUSH_RAW_whitecat = io.dcloud.feature.livepusher.R.raw.whitecat;
+    public static int LIVEPUSH_RAW_beauty = io.dcloud.feature.livepusher.R.raw.beauty;
+    public static int LIVEPUSH_RAW_default_fragment = io.dcloud.feature.livepusher.R.raw.default_fragment;
+    public static int LIVEPUSH_RAW_default_vertex = io.dcloud.feature.livepusher.R.raw.default_vertex;
 //
 //    //LivePush begin
 //    public static int LIVEPUSH_RAW_amaro = RInformation.getInt("RAW","amaro");

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.qihoo360.accounts.ui.v.RegisterEmailView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/register_email"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:padding="@dimen/qihoo_accounts_padding" >
+
+    <!-- 输入登录邮箱 -->
+
+    <RelativeLayout
+        android:id="@+id/qihoo_accounts_reg_email_account_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="@dimen/qihoo_accounts_input_box_height"
+        android:background="@drawable/qihoo_accounts_input_border"
+        android:orientation="horizontal" >
+
+        <com.qihoo360.accounts.ui.v.QAccountEditText
+            android:id="@+id/register_qaet_account"
+            style="@style/qihoo_accounts_input_text_style"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" />
+    </RelativeLayout>
+
+    <!-- 输入密码 -->
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="@dimen/qihoo_accounts_input_box_height"
+        android:layout_marginTop="@dimen/qihoo_accounts_input_boxs_margin"
+        android:gravity="center_vertical"
+        android:orientation="horizontal" >
+
+        <RelativeLayout
+            android:id="@+id/qihoo_accounts_reg_email_psw_layout"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:background="@drawable/qihoo_accounts_input_border"
+            android:orientation="horizontal" >
+
+            <Button
+                android:id="@+id/register_email_delete_password"
+                style="@style/qihoo_accounts_input_delete_btn_style"
+                android:layout_alignParentRight="true"
+                android:visibility="gone" />
+
+            <EditText
+                android:id="@+id/register_email_password"
+                style="@style/qihoo_accounts_pwd_input_text_style"
+                android:layout_toLeftOf="@id/register_email_delete_password"
+                android:hint="@string/qihoo_accounts_register_password_hint" />
+        </RelativeLayout>
+
+        <Button
+            android:id="@+id/register_email_show_password"
+            style="@style/qihoo_accounts_input_show_btn_style"
+            android:layout_marginLeft="@dimen/qihoo_accounts_show_pwd_margin_left"
+            android:text="@string/qihoo_accounts_show_password" />
+    </LinearLayout>
+
+    <!-- 验证码 -->
+
+    <LinearLayout
+        android:id="@+id/register_email_captcha_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="@dimen/qihoo_accounts_input_box_height"
+        android:layout_marginTop="@dimen/qihoo_accounts_input_boxs_margin"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone" >
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:background="@drawable/qihoo_accounts_input_border" >
+
+            <EditText
+                android:id="@+id/register_email_captcha_text"
+                style="@style/qihoo_accounts_input_text_style"
+                android:hint="@string/qihoo_accounts_image_captcha_hint"
+                android:maxLength="4" />
+
+            <Button
+                android:id="@+id/register_email_delete_captcha_btn"
+                style="@style/qihoo_accounts_input_delete_btn_style"
+                android:layout_alignParentRight="true"
+                android:visibility="gone" />
+        </RelativeLayout>
+
+        <ImageView
+            android:id="@+id/register_email_captcha_imageView"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_marginLeft="@dimen/qihoo_accounts_show_pwd_margin_left" />
+    </LinearLayout>
+
+    <!-- 立即注册button -->
+
+    <Button
+        android:id="@+id/register_email_click"
+        style="@style/qihoo_accounts_main_btn_style"
+        android:layout_width="fill_parent"
+        android:layout_marginTop="@dimen/qihoo_accounts_input_boxs_margin"
+        android:text="@string/qihoo_accounts_register_btn_text" />
+
+    <!-- 阅读并同意360服务条款 -->
+
+    <RelativeLayout
+        android:id="@+id/qihoo_accounts_email_lisence_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/qihoo_accounts_input_boxs_margin"
+        android:orientation="horizontal" >
+
+        <CheckBox
+            android:id="@+id/register_email_auto_read_lisence"
+            style="@style/qihoo_accounts_tip_text_style"
+            android:layout_alignParentLeft="true"
+            android:background="@null"
+            android:button="@null"
+            android:checked="true"
+            android:drawableLeft="@drawable/qihoo_accounts_checkbox_selector"
+            android:drawablePadding="@dimen/qihoo_accounts_show_pwd_margin_left"
+            android:gravity="center_vertical"
+            android:text="@string/qihoo_accounts_auto_read_license"/>
+
+        <TextView
+            android:id="@+id/register_email_license"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/register_email_auto_read_lisence"
+            android:background="@null"
+            android:text="@string/qihoo_accounts_register_license"
+            android:textColor="@color/qihoo_accounts_green"
+            android:textSize="@dimen/qihoo_accounts_textsize_normal" />
+    </RelativeLayout>
+
+    <!-- 手机注册 -->
+
+    <TextView
+        android:id="@+id/register_phone_button"
+        style="@style/qihoo_accounts_link_btn_style"
+        android:layout_gravity="right"
+        android:layout_marginTop="@dimen/qihoo_accounts_input_boxs_margin"
+        android:text="@string/qihoo_accounts_register_phone" />
+
+</com.qihoo360.accounts.ui.v.RegisterEmailView>

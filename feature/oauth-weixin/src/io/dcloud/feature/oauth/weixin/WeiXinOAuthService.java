@@ -32,6 +32,7 @@ import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.NetTool;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 import io.dcloud.common.util.ThreadPool;
 import io.dcloud.feature.oauth.BaseOAuthService;
 
@@ -107,6 +108,7 @@ public class WeiXinOAuthService extends BaseOAuthService {
                         onLoginCallBack(mLoginWebViewImpl, mLoginCallbackId, code);
                     }
                     if (msg instanceof SendAuth.Resp) {//成功回调
+                        Logger.d("WeiXinOAuthService", "isLoginReceiver = true");
                         isLoginReceiver = true;
                         SendAuth.Resp resp = (SendAuth.Resp) msg;
                         String code = resp.code;
@@ -215,7 +217,7 @@ public class WeiXinOAuthService extends BaseOAuthService {
         }
         //未安装客户端提示
         if (!PlatformUtil.isAppInstalled(pWebViewImpl.getContext(), "com.tencent.mm")) {
-            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_CLIENT_UNINSTALLED, DOMException.toString(DOMException.MSG_CLIENT_UNINSTALLED));
+            String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_CLIENT_UNINSTALLED, DOMException.toString(DOMException.MSG_CLIENT_UNINSTALLED));
             JSUtil.execCallback(pWebViewImpl, mLoginCallbackId, msg, JSUtil.ERROR, true, false);
             return;
         }
@@ -236,12 +238,12 @@ public class WeiXinOAuthService extends BaseOAuthService {
         super.authorize(pwebview, pJsArgs);
 //        appId不允许为空 secret不在设置之间
         if (TextUtils.isEmpty(appId)) {
-            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
+            String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
             JSUtil.execCallback(pwebview, mAuthCallbackId, msg, JSUtil.ERROR, true, false);
             return;
         }
         if (!PlatformUtil.isAppInstalled(pwebview.getContext(), "com.tencent.mm")) {
-            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_CLIENT_UNINSTALLED, DOMException.toString(DOMException.MSG_CLIENT_UNINSTALLED));
+            String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_CLIENT_UNINSTALLED, DOMException.toString(DOMException.MSG_CLIENT_UNINSTALLED));
             JSUtil.execCallback(pwebview, mAuthCallbackId, msg, JSUtil.ERROR, true, false);
             return;
         }
@@ -258,7 +260,7 @@ public class WeiXinOAuthService extends BaseOAuthService {
      * 因需要请求网络，所以将之放入子线程
      */
     private void loginInThread(final IWebview pwebview, final String callbackId, JSONObject option) {
-
+        Logger.d("WeiXinOAuthService", "isLoginReceiver = false");
         isLoginReceiver = false;
         String s_authResult = getValue(BaseOAuthService.KEY_AUTHRESULT);
         JSONObject authResult = JSONUtil.createJSONObject(s_authResult);
@@ -360,9 +362,12 @@ public class WeiXinOAuthService extends BaseOAuthService {
             public boolean onExecute(SysEventType pEventType, Object pArgs) {
                 // TODO Auto-generated method stub
                 // isLoginReceiver = false 表示login并未回调。 表示用户并未实施登录而是返回关闭了登录请求页面。
+                Logger.d("WeiXinOAuthService", "isLoginReceiver1 "+ isLoginReceiver);
                 if (!isLoginReceiver) { //用户取消
+                    Logger.d("WeiXinOAuthService", "isLoginReceiver2 "+ isLoginReceiver);
                     onLoginFinished(getErrorJsonbject(DOMException.CODE_USER_CANCEL, DOMException.MSG_USER_CANCEL), false,pwebview,callbackId);
                 }
+//                FeatureMessageDispatcher.unregisterListener(sLoginMessageListener);
 
                 if (app != null) {
                     app.unregisterSysEventListener(this, SysEventType.onResume);
@@ -371,9 +376,13 @@ public class WeiXinOAuthService extends BaseOAuthService {
             }
         }, ISysEventListener.SysEventType.onResume);
         if (suc && hasWXEntryActivity(pwebview.getContext())) {
-            FeatureMessageDispatcher.registerListener(sLoginMessageListener);
+            isLoginReceiver = true;         // 解决调用被杀死微信时会回调"用户取消"问题
+            // 未注册才注册监听，防止注册多个监听（否则用户取消登陆后再次登陆，会报code复用错误）
+            if (!FeatureMessageDispatcher.sFeatureMessage.contains(sLoginMessageListener)) {
+                FeatureMessageDispatcher.registerListener(sLoginMessageListener);
+            }
         } else {
-            pwebview.obtainWebview().postDelayed(new Runnable() {
+            pwebview.obtainWindowView().postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     onLoginCallBack(pwebview, callbackId, BaseResp.ErrCode.ERR_SENT_FAILED);

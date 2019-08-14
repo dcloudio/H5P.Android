@@ -4,11 +4,13 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.view.Display;
 import android.widget.Toast;
@@ -33,6 +35,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -98,11 +101,11 @@ public class WeiXinApiManager implements IFShareApi {
     //返回false时则继续
     private boolean hasGeneralError(IWebview pWebViewImpl, String pCallbackId) {
         if (!hasFullConfigData()) {
-            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
+            String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
             JSUtil.execCallback(pWebViewImpl, pCallbackId, msg, JSUtil.ERROR, true, false);
             return true;
         } else if (!PlatformUtil.isAppInstalled(pWebViewImpl.getContext(), "com.tencent.mm")) {
-            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_CLIENT_UNINSTALLED, DOMException.toString(DOMException.MSG_CLIENT_UNINSTALLED));
+            String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_CLIENT_UNINSTALLED, DOMException.toString(DOMException.MSG_CLIENT_UNINSTALLED));
             JSUtil.execCallback(pWebViewImpl, pCallbackId, msg, JSUtil.ERROR, true, false);
             return true;
         }
@@ -235,7 +238,7 @@ public class WeiXinApiManager implements IFShareApi {
                         e.printStackTrace();
                     }
                     if (!isContinue) {
-                        pWebViewImpl.obtainWebview().postDelayed(new Runnable() {
+                        pWebViewImpl.obtainWindowView().postDelayed(new Runnable() {
                             @Override
                             public void run() {
                                 onSendCallBack(pWebViewImpl, pCallbackId, BaseResp.ErrCode.ERR_OK);
@@ -252,7 +255,7 @@ public class WeiXinApiManager implements IFShareApi {
                         FeatureMessageDispatcher.registerListener(sSendCallbackMessageListener);
                         registerSendCallbackMsg(new Object[]{pWebViewImpl, pCallbackId});
                     } else {
-                        pWebViewImpl.obtainWebview().postDelayed(new Runnable() {
+                        pWebViewImpl.obtainWindowView().postDelayed(new Runnable() {
                             @Override
                             public void run() {
                                 onSendCallBack(pWebViewImpl, pCallbackId, BaseResp.ErrCode.ERR_SENT_FAILED);
@@ -482,7 +485,7 @@ public class WeiXinApiManager implements IFShareApi {
         if (suc) {//由于调用微信发送接口，会立马回复true，而不是真正分享成功，甚至连微信界面都没有启动，在此延迟回调，以增强体验
             JSUtil.execCallback(pWebViewImpl, pCallbackId, "", JSUtil.OK, false, false);
         } else {
-            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_INTERNAL_ERROR, DOMException.toString(code, "Share微信分享", errorMsg, mLink));
+            String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_INTERNAL_ERROR, DOMException.toString(code, "Share微信分享", errorMsg, mLink));
             JSUtil.execCallback(pWebViewImpl, pCallbackId, msg, JSUtil.ERROR, true, false);
         }
     }
@@ -538,7 +541,27 @@ public class WeiXinApiManager implements IFShareApi {
                     String AbsFullPath= pWebViewImpl.obtainFrameView().obtainApp().convert2LocalFullPath(pWebViewImpl.obtainFullUrl(),pImg);
                     //Bitmap bitmap=scaleLoadPic(pWebViewImpl,AbsFullPath);
                     WXImageObject imgObj = new WXImageObject();
-                    imgObj.imagePath = AbsFullPath;
+//                    imgObj.imagePath = AbsFullPath;
+                    // 适配AndroidQ，"content://"文件（如相册获取）
+                    if (AbsFullPath.startsWith("content://")) {
+                        Uri contentUri = Uri.parse(AbsFullPath);
+                        InputStream inputStream = null;
+                        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                        int nRead;
+                        try {
+                            inputStream = pWebViewImpl.getContext().getContentResolver().openInputStream(contentUri);
+                            byte[] data = new byte[16384];
+                            while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+                                buffer.write(data, 0, nRead);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        byte[] fileByteArr = buffer.toByteArray();
+                        imgObj.imageData = fileByteArr;
+                    } else {
+                        imgObj.imagePath = AbsFullPath;
+                    }
                     //bitmap.recycle();
 //				WXImageObject imgObj = new WXImageObject();
 //				imgObj.imagePath = pImg;//避免将来资源放置在程序私有目录第三方程序无权访问问题
@@ -771,9 +794,28 @@ public class WeiXinApiManager implements IFShareApi {
         //设置缩放比例
         opts.inSampleSize=scale;
         opts.inJustDecodeBounds=false;
-        Bitmap bm=BitmapFactory.decodeFile(path,opts);
+//        Bitmap bm=BitmapFactory.decodeFile(path,opts);
+        Bitmap bm= null;
+        // 适配AndroidQ，"content://"文件（如相册获取）
+        if (path.startsWith("content://")) {
+            Uri contentUri = Uri.parse(path);
+            Cursor cursor = pWebViewImpl.getContext().getContentResolver().query(contentUri, null, null, null, null);
+            if(cursor != null){
+                InputStream inputStream = null;
+                try {
+                    inputStream = pWebViewImpl.getContext().getContentResolver().openInputStream(contentUri);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                cursor.moveToFirst();
+                bm=BitmapFactory.decodeStream(inputStream,null,opts);
+                //TO 成功
+                cursor.close();
+            }
+        } else {
+            bm=BitmapFactory.decodeFile(path,opts);
+        }
         return bm;
-
     }
 
     private String buildTransaction(final String type) {

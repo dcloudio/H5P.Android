@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="0dp"
+    android:padding="0dp" >
+
+    <!-- 输入账号下拉填充 -->
+
+    <AutoCompleteTextView
+        android:id="@+id/qaet_autoComplete"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_margin="0dp"
+        android:background="@null"
+        android:dropDownHeight="@dimen/qihoo_accounts_autocomplete_dropdownheight"
+        android:dropDownHorizontalOffset="-2px"
+        android:dropDownSelector="@drawable/qihoo_accounts_qaet_piece"
+        android:dropDownVerticalOffset="-1dp"
+        android:maxLength="50"
+        android:paddingBottom="0dp"
+        android:paddingLeft="0dp"
+        android:paddingRight="@dimen/qihoo_accounts_autocomplete_right"
+        android:paddingTop="0dp"
+        android:popupBackground="@drawable/qihoo_accounts_qaet_item_bg"
+        android:singleLine="true"
+        android:imeOptions="actionNext"
+        android:textSize="@dimen/qihoo_accounts_textsize_normal" />
+
+    <ImageButton
+        android:id="@+id/qaet_delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingRight="@dimen/qihoo_accounts_autocomplete_delete_right"
+        android:layout_alignRight="@+id/qaet_autoComplete"
+        android:layout_centerVertical="true"
+        android:background="@null"
+        android:contentDescription="@string/qihoo_accounts_login_account_hint"
+        android:src="@drawable/qihoo_accounts_btn_delete"
+        android:visibility="invisible" />
+
+</RelativeLayout>

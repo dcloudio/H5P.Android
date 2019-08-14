@@ -1,8 +1,13 @@
 package io.dcloud.share.qq;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 
 import com.tencent.connect.common.Constants;
@@ -31,6 +36,7 @@ import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 import io.dcloud.share.IFShareApi;
 
 /**
@@ -220,18 +226,40 @@ public class QQApiManager implements IFShareApi {
 			params.putString(QQShare.SHARE_TO_QQ_IMAGE_URL, imgPath);
 		} else {
 			imgPath = pWebViewImpl.obtainFrameView().obtainApp().convert2LocalFullPath(pWebViewImpl.obtainFullUrl(), imgPath);
-			if(!DHFile.exists(imgPath) && defaultImg){//判断要分享文件是否存在，如果不存在则使用默认图标
-				InputStream is = pWebViewImpl.getActivity().getResources().openRawResource(RInformation.DRAWABLE_ICON);
-				imgPath = pWebViewImpl.obtainFrameView().obtainApp().obtainAppTempPath() + System.currentTimeMillis();//临时目录，当应用退出的时候会删除
-				try {
-					DHFile.writeFile(is, imgPath);
-					is.close();
-				} catch (IOException e) {
-					e.printStackTrace();
+			// androidQ适配，为适配AndroidQ相册获取图片统一返回content...，因此需要转换图片地址上传
+			if (imgPath.startsWith("content:")) {
+				imgPath = getRealPathFromURI(pWebViewImpl.getContext(), Uri.parse(imgPath));
+			} else {
+				if(!DHFile.exists(imgPath) && defaultImg){//判断要分享文件是否存在，如果不存在则使用默认图标
+					InputStream is = pWebViewImpl.getActivity().getResources().openRawResource(RInformation.DRAWABLE_ICON);
+					imgPath = pWebViewImpl.obtainFrameView().obtainApp().obtainAppTempPath() + System.currentTimeMillis();//临时目录，当应用退出的时候会删除
+					try {
+						DHFile.writeFile(is, imgPath);
+						is.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 			params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, imgPath);
 		}
+	}
+
+	/**
+	 * 相册content地址转换为真实地址
+	 * @param context
+	 * @param contentUri
+	 * @return
+	 */
+	private String getRealPathFromURI(Context context, Uri contentUri) {
+		String[] proj = { MediaStore.Images.Media.DATA };
+		CursorLoader loader = new CursorLoader(context, contentUri, proj, null, null, null);
+		Cursor cursor = loader.loadInBackground();
+		int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+		cursor.moveToFirst();
+		String result = cursor.getString(column_index);
+		cursor.close();
+		return result;
 	}
 
 	class MyIUiListener implements IUiListener {
@@ -282,7 +310,7 @@ public class QQApiManager implements IFShareApi {
             Logger.e(TAG, "authorize: appId"+APPID );
         }
         if(PdrUtil.isEmpty(APPID)){
-            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
+            String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
             JSUtil.execCallback(pWebViewImpl, pCallbackId, msg, JSUtil.ERROR, true, false);
             return;
         }

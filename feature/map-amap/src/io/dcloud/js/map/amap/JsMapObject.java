@@ -5,6 +5,7 @@ import com.amap.api.maps.TextureMapView;
 import org.json.JSONArray;
 
 import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.js.map.amap.adapter.DHMapView;
 
 /**
  * <p>Description:JS对象类</p>
@@ -18,7 +19,7 @@ import io.dcloud.common.DHInterface.IWebview;
  * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2012-12-24 下午4:02:21</pre>
  */
 public abstract class JsMapObject {
-	protected TextureMapView mMapView = null;
+	protected DHMapView mMapView = null;
 	protected IWebview mWebview = null;
 	String mUUID = null;
 	String mJsId = null;
@@ -63,7 +64,7 @@ public abstract class JsMapObject {
 	 * @param pMapView
 	 * <br/>Create By: yanglei Email:yanglei@dcloud.io at 2014-5-30 下午04:00:09
 	 */
-	public void onAddToMapView(TextureMapView pMapView){
+	public void onAddToMapView(DHMapView pMapView){
 		mMapView = pMapView;
 	}
 }

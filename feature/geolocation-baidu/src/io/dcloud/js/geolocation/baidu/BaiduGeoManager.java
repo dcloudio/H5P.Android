@@ -31,6 +31,7 @@ import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.NetTool;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 import io.dcloud.js.geolocation.GeoManagerBase;
 
 public class BaiduGeoManager extends GeoManagerBase{
@@ -90,7 +91,7 @@ public class BaiduGeoManager extends GeoManagerBase{
 				if(/*PdrUtil.isEquals("baidu", pJsArgs[4]) &&*/ isNotWgs84){
                     startLocating(pWebViewImpl, pJsArgs[0], null, _enableHighAccuracy, timeout, -1, pActionName.endsWith("DLGEO"),pJsArgs[3],false);
 				}else{
-					String _json = String.format(DOMException.JSON_ERROR_INFO,DOMException.CODE_GEOLOCATION_PROVIDER_ERROR,isNotWgs84 ? DOMException.MSG_GEOLOCATION_PROVIDER_ERROR : "only support gcj02|bd09|bd09ll");
+					String _json = StringUtil.format(DOMException.JSON_ERROR_INFO,DOMException.CODE_GEOLOCATION_PROVIDER_ERROR,isNotWgs84 ? DOMException.MSG_GEOLOCATION_PROVIDER_ERROR : "only support gcj02|bd09|bd09ll");
 					JSUtil.execCallback(pWebViewImpl, pJsArgs[0], _json, JSUtil.ERROR, true, false);
 				}
 			}
@@ -111,7 +112,7 @@ public class BaiduGeoManager extends GeoManagerBase{
 				if(/*PdrUtil.isEquals("baidu", pJsArgs[4]) &&*/ isNotWgs84){
                     startLocating(pWebViewImpl, pJsArgs[0], pJsArgs[1], _enableHighAccuracy, timeout, interval, pActionName.endsWith("DLGEO"), pJsArgs[3],true);
 				}else{
-					String _json = String.format(DOMException.JSON_ERROR_INFO,DOMException.CODE_GEOLOCATION_PROVIDER_ERROR,isNotWgs84 ? DOMException.MSG_GEOLOCATION_PROVIDER_ERROR : "only support gcj02|bd09|bd09ll");
+					String _json = StringUtil.format(DOMException.JSON_ERROR_INFO,DOMException.CODE_GEOLOCATION_PROVIDER_ERROR,isNotWgs84 ? DOMException.MSG_GEOLOCATION_PROVIDER_ERROR : "only support gcj02|bd09|bd09ll");
 					JSUtil.execCallback(pWebViewImpl, pJsArgs[0], _json, JSUtil.ERROR, true, false);
 				}
 			}
@@ -171,7 +172,7 @@ public class BaiduGeoManager extends GeoManagerBase{
             });
             mClient.start();
         } else {
-            String _json = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_GEOLOCATION_HASNT_BAIDU_APPKEY, DOMException.MSG_GEOLOCATION_HASNT_BAIDU_APKEY);
+            String _json = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_GEOLOCATION_HASNT_BAIDU_APPKEY, DOMException.MSG_GEOLOCATION_HASNT_BAIDU_APKEY);
             JSUtil.execCallback(pWebViewImpl, pCallbackId, _json, JSUtil.ERROR, true, false);
         }
 
@@ -309,7 +310,7 @@ public class BaiduGeoManager extends GeoManagerBase{
 
 
 	private void geoDataError(IWebview pWebViewImpl, String pCallbackId,boolean isDLGeo,boolean continuous) {
-		String err = String.format(DOMException.JSON_ERROR_INFO, 40, "定位异常");
+		String err = StringUtil.format(DOMException.JSON_ERROR_INFO, 40, "定位异常");
         if (isDLGeo) {
             JSUtil.execGEOCallback(pWebViewImpl, pCallbackId, err, JSUtil.ERROR, true,continuous);
         } else {

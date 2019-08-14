@@ -2,6 +2,7 @@ package io.dcloud.js.map.amap;
 
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.util.JSONUtil;
+import io.dcloud.js.map.amap.adapter.DHMapView;
 import io.dcloud.js.map.amap.adapter.IFJsOverlay;
 import io.dcloud.js.map.amap.adapter.MapCircleProxy;
 
@@ -64,7 +65,7 @@ class JsMapCircle extends JsMapObject implements IFJsOverlay{
 	}
 	
 	@Override
-	public void onAddToMapView(TextureMapView pMapView) {
+	public void onAddToMapView(DHMapView pMapView) {
 		super.onAddToMapView(pMapView);
 		mMapCircle.initMapCircle(pMapView);
 	}

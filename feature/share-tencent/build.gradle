@@ -1,0 +1,44 @@
+apply plugin: 'com.android.library'
+afterEvaluate {
+    generateReleaseBuildConfig.enabled = false
+}
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        versionCode 1
+        versionName "1.0"
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    buildTypes {
+        release {
+            zipAlignEnabled true
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile '../AndroidManifest.xml'
+            assets.srcDirs = [
+                    './assets'
+            ]
+            jniLibs.srcDirs = [
+                    './libs']
+            java.srcDirs = ['./src'
+            ]
+            res.srcDirs = ['./res'
+            ]
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: './libs')
+    compileOnly project(':lib.5plus.base')
+}

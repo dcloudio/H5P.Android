@@ -1,14 +1,12 @@
 package io.dcloud.feature.apsGt;
 
 import android.content.Context;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.igexin.sdk.PushManager;
 
 import io.dcloud.common.adapter.util.AndroidResources;
-import io.dcloud.feature.aps.APSFeatureImpl;
 import io.dcloud.feature.aps.AbsPushService;
 
 /**
@@ -30,7 +28,7 @@ public class GTPushService extends AbsPushService{
 	@Override
 	public void onStart(Context pContext, Bundle pSaveBundle,String[] pArgs) {
 		id=ID;
-		PushManager.getInstance().initialize(pContext.getApplicationContext(),GTNormalPushService.class);
+		PushManager.getInstance().initialize(pContext.getApplicationContext(),null);
         // GTNormalIntentService 为第三方自定义的推送服务事件接收类
         PushManager.getInstance().registerPushIntentService(pContext.getApplicationContext(),GTNormalIntentService.class);
         SharedPreferences _sp = pContext.getSharedPreferences(AbsPushService.CLIENTID + ID, Context.MODE_PRIVATE);

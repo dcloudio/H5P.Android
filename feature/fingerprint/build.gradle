@@ -1,0 +1,57 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        versionCode 1
+        versionName '1.0'
+    }
+
+//    packageBuildConfig(false)     // deprecated
+
+    lintOptions {
+        abortOnError false
+    }
+
+    buildTypes {
+        release {
+            zipAlignEnabled true
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile './AndroidManifest.xml'
+            assets.srcDirs = [
+                    './assets'
+            ]
+            jniLibs.srcDirs = [
+                    './libs']
+            java.srcDirs = ['./src'
+            ]
+            res.srcDirs = ['./res'
+            ]
+        }
+    }
+
+}
+
+dependencies {
+    compileOnly fileTree(include: ['*.jar'], dir: './libs')
+    compileOnly "com.android.support:recyclerview-v7:${rootProject.ext.supportLibVersion}"
+    compileOnly "com.android.support:support-v4:${rootProject.ext.supportLibVersion}"
+    compileOnly "com.android.support:appcompat-v7:${rootProject.ext.supportLibVersion}"
+    compileOnly project(':lib.5plus.base')
+}
+
+
+project.beforeEvaluate { // build.gradle解析前
+}
+
+project.afterEvaluate { // build.gradle解析后、task之前
+    generateReleaseBuildConfig.enabled = false
+}
+

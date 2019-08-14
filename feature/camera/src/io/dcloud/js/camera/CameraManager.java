@@ -267,6 +267,9 @@ class CameraManager {
 			if(json != null && json.has("optimize")) {
 				_Option.optimize = JSONUtil.getBoolean(json, "optimize");
 			}
+			if(json != null && json.has("videoMaximumDuration")) {
+				_Option.videoMaximumDuration = JSONUtil.getInt(json, "videoMaximumDuration");
+			}
 
 		}
 		return _Option;
@@ -279,6 +282,7 @@ class CameraManager {
 		String format;
 		int index;
 		boolean optimize = true;
+		int videoMaximumDuration = 0;
 		/**
 		 * @return the filename
 		 */
@@ -302,6 +306,10 @@ class CameraManager {
 		 */
 		public int getIndex() {
 			return index;
+		}
+
+		public int videoMaximumDuration() {
+			return videoMaximumDuration;
 		}
 		
 	}

@@ -1,0 +1,138 @@
+<resources>
+    <!-- 登录、注册公用 -->   
+    <string name="qihoo_accounts_image_captcha_hint">請輸入驗證碼</string>
+    <string name="qihoo_accounts_show_password">顯示密碼</string>
+    <string name="qihoo_accounts_hide_password">隱藏密碼</string>
+    <string name="qihoo_accounts_auto_read_license">閱讀並同意</string>
+    <string name="qihoo_accounts_webview_findpwd">找回密碼</string>
+    <string name="qihoo_accounts_webview_lisence">360用戶服務條款</string>
+    <string name="qihoo_accounts_webview_chpwd">修改密碼</string>
+    <string name="qihoo_accounts_webview_bindmobile">綁定手機號</string>
+    <string name="qihoo_accounts_webview_close">關閉</string>
+    
+    <!-- 找回密码wap页定制皮肤 （默认绿色,目前提供绿、红、蓝、橙色四种，如有其他皮肤需求，请联系用户中心g-quc@360.cn）-->
+    <string name="qihoo_accounts_webview_findpwd_skin">green</string>
+    <!-- <string name="qihoo_accounts_webview_findpwd_skin">red</string>
+    <string name="qihoo_accounts_webview_findpwd_skin">blue</string>
+    <string name="qihoo_accounts_webview_findpwd_skin">orange</string> -->
+    
+    <!-- 图片验证码的相关提示 -->
+    <string name="qihoo_accounts_image_captcha_null">請輸入驗證碼</string>
+    <string name="qihoo_accounts_image_captcha_error">獲取驗證碼失敗</string>
+    <!-- 自动完成 -->
+    <string name="qihoo_account_select_account_title">檢測到已登錄360帳號，請點擊登錄</string>
+    <string name="qihoo_account_select_account_loginother">使用其它帳號登錄</string>
+    <string name="qihoo_account_select_account_register"><u>註冊新帳號</u></string>
+    <string name="qihoo_account_select_account_no_account_note">沒有已登錄的帳號，請先登錄或者註冊</string>
+    
+    <!-- 登录 -->
+    <string name="qihoo_accounts_login_top_title">360帳號登錄</string>
+    <string name="qihoo_accounts_login_account_hint">請輸入手機號/郵箱/用戶名</string>
+    <string name="qihoo_accounts_login_password_hint">請輸入密碼</string>
+    <string name="qihoo_accounts_login_forget_password"><u>忘記密碼</u></string>
+    <string name="qihoo_accounts_login_quick_register"><u>快速註冊</u></string>
+    <string name="qihoo_accounts_login_btn_text">立即登錄</string>
+    <string name="qihoo_accounts_login_error_captcha">驗證碼錯誤，請重新輸入</string>
+    <string name="qihoo_accounts_login_error_active_email">登錄失敗，請先激活登錄郵箱</string>
+    <string name="qihoo_accounts_login_pwd_error_first">密碼錯誤，今天還有</string>
+    <string name="qihoo_accounts_login_pwd_error_last">次登錄機會</string>
+    
+    <!-- 注册公用 -->
+    <string name="qihoo_accounts_register_phone"><u>手機註冊</u></string>
+    <string name="qihoo_accounts_register_email"><u>郵箱註冊</u></string>
+    <string name="qihoo_accounts_register_other"><u>使用其他方式註冊</u></string>
+    <string name="qihoo_accounts_register_top_title">360帳號註冊</string>
+    <string name="qihoo_accounts_register_btn_text">立即註冊</string>
+    <string name="qihoo_accounts_register_license">《360使用者服務協定》</string>
+    <string name="qihoo_accounts_register_error_license">請先閱讀《360使用者服務協定》</string>   
+   
+    <!-- 手机找回密码 -->
+    <string name="qihoo_accounts_findpwd_by_mobile_title">找回密碼</string>
+    <string name="qihoo_accounts_findpwd_by_mobile_next">下一步</string>
+    <string name="qihoo_accounts_findpwd_by_mobile_hint">請輸入新密碼</string>
+    <string name="qihoo_accounts_findpwd_by_mobile_save">保存新密碼</string>
+    <string name="qihoo_accounts_findpwd_by_other"><u>通過其他方式找回</u></string>
+    <string name="qihoo_accounts_findpwd_valid_phone">帳號不存在</string>
+    <string name="qihoo_accounts_findpwd_by_mobile_inputphone_hint">請輸入手機號以接收校驗碼</string>
+    <string name="qihoo_accounts_findpwd_sms_tips">點擊“下一步”將嘗試自動填寫校驗碼</string>
+    
+    <!-- 上行、下行、邮件注册 -->
+    <string name="qihoo_accounts_register_password_hint">請輸入6~20位的密碼</string>
+    <string name="qihoo_accounts_register_up_sms_tips_first">使用</string>
+    <string name="qihoo_accounts_register_up_sms_tips">本機號碼</string>
+    <string name="qihoo_accounts_register_up_sms_tips_last">進行註冊，運營商會收取一條短信費用</string>
+    <string name="qihoo_accounts_register_down_sms_account_hint">請輸入您的手機號</string>
+    <string name="qihoo_accounts_register_down_sms_captcha_your_phone">驗證碼已發送到您的手機：</string>
+    <string name="qihoo_accounts_register_down_sms_captcha_hint">請輸入校驗碼</string>
+    <string name="qihoo_accounts_register_down_sms_captcha_send_click">點擊獲取校驗碼</string>
+    <string name="qihoo_accounts_register_down_sms_captcha_send_time_first"></string>
+    <string name="qihoo_accounts_register_down_sms_captcha_send_time_last">秒後重新獲取</string>
+    <string name="qihoo_accounts_register_email_account_hint">請輸入您的常用郵箱</string>
+    <string name="qihoo_accounts_register_email_tips">激活郵件已發送到您的郵箱：</string>
+    <string name="qihoo_accounts_register_email_active_tips">請在48小時內點擊郵件內的鏈接完成激活</string>
+    <string name="qihoo_accounts_register_email_commit">去郵箱收信</string>
+    
+    <!-- 邮箱有效性检测的错误提醒 -->
+    <string name="qihoo_accounts_valid_email_error_null">請輸入正確郵箱</string>
+    <string name="qihoo_accounts_valid_email_error_blankspace">郵箱不能為空，請重新輸入</string>
+    <string name="qihoo_accounts_valid_email_error_no_email">郵箱格式不正確，請重新輸入</string>
+    <!-- 手机号有效性检测的错误提醒 -->
+    <string name="qihoo_accounts_valid_phone_error_null">請輸入正確手機號</string>
+    <string name="qihoo_accounts_valid_phone_error_blankspace">手機號不能為空，請重新輸入</string>
+    <string name="qihoo_accounts_valid_phone_error_no_number">手機號格式不正確，請重新輸入</string>
+    <!-- 密码有效性检测的错误提醒 -->
+    <string name="qihoo_accounts_valid_password_error_null">請輸入正確密碼</string>
+    <string name="qihoo_accounts_valid_password_error_blankspace">密碼不能為空，請重新輸入</string>
+    <string name="qihoo_accounts_valid_password_error_length_short">密碼長度不足6位元，請重新輸入</string>
+    <string name="qihoo_accounts_valid_password_error_length_long">密碼長度超過20位元，請重新輸入</string>
+    <string name="qihoo_accounts_valid_password_error_chinese">密碼中不能包含漢字，請重新輸入</string>
+    <string name="qihoo_accounts_valid_password_error_samechars">密碼不能使用同一字元，請重新輸入</string>
+    <string name="qihoo_accounts_valid_password_error_continuous">密碼不能使用連續字元，請重新輸入</string>
+    <string name="qihoo_accounts_valid_password_error_weak">密碼不能使用弱密碼，請重新輸入</string>
+    
+    <!-- 登录帐号有效性的错误提醒 -->
+    <string name="qihoo_accounts_valid_login_error_empty_username">帳號不能為空，請重新輸入</string>
+    <string name="qihoo_accounts_valid_email_error_no_browser">請檢測系統是否已安裝瀏覽器</string>
+    
+    <!-- Dialog中使用 -->
+    <string name="qihoo_accounts_dialog_opt_succ">成功</string>
+    <string name="qihoo_accounts_dialog_doing_login">正在登錄&#8230;</string>
+    <string name="qihoo_accounts_dialog_doing_register">正在註冊帳號&#8230;</string>
+    <string name="qihoo_accounts_dialog_doing_commit">正在提交校驗碼&#8230;</string>
+    <string name="qihoo_accounts_dialog_doing_send">正在發送&#8230;</string>
+    <string name="qihoo_accounts_dialog_doing_send_again">正在重新發送&#8230;</string>
+    <string name="qihoo_accounts_dialog_doing_loading">正在載入頁面&#8230;</string>
+    <string name="qihoo_accounts_dialog_error_reg_title">註冊失敗</string>
+    <string name="qihoo_accounts_dialog_error_login_title">登錄失敗</string>
+    <string name="qihoo_accounts_dialog_error_active_title">帳號激活</string>
+    <string name="qihoo_accounts_dialog_error_btn_cancel">取消</string>
+    <string name="qihoo_accounts_dialog_error_btn_confirm">確定</string>
+    <string name="qihoo_accounts_dialog_error_btn_cancel_reg">取消</string>
+    <string name="qihoo_accounts_dialog_error_btn_confirm_reg">立即登錄</string>
+    <string name="qihoo_accounts_dialog_error_btn_cancel_active">重發郵件</string>
+    <string name="qihoo_accounts_dialog_error_btn_confirm_active">立即登錄</string>
+    <string name="qihoo_accounts_dialog_error_btn_cancel_login_active">取消</string>
+    <string name="qihoo_accounts_dialog_error_btn_confirm_login_active">立即激活</string>
+    
+    <!-- Dialog特殊错误提示信息 -->
+    <string name="qihoo_accounts_dialog_error_message_default">操作失敗</string>
+    <string name="qihoo_accounts_dialog_error_message_active">帳號激活後即可登錄</string>
+    <string name="qihoo_accounts_dialog_error_login_message_default">登錄失敗，請重新登錄</string>
+    <string name="qihoo_accounts_dialog_error_reg_mobile_message_default_first">手機號</string>
+    <string name="qihoo_accounts_dialog_error_reg_email_message_default_first">郵箱</string>
+    <string name="qihoo_accounts_dialog_error_reg_message_default_last">已註冊</string>
+    <string name="qihoo_accounts_dialog_error_commit_captcha_message_default">發送失敗，請重新發送</string>
+    <string name="qihoo_accounts_dialog_error_send_again_message_default">重新發送失敗</string>
+    <string name="qihoo_accounts_dialog_error_up_reg_cannot_send">短信發送失敗</string>
+    <string name="qihoo_accounts_dialog_error_no_network">網路不可用，請檢查手機是否聯網</string>
+    <string name="qihoo_accounts_dialog_error_out_of_valid_time">手機當前時間錯誤，請調整手機時間</string>
+    <string name="qihoo_accounts_dialog_error_bad_data">服務器錯誤</string>
+    <string name="qihoo_accounts_dialog_error_no_captcha">讀取校驗碼失敗、請檢查短信</string>
+    <string name="qihoo_accounts_dialog_error_empty_captcha">驗證碼不能為空</string>
+    <string name="qihoo_accounts_sms_cdoe_null">請輸入校驗碼</string>
+    <string name="qihoo_accounts_dialog_error_ssl_exception">證書錯誤</string>
+    <string name="qihoo_accounts_dialog_error_trans_data">網路出錯</string>
+    <string name="qihoo_accounts_dialog_error_connect_timeout">網路異常，聯網超時</string>
+    <string name="qihoo_accounts_dialog_error_trans_timeout">網路異常，資料傳輸時出錯</string>
+    <string name="qihoo_accounts_dialog_error_http_error">網路異常，連接伺服器時出錯</string>
+</resources>

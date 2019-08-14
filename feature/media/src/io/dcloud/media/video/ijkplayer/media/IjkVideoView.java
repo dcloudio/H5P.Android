@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 
+import io.dcloud.common.util.StringUtil;
 import tv.danmaku.ijk.media.player.AndroidMediaPlayer;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
@@ -51,6 +52,9 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     private String TAG = "TTAG";
     // settable by the client
     private Uri mUri;
+
+    // 播放本地assets下文件
+    private AssetsDataSourceProvider fd;
     private Map<String, String> mHeaders;
 
     // mCurrentState is a VideoView object's current state.
@@ -84,7 +88,8 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     private boolean mCanPause = true;
     private boolean mCanSeekBack = true;
     private boolean mCanSeekForward = true;
-    private boolean mIsUsingMediaCodec;
+
+    private boolean mIsUsingMediaCodec = false;
     private boolean mIsUsingMediaCodecAutoRotate;
     private boolean mIsMediaCodecHandleResolutionChange;
     private boolean mIsUsingOpenSLES;
@@ -164,6 +169,14 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         mCurrentState = MediaPlayerParams.STATE_IDLE;
         mTargetState = MediaPlayerParams.STATE_IDLE;
         _notifyMediaStatus();
+    }
+
+    /**
+     * 切换软硬件解码
+     * @param mIsUsingMediaCodec
+     */
+    public void setmIsUsingMediaCodec(boolean mIsUsingMediaCodec) {
+        this.mIsUsingMediaCodec = mIsUsingMediaCodec;
     }
 
     /**
@@ -296,7 +309,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                    float percent = (Float)valueAnimator.getAnimatedValue();
+                    float percent = (Float) valueAnimator.getAnimatedValue();
                     mSaveMatrix.set(matrix);
                     mSaveMatrix.postTranslate(deltaX * percent, deltaY * percent);
                     mRenderView.setTransform(mSaveMatrix);
@@ -351,7 +364,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
                 break;
             }
             default:
-                Log.e(TAG, String.format(Locale.getDefault(), "invalid render %d\n", render));
+                Log.e(TAG, StringUtil.format("invalid render %d\n", render));
                 break;
         }
     }
@@ -372,6 +385,14 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
      */
     public void setVideoURI(Uri uri) {
         setVideoURI(uri, null);
+    }
+
+    public void setVideoFileDescriptor(AssetsDataSourceProvider fd) {
+        this.fd = fd;
+        mSeekWhenPrepared = 0;
+        openVideo();
+        requestLayout();
+        invalidate();
     }
 
     /**
@@ -400,12 +421,13 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     /**
      * 倍速
      */
-    public void setSpeed(float speed){
-        if (mMediaPlayer != null && mMediaPlayer instanceof IjkMediaPlayer) {
+    public void setSpeed(float speed) {
+        if (mMediaPlayer instanceof IjkMediaPlayer) {
             IjkMediaPlayer ijkMedia = (IjkMediaPlayer) mMediaPlayer;
             ijkMedia.setSpeed(speed);
         }
     }
+
     /**
      * 截图
      *
@@ -438,8 +460,8 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
     @TargetApi(23)
     private void openVideo() {
-        if (mUri == null || mSurfaceHolder == null) {
-            if (mUri == null) {
+        if ((mUri == null && fd == null)|| mSurfaceHolder == null ) {
+            if (mUri == null && fd == null) {
                 mCurrentState = MediaPlayerParams.STATE_ERROR;
                 mTargetState = MediaPlayerParams.STATE_ERROR;
                 mErrorListener.onError(mMediaPlayer, MediaPlayer.MEDIA_ERROR_UNKNOWN, 0);
@@ -471,15 +493,19 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             mMediaPlayer.setOnBufferingUpdateListener(mBufferingUpdateListener);
             mMediaPlayer.setOnSeekCompleteListener(mSeekCompleteListener);
             mCurrentBufferPercentage = 0;
-            String scheme = mUri.getScheme();
-            if (Build.VERSION.SDK_INT >= 23 && mIsUsingMediaDataSource &&
-                    (TextUtils.isEmpty(scheme) || scheme.equalsIgnoreCase("file"))) {
-                IMediaDataSource dataSource = new FileMediaDataSource(new File(mUri.toString()));
-                mMediaPlayer.setDataSource(dataSource);
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                mMediaPlayer.setDataSource(mAppContext, mUri, mHeaders);
-            } else {
-                mMediaPlayer.setDataSource(mUri.toString());
+            if (mUri != null) {
+                String scheme = mUri.getScheme();
+                if (Build.VERSION.SDK_INT >= 23 && mIsUsingMediaDataSource &&
+                        (TextUtils.isEmpty(scheme) || scheme.equalsIgnoreCase("file"))) {
+                    IMediaDataSource dataSource = new FileMediaDataSource(new File(mUri.toString()));
+                    mMediaPlayer.setDataSource(dataSource);
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+                    mMediaPlayer.setDataSource(mAppContext, mUri, mHeaders);
+                } else {
+                    mMediaPlayer.setDataSource(mUri.toString());
+                }
+            } else if (fd != null) {
+                mMediaPlayer.setDataSource(fd);
             }
             bindSurfaceHolder(mMediaPlayer, mSurfaceHolder);
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -494,12 +520,12 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             mCurrentState = MediaPlayerParams.STATE_PREPARING;
             attachMediaController();
         } catch (IOException ex) {
-            Log.w(TAG, "Unable to open content: " + mUri, ex);
+//            Log.w(TAG, "Unable to open content: " + mUri, ex);
             mCurrentState = MediaPlayerParams.STATE_ERROR;
             mTargetState = MediaPlayerParams.STATE_ERROR;
             mErrorListener.onError(mMediaPlayer, MediaPlayer.MEDIA_ERROR_UNKNOWN, 0);
         } catch (IllegalArgumentException ex) {
-            Log.w(TAG, "Unable to open content: " + mUri, ex);
+//            Log.w(TAG, "Unable to open content: " + mUri, ex);
             mCurrentState = MediaPlayerParams.STATE_ERROR;
             mTargetState = MediaPlayerParams.STATE_ERROR;
             mErrorListener.onError(mMediaPlayer, MediaPlayer.MEDIA_ERROR_UNKNOWN, 0);
@@ -603,7 +629,8 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
     /**
      * add，返回解码器
-     * @return  解码器
+     *
+     * @return 解码器
      */
     public IMediaPlayer getMediaPlayer() {
         return mMediaPlayer;
@@ -994,7 +1021,8 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     /**
      * add
      * 获取中断的进度
-     * @return  进度
+     *
+     * @return 进度
      */
     public int getInterruptPosition() {
         if (mMediaPlayer != null) {
@@ -1125,9 +1153,9 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             case 2:
             default: {
                 IjkMediaPlayer ijkMediaPlayer = null;
-                if (mUri != null) {
+                if (mUri != null || fd != null) {
                     ijkMediaPlayer = new IjkMediaPlayer();
-                    ijkMediaPlayer.native_setLogLevel(IjkMediaPlayer.IJK_LOG_DEBUG);
+//                    ijkMediaPlayer.native_setLogLevel(IjkMediaPlayer.IJK_LOG_DEBUG);
 
                     if (mIsUsingMediaCodec) {
                         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec", 1);
@@ -1165,12 +1193,21 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
                     //倍速变调问题
                     ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "soundtouch", 1);
-//                    //设置加载慢问题
-//                    ijkMediaPlayer.setOption(1, "analyzemaxduration", 100L);
-//                    ijkMediaPlayer.setOption(1, "probesize", 10240L);
-//                    ijkMediaPlayer.setOption(1, "flush_packets", 1L);
-//                    ijkMediaPlayer.setOption(4, "packet-buffering", 0L);
-//                    ijkMediaPlayer.setOption(4, "framedrop", 1L);
+
+                    //重定向导致切换视频报错
+                    ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "dns_cache_clear", 1);
+
+                    //播放rtsp、rtmp处理
+                    if (mUri != null && (mUri.toString().startsWith("rtmp://") || mUri.toString().startsWith("rtsp://"))) {
+                        if (mUri.toString().startsWith("rtsp://"))
+                            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "rtsp_transport", "tcp");
+                        //设置rtsp、rtmp加载慢问题
+                        ijkMediaPlayer.setOption(1, "analyzemaxduration", 100L);
+                        ijkMediaPlayer.setOption(1, "probesize", 40960L);
+                        ijkMediaPlayer.setOption(1, "flush_packets", 1L);
+                        ijkMediaPlayer.setOption(4, "packet-buffering", 0L);
+                        ijkMediaPlayer.setOption(4, "framedrop", 1L);
+                    }
                 }
                 mediaPlayer = ijkMediaPlayer;
             }

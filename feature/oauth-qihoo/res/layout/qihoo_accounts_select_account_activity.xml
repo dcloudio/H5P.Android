@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/qihoo_accounts_bg"
+    android:orientation="vertical" >
+
+    <LinearLayout style="@style/qihoo_accounts_top_title_style" >
+
+        <TextView
+            android:id="@+id/qihoo_accounts_login_top_title"
+            style="@style/qihoo_accounts_top_title_text_style"
+            android:text="@string/qihoo_accounts_login_top_title" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:padding="@dimen/qihoo_accounts_padding" >
+
+        <TextView
+            android:id="@+id/select_account_note"
+            style="@style/qihoo_accounts_note_text_style"
+            android:text="@string/qihoo_account_select_account_title" />
+
+        <ListView
+            android:id="@+id/select_account_list"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:choiceMode="singleChoice"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="@dimen/qihoo_accounts_select_divider_height"
+            android:minHeight="@dimen/qihoo_accounts_select_list_height"
+            android:paddingBottom="@dimen/qihoo_accounts_padding"
+            android:paddingTop="@dimen/qihoo_accounts_padding" >
+        </ListView>
+
+        <Button
+            android:id="@+id/login_other_bt"
+            style="@style/qihoo_accounts_main_btn_style"
+            android:layout_width="fill_parent"
+            android:text="@string/qihoo_account_select_account_loginother" />
+
+        <Button
+            android:id="@+id/register_bt"
+            style="@style/qihoo_accounts_link_btn_style"
+            android:layout_gravity="right"
+            android:text="@string/qihoo_account_select_account_register" />
+    </LinearLayout>
+
+</LinearLayout>

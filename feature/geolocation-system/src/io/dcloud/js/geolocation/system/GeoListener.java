@@ -4,6 +4,7 @@ import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.JSUtil;
+import io.dcloud.common.util.StringUtil;
 
 import java.util.Locale;
 import java.util.Timer;
@@ -124,7 +125,7 @@ public class GeoListener {
 	",coordsType:'%s'" +//坐标类型
 	"}";
 	private String makeJSON(Location pLoc,String coordsType){
-	return String.format(Locale.ENGLISH,RETURN_JSON,
+	return StringUtil.format(RETURN_JSON,
 			pLoc.getLatitude() 
 			,pLoc.getLongitude()
 			,pLoc.getAltitude()

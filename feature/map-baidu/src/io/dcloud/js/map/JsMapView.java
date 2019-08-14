@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.ui.AdaFrameView;
 import io.dcloud.common.adapter.util.Logger;
+import io.dcloud.common.adapter.util.PermissionUtil;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.js.map.adapter.DHMapFrameItem;
@@ -66,71 +67,128 @@ class JsMapView extends JsMapObject implements IFMapDispose{
 		this.id = id;
 	}
 	@Override
-	protected void updateObject(String pStrEvent, JSONArray pJsArgs) {
-		if("centerAndZoom".equals(pStrEvent)){
-			JsMapPoint _mapPoint = JsMapManager.getJsMapManager().getMapPoint(mWebview, JSONUtil.getJSONObject(pJsArgs,0));
-			mMapFrameItem.centerAndZoom(_mapPoint.getMapPoint(), JSONUtil.getString(pJsArgs,1));
-		}else if("setCenter".equals(pStrEvent)){
-			JsMapPoint _mapPoint = JsMapManager.getJsMapManager().getMapPoint(mWebview, JSONUtil.getJSONObject(pJsArgs,0));
-			mMapFrameItem.setCenter(_mapPoint.getMapPoint());
-		}else if("setZoom".equals(pStrEvent)){
-			mMapFrameItem.setZoom(JSONUtil.getString(pJsArgs,0));
-		}else if("reset".equals(pStrEvent)){
-			mMapFrameItem.reset();
-		}else if("show".equals(pStrEvent)){
-			mMapFrameItem.show();
-		}else if("hide".equals(pStrEvent)){
-			mMapFrameItem.hide();
-		}else if("setMapType".equals(pStrEvent)){
-			mMapFrameItem.setMapType(JSONUtil.getString(pJsArgs,0));
-		}else if("setTraffic".equals(pStrEvent)){
-			mMapFrameItem.setTraffic(Boolean.parseBoolean(JSONUtil.getString(pJsArgs,0)));
-		}else if("showUserLocation".equals(pStrEvent)){
-			mMapFrameItem.setShowUserLocation(JSONUtil.getString(pJsArgs,0));
-		}else if("showZoomControls".equals(pStrEvent)){
-			mMapFrameItem.setShowZoomControls(JSONUtil.getString(pJsArgs,0));
-		}else if("addOverlay".equals(pStrEvent)){
-			JsMapObject _jsMapObj = JsMapManager.getJsMapManager().getJsObject(JSONUtil.getString(pJsArgs,0));
-			if(_jsMapObj instanceof IFJsOverlay){
-				mMapFrameItem.addOverlay(((IFJsOverlay) _jsMapObj).getMapOverlay());
-				_jsMapObj.onAddToMapView(mMapFrameItem.getMapView());
+	protected void updateObject(String pStrEvent, final JSONArray pJsArgs) {
+		switch (pStrEvent) {
+			case "centerAndZoom": {
+				JsMapPoint _mapPoint = JsMapManager.getJsMapManager().getMapPoint(mWebview, JSONUtil.getJSONObject(pJsArgs,0));
+				mMapFrameItem.centerAndZoom(_mapPoint.getMapPoint(), JSONUtil.getString(pJsArgs,1));
+				break;
 			}
-		}else if("addRoute".equals(pStrEvent)){
-			JsMapObject _jsMapObj = JsMapManager.getJsMapManager().getJsObject(JSONUtil.getString(pJsArgs,0));
-			if(_jsMapObj instanceof IFJsOverlay){
-				mMapFrameItem.addOverlay(((IFJsOverlay) _jsMapObj).getMapOverlay());
+			case "setCenter": {
+				JsMapPoint _mapPoint = JsMapManager.getJsMapManager().getMapPoint(mWebview, JSONUtil.getJSONObject(pJsArgs,0));
+				mMapFrameItem.setCenter(_mapPoint.getMapPoint());
+				break;
 			}
-		}else if("removeOverlay".equals(pStrEvent)){
-			JsMapObject _jsMapObj = JsMapManager.getJsMapManager().getJsObject(JSONUtil.getString(pJsArgs,0));
-			if(_jsMapObj instanceof IFJsOverlay){
-				mMapFrameItem.removeOverlay(((IFJsOverlay) _jsMapObj).getMapOverlay());
+			case "setZoom": {
+				mMapFrameItem.setZoom(JSONUtil.getString(pJsArgs,0));
+				break;
 			}
-		}else if("getUserLocation".equals(pStrEvent)){
-			String callBackId = JSONUtil.getString(pJsArgs,0);
-			if(pJsArgs.length() > 1) {
-				String uuid = JSONUtil.getString(pJsArgs, 1);
-				IWebview cWebview = JsMapManager.getJsMapManager().findWebviewByUuid(mWebview, uuid);
-				if(cWebview != null) {
-					mMapFrameItem.getUserLocation(cWebview, callBackId);
-					return;
+			case "reset": {
+				mMapFrameItem.reset();
+				break;
+			}
+			case "show": {
+				mMapFrameItem.show();
+				break;
+			}
+			case "hide": {
+				mMapFrameItem.hide();
+				break;
+			}
+			case "setMapType": {
+				mMapFrameItem.setMapType(JSONUtil.getString(pJsArgs,0));
+				break;
+			}
+			case "setTraffic": {
+				mMapFrameItem.setTraffic(Boolean.parseBoolean(JSONUtil.getString(pJsArgs,0)));
+				break;
+			}
+			case "showUserLocation": {
+				PermissionUtil.usePermission(mWebview.getActivity(), mWebview.obtainApp().isStreamApp(), PermissionUtil.PMS_LOCATION, new PermissionUtil.StreamPermissionRequest(mWebview.obtainApp()) {
+					@Override
+					public void onGranted(String streamPerName) {
+						if(PermissionUtil.PMS_LOCATION.equals(streamPerName)) {
+							mMapFrameItem.setShowUserLocation(JSONUtil.getString(pJsArgs,0));
+						}
+					}
+
+					@Override
+					public void onDenied(String streamPerName) {
+					}
+				});
+				break;
+			}
+			case "showZoomControls": {
+				mMapFrameItem.setShowZoomControls(JSONUtil.getString(pJsArgs,0));
+				break;
+			}
+			case "addOverlay": {
+				JsMapObject _jsMapObj = JsMapManager.getJsMapManager().getJsObject(JSONUtil.getString(pJsArgs,0));
+				if(_jsMapObj instanceof IFJsOverlay){
+					mMapFrameItem.addOverlay(((IFJsOverlay) _jsMapObj).getMapOverlay());
+					_jsMapObj.onAddToMapView(mMapFrameItem.getMapView());
 				}
+				break;
 			}
-			mMapFrameItem.getUserLocation(mWebview, callBackId);
-		}else if("clearOverlays".equals(pStrEvent)){
-			mMapFrameItem.clearOverlays();
-		}else if("resize".equals(pStrEvent)){
-			mMapFrameItem.resize(pJsArgs);
-		}else if ("getCurrentCenter".equals(pStrEvent)) {
-			String callBackId = JSONUtil.getString(pJsArgs,0);
-			if(pJsArgs.length() > 1) {
-				String uuid = JSONUtil.getString(pJsArgs, 1);
-				IWebview cWebview = JsMapManager.getJsMapManager().findWebviewByUuid(mWebview, uuid);
-				if(cWebview != null) {
-					mMapFrameItem.getCurrentCenter(cWebview, callBackId);
-					return;
+			case "addRoute": {
+				JsMapObject _jsMapObj = JsMapManager.getJsMapManager().getJsObject(JSONUtil.getString(pJsArgs,0));
+				if(_jsMapObj instanceof IFJsOverlay){
+					mMapFrameItem.addOverlay(((IFJsOverlay) _jsMapObj).getMapOverlay());
 				}
+				break;
 			}
-			mMapFrameItem.getCurrentCenter(mWebview, callBackId);
+			case "removeOverlay": {
+				JsMapObject _jsMapObj = JsMapManager.getJsMapManager().getJsObject(JSONUtil.getString(pJsArgs,0));
+				if(_jsMapObj instanceof IFJsOverlay){
+					mMapFrameItem.removeOverlay(((IFJsOverlay) _jsMapObj).getMapOverlay());
+				}
+				break;
+			}
+			case "getUserLocation": {
+				PermissionUtil.usePermission(mWebview.getActivity(), mWebview.obtainApp().isStreamApp(), PermissionUtil.PMS_LOCATION, new PermissionUtil.StreamPermissionRequest(mWebview.obtainApp()) {
+					@Override
+					public void onGranted(String streamPerName) {
+						if(PermissionUtil.PMS_LOCATION.equals(streamPerName)) {
+							String callBackId = JSONUtil.getString(pJsArgs,0);
+							if(pJsArgs.length() > 1) {
+								String uuid = JSONUtil.getString(pJsArgs, 1);
+								IWebview cWebview = JsMapManager.getJsMapManager().findWebviewByUuid(mWebview, uuid);
+								if(cWebview != null) {
+									mMapFrameItem.getUserLocation(cWebview, callBackId);
+									return;
+								}
+							}
+							mMapFrameItem.getUserLocation(mWebview, callBackId);
+						}
+					}
+
+					@Override
+					public void onDenied(String streamPerName) {
+					}
+				});
+				break;
+			}
+			case "clearOverlays": {
+				mMapFrameItem.clearOverlays();
+				break;
+			}
+			case "resize": {
+				mMapFrameItem.resize(pJsArgs);
+				break;
+			}
+			case "getCurrentCenter": {
+				String callBackId = JSONUtil.getString(pJsArgs,0);
+				if(pJsArgs.length() > 1) {
+					String uuid = JSONUtil.getString(pJsArgs, 1);
+					IWebview cWebview = JsMapManager.getJsMapManager().findWebviewByUuid(mWebview, uuid);
+					if(cWebview != null) {
+						mMapFrameItem.getCurrentCenter(cWebview, callBackId);
+						return;
+					}
+				}
+				mMapFrameItem.getCurrentCenter(mWebview, callBackId);
+				break;
+			}
 		}
 	}
 

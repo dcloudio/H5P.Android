@@ -1,5 +1,9 @@
 package io.dcloud.net;
 
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.MediaStore;
+
 import org.json.JSONObject;
 
 import java.io.File;
@@ -15,6 +19,7 @@ import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 import io.dcloud.common.util.net.NetWork;
 import io.dcloud.common.util.net.RequestData;
 import io.dcloud.common.util.net.UploadMgr;
@@ -108,17 +113,38 @@ public class JsUpload implements IReqListener,IResponseListener{
 	 * Log ID: 1.0 (Log编号 依次递增)
 	 * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2013-3-28 下午1:52:22</pre>
 	 */
-	public boolean addFile(String pPath, JSONObject pOption){
+	public boolean addFile(IWebview pWebViewImpl, String pPath, JSONObject pOption){
 		boolean _ret = false;
 		UploadFile _uploadFile = new UploadFile();
-		File _file = new File(pPath);
 		try {
-			_uploadFile.mFileInputS = new FileInputStream(_file);
-			_uploadFile.mFileSize = _file.length();
-			String _key = pOption.optString("key", _file.getName());
-			_uploadFile.mFilename = pOption.optString("name", _file.getName());
-			_uploadFile.mMimetype = pOption.optString("mime", PdrUtil.getMimeType(pPath));
-			_ret = mUploadNetWork.addFile(_key, _uploadFile);
+			// 适配AndroidQ，"content://"文件（如相册获取）
+			if (pPath.startsWith("content://")) {
+				Uri contentUri = Uri.parse(pPath);
+				Cursor cursor = pWebViewImpl.getContext().getContentResolver().query(contentUri, null, null, null, null);
+				if(cursor != null){
+					InputStream inputStream = pWebViewImpl.getContext().getContentResolver().openInputStream(contentUri);
+					cursor.moveToFirst();
+					int size = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media.SIZE));
+					String name = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME));
+					String type = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.MIME_TYPE));
+					_uploadFile.mFileInputS = (FileInputStream) inputStream;
+					_uploadFile.mFileSize = size;
+					String _key = pOption.optString("key", name);
+					_uploadFile.mFilename = pOption.optString("name", name);
+					_uploadFile.mMimetype = pOption.optString("mime", type);
+					_ret = mUploadNetWork.addFile(_key, _uploadFile);
+					//TO 成功
+					cursor.close();
+				}
+			} else {
+				File _file = new File(pPath);
+				_uploadFile.mFileInputS = new FileInputStream(_file);
+				_uploadFile.mFileSize = _file.length();
+				String _key = pOption.optString("key", _file.getName());
+				_uploadFile.mFilename = pOption.optString("name", _file.getName());
+				_uploadFile.mMimetype = pOption.optString("mime", PdrUtil.getMimeType(pPath));
+				_ret = mUploadNetWork.addFile(_key, _uploadFile);
+			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -148,7 +174,7 @@ public class JsUpload implements IReqListener,IResponseListener{
 	 * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2013-3-28 下午1:53:43</pre>
 	 */
 	public String toJsonUpload(){
-		return String.format("{state:%d,status:%d,uploadedSize:%d,totalSize:%d,headers:%s}", 
+		return StringUtil.format("{state:%d,status:%d,uploadedSize:%d,totalSize:%d,headers:%s}",
 				mState,mUploadNetWork.mStatus,mUploadNetWork.mUploadedSize,mUploadNetWork.mTotalSize, mUploadNetWork.responseHeaders);
 	}
 	
@@ -179,7 +205,7 @@ public class JsUpload implements IReqListener,IResponseListener{
 			UploadMgr.getUploadMgr().removeNetWork(mUploadNetWork);
 			String json = "{state:%d,status:%d,filename:'%s',responseText:%s,headers:%s}";
 			String rt = JSONUtil.toJSONableString(mUploadNetWork.getResponseText());
-			JSUtil.excUploadCallBack(mWebview,String.format(json, mState,mUploadNetWork.mStatus,mUploadNetWork.mUploadingFile.toString(),rt,mUploadNetWork.responseHeaders),mUUID);
+			JSUtil.excUploadCallBack(mWebview,StringUtil.format(json, mState,mUploadNetWork.mStatus,mUploadNetWork.mUploadingFile.toString(),rt,mUploadNetWork.responseHeaders),mUUID);
 		}
 //			try {
 //				String filePath = mFullRootPath + mFileName;

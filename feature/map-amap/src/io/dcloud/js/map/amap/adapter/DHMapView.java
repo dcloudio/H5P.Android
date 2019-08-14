@@ -40,6 +40,7 @@ import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.util.PlatformUtil;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 import io.dcloud.js.map.amap.IFMapDispose;
 import io.dcloud.js.map.amap.JsMapManager;
 import io.dcloud.js.map.amap.MapJsUtil;
@@ -453,7 +454,7 @@ public class DHMapView extends TextureMapView implements IFMapDispose , OnMarker
         String js=null;
         if (PdrUtil.isEmpty(aMapLocation)) {
             String message = DOMException.toString(DOMException.CODE_GEOLOCATION_PROVIDER_ERROR, "geolocation", DOMException.MSG_GEOLOCATION_PROVIDER_ERROR, null);
-            js = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_GEOLOCATION_PROVIDER_ERROR, message);
+            js = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_GEOLOCATION_PROVIDER_ERROR, message);
         }else{
             js = String.format(GET_USER_LOCATION_TEMPLATE, aMapLocation.getErrorCode(), String.format(Locale.ENGLISH,PLUS_MAPS_POINT_TEMPLATE, aMapLocation.getLongitude(),aMapLocation.getLatitude()));
         }

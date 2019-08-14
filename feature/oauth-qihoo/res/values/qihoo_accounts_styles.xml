@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- title样式 -->
+    <style name="qihoo_accounts_top_title_style">
+        <item name="android:background">@drawable/qihoo_accounts_top_background</item>
+        <item name="android:layout_height">@dimen/qihoo_accounts_title_height</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <!-- title字体样式 -->
+    <style name="qihoo_accounts_top_title_text_style">
+        <item name="android:textSize">@dimen/qihoo_accounts_textsize_title</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/qihoo_accounts_white</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">fill_parent</item>
+    </style>
+
+    <!-- title返回键样式 -->
+    <style name="qihoo_accounts_top_title_back_style">
+        <item name="android:gravity">center</item>
+        <item name="android:layout_width">@dimen/qihoo_accounts_title_back_width</item>
+        <item name="android:layout_height">fill_parent</item>
+    </style>
+
+    <!-- 黑色字体信息提示 -->
+    <style name="qihoo_accounts_note_text_style">
+        <item name="android:textSize">@dimen/qihoo_accounts_textsize_normal</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/qihoo_accounts_black</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <!-- 灰色信息提示 -->
+    <style name="qihoo_accounts_tip_text_style">
+        <item name="android:textSize">@dimen/qihoo_accounts_textsize_normal</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/qihoo_accounts_grey</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <!-- 账号样式 -->
+    <style name="qihoo_accounts_account_text_style">
+        <item name="android:textSize">@dimen/qihoo_accounts_textsize_title</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/qihoo_accounts_green</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <!-- 绿色主Button样式 -->
+    <style name="qihoo_accounts_main_btn_style">
+        <item name="android:background">@drawable/qihoo_accounts_btn_main_selector</item>
+        <item name="android:textSize">@dimen/qihoo_accounts_textsize_title</item>
+        <item name="android:layout_height">@dimen/qihoo_accounts_btns_height</item>
+        <item name="android:textColor">@color/qihoo_accounts_white</item>
+        <item name="android:inputType">text</item>
+    </style>
+
+    <!-- 灰色次Button样式 -->
+    <style name="qihoo_accounts_second_btn_style">
+        <item name="android:background">@drawable/qihoo_accounts_btn_second_selector</item>
+        <item name="android:textSize">@dimen/qihoo_accounts_textsize_title</item>
+        <item name="android:layout_height">@dimen/qihoo_accounts_btns_height</item>
+        <item name="android:textColor">@color/qihoo_accounts_black</item>
+        <item name="android:inputType">text</item>
+    </style>
+
+    <!-- 绿色链接Button -->
+    <style name="qihoo_accounts_link_btn_style">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textSize">@dimen/qihoo_accounts_textsize_normal</item>
+        <item name="android:layout_height">@dimen/qihoo_accounts_btns_height</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:textColor">@color/qihoo_accounts_green</item>
+    </style>
+
+    <!-- 显示/隐藏/获取验证码等Button样式 -->
+    <style name="qihoo_accounts_input_show_btn_style">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:background">@drawable/qihoo_accounts_btn_second_selector</item>
+        <item name="android:textSize">@dimen/qihoo_accounts_textsize_normal</item>
+        <item name="android:textColor">@color/qihoo_accounts_black</item>
+        <item name="android:padding">@dimen/qihoo_accounts_show_pwd_margin_left</item>
+    </style>
+
+    <!-- 输入框“删除”Button样式 -->
+    <style name="qihoo_accounts_input_delete_btn_style">
+        <item name="android:background">@drawable/qihoo_accounts_btn_delete</item>
+        <item name="android:layout_width">@dimen/qihoo_accounts_input_box_delete_width</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:padding">@dimen/qihoo_accounts_input_box_delete_left</item>
+    </style>
+
+    <!-- 账号输入框样式 -->
+    <style name="qihoo_accounts_input_text_style">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:gravity">left|center_vertical</item>
+        <item name="android:paddingLeft">@dimen/qihoo_accounts_input_type_style_padding_left</item>
+        <item name="android:paddingRight">@dimen/qihoo_accounts_input_type_style_padding_right</item>
+        <item name="android:background">@null</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:imeOptions">actionNone</item>
+        <item name="android:textSize">@dimen/qihoo_accounts_textsize_normal</item>
+        <item name="android:maxLength">50</item>
+        <item name="android:textColor">@color/qihoo_accounts_black</item>
+    </style>
+
+    <!-- 密码输入框样式 -->
+    <style name="qihoo_accounts_pwd_input_text_style">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:gravity">left|center_vertical</item>
+        <item name="android:paddingLeft">@dimen/qihoo_accounts_input_type_style_padding_left</item>
+        <item name="android:paddingRight">@dimen/qihoo_accounts_input_type_style_padding_right</item>
+        <item name="android:background">@null</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:imeOptions">actionNone</item>
+        <item name="android:textSize">@dimen/qihoo_accounts_textsize_normal</item>
+        <item name="android:maxLength">20</item>
+        <item name="android:inputType">textPassword</item>
+        <item name="android:textColor">@color/qihoo_accounts_black</item>
+    </style>
+
+    <!-- dialog样式 -->
+    <style name="qihoo_accounts_dialog_style" parent="@android:style/Theme.Dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:backgroundDimEnabled">true</item>
+    </style>
+
+    <!-- 对话框“X”样式 -->
+    <style name="qihoo_accounts_dialog_exit_style">
+        <item name="android:gravity">center</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+</resources>

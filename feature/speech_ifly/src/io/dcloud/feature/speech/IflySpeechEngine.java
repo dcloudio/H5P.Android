@@ -2,7 +2,7 @@ package io.dcloud.feature.speech;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.os.Handler;
+import android.os.Build;
 
 import com.iflytek.cloud.InitListener;
 import com.iflytek.cloud.RecognizerResult;
@@ -24,8 +24,10 @@ import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.util.AndroidResources;
 import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.constant.StringConst;
+import io.dcloud.common.util.DialogUtil;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.feature.speech.ifly.R;
 
 public class IflySpeechEngine extends AbsSpeechEngine {
     private static final String TAG = "IflySpeechEngine";
@@ -35,15 +37,29 @@ public class IflySpeechEngine extends AbsSpeechEngine {
 
     public void init(Context context, IWebview pWebview) {
         super.init(context, pWebview);
-        sIflyAppid = AndroidResources.getMetaValue("IFLY_APPKEY");
-        if (!PdrUtil.isEmpty(sIflyAppid)) {
-            SpeechUtility.createUtility(context, SpeechConstant.APPID + "=" + sIflyAppid);
+        if(isApply()) {
+            sIflyAppid = AndroidResources.getMetaValue("IFLY_APPKEY");
+            if (!PdrUtil.isEmpty(sIflyAppid)) {
+                SpeechUtility.createUtility(context, SpeechConstant.APPID + "=" + sIflyAppid);
+            }
+        } else {
+            DialogUtil.showDialog(pWebview.getActivity(), null, context.getString(R.string.sp_ifly_error_tips), new String[]{null});
         }
     }
 
+    public boolean isApply() {
+        if(Build.CPU_ABI.equalsIgnoreCase("x86")) {
+            return false;
+        }
+        return true;
+    }
+
+
     public void startRecognize(JSONObject pOption) {
-        mIsrDialog = new MyRecognizerDialog(mContext, null);
-        mIsrDialog.startRecognize(pOption);
+        if(isApply()) {
+            mIsrDialog = new MyRecognizerDialog(mContext, null);
+            mIsrDialog.startRecognize(pOption);
+        }
     }
 
     public void stopRecognize(boolean isExeOnEnd) {
@@ -52,7 +68,6 @@ public class IflySpeechEngine extends AbsSpeechEngine {
             mIsrDialog = null;
         }
     }
-
 
     class MyRecognizerDialog extends RecognizerDialog {
 

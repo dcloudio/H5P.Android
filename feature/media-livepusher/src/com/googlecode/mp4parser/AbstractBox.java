@@ -33,6 +33,8 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.logging.Logger;
 
+import io.dcloud.common.util.StringUtil;
+
 import static com.googlecode.mp4parser.util.CastUtils.l2i;
 
 /**
@@ -243,7 +245,7 @@ public abstract class AbstractBox implements Box {
             byte v1 = content.get(i);
             byte v2 = bb.get(j);
             if (v1 != v2) {
-                LOG.severe(String.format("%s: buffers differ at %d: %2X/%2X", this.getType(), i, v1, v2));
+                LOG.severe(StringUtil.format("%s: buffers differ at %d: %2X/%2X", this.getType(), i, v1, v2));
                 byte[] b1 = new byte[content.remaining()];
                 byte[] b2 = new byte[bb.remaining()];
                 content.get(b1);

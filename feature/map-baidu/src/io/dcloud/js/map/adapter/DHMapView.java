@@ -38,7 +38,6 @@ import com.baidu.mapapi.map.MapPoi;
 import com.baidu.mapapi.map.MapStatus;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
-import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.Marker;
 import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationConfiguration.LocationMode;
@@ -86,7 +85,7 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
 
 	private ArrayList<String> mMapCallBackWebUuids;
 
-	String mCoorType = "bd09ll";//返回国测局经纬度坐标系：gcj02 返回百度墨卡托坐标系 ：bd09 返回百度经纬度坐标系 ：bd09ll
+	String mCoordType = "bd09ll";//返回国测局经纬度坐标系：gcj02 返回百度墨卡托坐标系 ：bd09 返回百度经纬度坐标系 ：bd09ll
 
 	public DHMapView(Context pContext,IWebview pWebView, LatLng center, int zoom, int mapType, boolean traffic, boolean zoomControls) {
 		flag = "我是编号：" + aaaaaaaaaaa++;
@@ -96,7 +95,7 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
 		String coordType = pWebView.obtainApp().obtainConfigProperty(StringConst.JSONKEY_MAP_COORD_TYPE);
 		if(!TextUtils.isEmpty(coordType) && coordType.equals("gcj02")) {
 			SDKInitializer.setCoordType(CoordType.GCJ02);
-			mCoorType = coordType;
+			mCoordType = coordType;
 		}
 		BaiduMapOptions options = new BaiduMapOptions();
 		MapStatus status = new MapStatus.Builder().target(center).zoom(zoom).build();
@@ -380,16 +379,17 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
 				return;
 			}
 			// LocationMode.FOLLOWING 跟随  LocationMode.NORMAL 普通  LocationMode.COMPASS 罗盘 三种样式 默认为跟随
-			mBaiduMap.setMyLocationConfigeration(new MyLocationConfiguration(
+			mBaiduMap.setMyLocationConfiguration(new MyLocationConfiguration(
 					LocationMode.NORMAL, false, mCurrentMarker));
 			if (mLocClient == null) {
 				createLocClient();
 			}
+			mLocated = false;
 			// 开启定位图层
 			mBaiduMap.setMyLocationEnabled(true);
 			LocationClientOption option = new LocationClientOption();
 			option.setOpenGps(true);// 打开gps
-			option.setCoorType(mCoorType); // 设置坐标类型
+			option.setCoorType(mCoordType); // 设置坐标类型
 			option.setScanSpan(SCAN_SPAN_TIME);
 			mLocClient.setLocOption(option);
 			mLocClient.start();
@@ -421,7 +421,7 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
 		}
 		LocationClientOption option = new LocationClientOption();
 		option.setOpenGps(true);// 打开gps
-		option.setCoorType(mCoorType); // 设置坐标类型
+		option.setCoorType(mCoordType); // 设置坐标类型
 		option.setScanSpan(SCAN_SPAN_TIME);
 		mLocClient.setLocOption(option);
 		if(!mLocClient.isStarted()) {
@@ -464,8 +464,8 @@ public class DHMapView implements IFMapDispose, OnMarkerClickListener, OnMapClic
 						.direction(100).latitude(location.getLatitude())
 						.longitude(location.getLongitude()).build();
 				mBaiduMap.setMyLocationData(locData);
-				if (mLocated) {
-					mLocated = false;
+				if (!mLocated) {
+					mLocated = true;
 					LatLng ll = new LatLng(location.getLatitude(),
 							location.getLongitude());
 					MapStatusUpdate u = MapStatusUpdateFactory.newLatLng(ll);

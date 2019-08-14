@@ -13,6 +13,7 @@ import io.dcloud.common.util.AESHelper;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.NetTool;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 
 public abstract class BaseOAuthService extends BaseModule implements IReflectAble {
     /**
@@ -124,7 +125,7 @@ public abstract class BaseOAuthService extends BaseModule implements IReflectAbl
      */
     public boolean hasGeneralError(IWebview pWebViewImpl, String pCallbackId) {
         if (!hasFullConfigData()) {
-            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
+            String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
             JSUtil.execCallback(pWebViewImpl, pCallbackId, msg, JSUtil.ERROR, true, false);
             return true;
         }

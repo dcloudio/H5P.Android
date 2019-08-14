@@ -1,6 +1,7 @@
 package io.dcloud.js.map.amap;
 
 import io.dcloud.common.DHInterface.IWebview;
+import io.dcloud.js.map.amap.adapter.DHMapView;
 import io.dcloud.js.map.amap.adapter.MapSearch;
 
 import org.json.JSONArray;
@@ -121,7 +122,7 @@ class JsMapSearch extends JsMapObject {
 	}
 	
 	@Override
-	public void onAddToMapView(TextureMapView pMapView) {
+	public void onAddToMapView(DHMapView pMapView) {
 		super.onAddToMapView(pMapView);
 		mMapSearch.setMapView(pMapView);
 	}

@@ -12,6 +12,7 @@ import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 import io.dcloud.feature.barcode.decoding.CaptureActivityHandler;
 import io.dcloud.feature.barcode.view.DetectorViewConfig;
 
@@ -49,7 +50,7 @@ public class BarcodeProxy implements ISysEventListener {
 //		}
 		if("start".equals(pActionName)){
 			if(!PdrUtil.isEmpty(mBarcodeView.errorMsg)){
-				String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BARCODE_ERROR,mBarcodeView.errorMsg);
+				String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BARCODE_ERROR,mBarcodeView.errorMsg);
 				mBarcodeView.runJsCallBack(msg, JSUtil.ERROR, true, true);
 				//JSUtil.execCallback(pWebViewImpl, mBarcodeView.mCallbackId,msg , JSUtil.ERROR, true, true);
 			}else{
@@ -135,7 +136,7 @@ public class BarcodeProxy implements ISysEventListener {
 				 message = String.format(message, result.getBarcodeFormat().toString(),JSONUtil.toJSONableString(result.getText()),path);
 				 JSUtil.execCallback(pWebViewImpl, callbackId, message, JSUtil.OK, true, false);
 			}else{
-				String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BARCODE_ERROR,DOMException.MSG_BARCODE);
+				String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BARCODE_ERROR,DOMException.MSG_BARCODE);
 				JSUtil.execCallback(pWebViewImpl, callbackId,msg , JSUtil.ERROR, true, false);
 			}
 		}else if("close".equals(pActionName)){

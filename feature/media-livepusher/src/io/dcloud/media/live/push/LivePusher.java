@@ -44,11 +44,13 @@ import io.dcloud.common.DHInterface.IApp;
 import io.dcloud.common.DHInterface.IFrameView;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.ui.AdaFrameItem;
+import io.dcloud.common.adapter.ui.AdaUniWebView;
 import io.dcloud.common.adapter.util.ViewRect;
 import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 import io.dcloud.media.live.LivePusherStateListener;
 
 public class LivePusher extends AdaFrameItem implements  DcUpYunStateListener{
@@ -677,7 +679,7 @@ public class LivePusher extends AdaFrameItem implements  DcUpYunStateListener{
             public void run() {
                 Bitmap finalBitmap  = rotateBitmap(bitmap);
                 String bitmapPath = saveBitmap(finalBitmap, filepath);
-                String resultMessage = String.format("{width:\"%d\",height:\"%d\",tempImagePath:\"%s\"}", finalBitmap.getWidth(), finalBitmap.getHeight(),bitmapPath);
+                String resultMessage = StringUtil.format("{width:\"%d\",height:\"%d\",tempImagePath:\"%s\"}", finalBitmap.getWidth(), finalBitmap.getHeight(),bitmapPath);
                 JSUtil.execCallback(pWebView, callBackID, resultMessage, JSUtil.OK, true, false);
                 bitmap.recycle();
                 finalBitmap.recycle();
@@ -773,7 +775,7 @@ public class LivePusher extends AdaFrameItem implements  DcUpYunStateListener{
         }
     }
 
-    protected static final String EVENT_TEMPLATE = "window.__Media_Live__Push__.execCallback_LivePush('%s', %s,'%s');";
+    protected static String EVENT_TEMPLATE = "window.__Media_Live__Push__.execCallback_LivePush('%s', %s,'%s');";
     protected static final String EVENT_RESULT_TEMPLATE = "{code:'%d',message:'%s'}";
     @Override
     public void onRtmpVideoStreaming(String msg) {
@@ -794,7 +796,7 @@ public class LivePusher extends AdaFrameItem implements  DcUpYunStateListener{
     @Override
     public void onRtmpStopped(String msg) {
 //        if (null != eventListenerWebview){
-            String resultStr = String.format(EVENT_RESULT_TEMPLATE, 1001, msg);
+            String resultStr = StringUtil.format(EVENT_RESULT_TEMPLATE, 1001, msg);
 //            String _json = String.format(EVENT_TEMPLATE,  "statechange",resultStr);
 //            eventListenerWebview.executeScript(_json);
             statusEventListener("statechange",resultStr);
@@ -837,7 +839,7 @@ public class LivePusher extends AdaFrameItem implements  DcUpYunStateListener{
     @Override
     public void onRtmpConnecting(String msg) {
 //        if (null != eventListenerWebview){
-            String resultStr = String.format(EVENT_RESULT_TEMPLATE, 1001, msg);
+            String resultStr = StringUtil.format(EVENT_RESULT_TEMPLATE, 1001, msg);
 //            String _json = String.format(EVENT_TEMPLATE, "statechange",resultStr);
 //            eventListenerWebview.executeScript(_json);
             statusEventListener("statechange",resultStr);
@@ -848,7 +850,7 @@ public class LivePusher extends AdaFrameItem implements  DcUpYunStateListener{
     @Override
     public void onRtmpConnected(String msg) {
 //        if (null != eventListenerWebview){
-            String resultStr = String.format(EVENT_RESULT_TEMPLATE, 1002, msg);
+            String resultStr = StringUtil.format(EVENT_RESULT_TEMPLATE, 1002, msg);
 //            String _json = String.format(EVENT_TEMPLATE, "statechange", resultStr);
 //            eventListenerWebview.executeScript(_json);
             statusEventListener("statechange",resultStr);
@@ -864,7 +866,7 @@ public class LivePusher extends AdaFrameItem implements  DcUpYunStateListener{
     @Override
     public void onRtmpDisconnected(String msg) {
 //        if (null != eventListenerWebview){
-            String resultStr = String.format(EVENT_RESULT_TEMPLATE, 3004, msg);
+            String resultStr = StringUtil.format(EVENT_RESULT_TEMPLATE, 3004, msg);
 //            String _json = String.format(EVENT_TEMPLATE,  "statechange", resultStr);
 //            eventListenerWebview.executeScript(_json);
             statusEventListener("statechange",resultStr);
@@ -879,7 +881,7 @@ public class LivePusher extends AdaFrameItem implements  DcUpYunStateListener{
     public void onRtmpOutputFps(double fps) {
 //        if (null != eventListenerWebview){
             curFps = fps;
-            String message = String.format("{fps:%.0f,bitrate:%d,totalsize:%d}",curFps, curBitrate, curTotalSize);
+            String message = StringUtil.format("{fps:%.0f,bitrate:%d,totalsize:%d}",curFps, curBitrate, curTotalSize);
             statusEventListener("netstatus",message);
 //        }
     }
@@ -888,6 +890,11 @@ public class LivePusher extends AdaFrameItem implements  DcUpYunStateListener{
         if (eventCallBacks.containsKey(event)){
             HashMap<String,IWebview> callBacks = eventCallBacks.get(event);
             for (String key : callBacks.keySet()) {
+                if (callBacks.get(key) instanceof AdaUniWebView) {
+                    EVENT_TEMPLATE = "__Media_Live__Push__.execCallback_LivePush('%s', %s,'%s');";
+                } else {
+                    EVENT_TEMPLATE = "window.__Media_Live__Push__.execCallback_LivePush('%s', %s,'%s');";
+                }
                 String _json = String.format(EVENT_TEMPLATE, event, message,key);
                 callBacks.get(key).executeScript(_json);
             }
@@ -901,7 +908,7 @@ public class LivePusher extends AdaFrameItem implements  DcUpYunStateListener{
             curBitrate = bitrate;
             curTotalSize = totalSize;
 
-            String message = String.format("{fps:%.0f,bitrate:%d,totalsize:%d}",curFps, bitrate, totalSize);
+            String message = StringUtil.format("{fps:%.0f,bitrate:%d,totalsize:%d}",curFps, bitrate, totalSize);
             statusEventListener("netstatus",message);
 
 //        }
@@ -910,7 +917,7 @@ public class LivePusher extends AdaFrameItem implements  DcUpYunStateListener{
     @Override
     public void onNetWorkError(Exception e, int tag) {
 //        if (null != eventListenerWebview){
-            String resultStr = String.format(EVENT_RESULT_TEMPLATE, 1102, e.toString());
+            String resultStr = StringUtil.format(EVENT_RESULT_TEMPLATE, 1102, e.toString());
 //            String _json = String.format(EVENT_TEMPLATE,  "error", resultStr);
 //            eventListenerWebview.executeScript(_json);
             statusEventListener("error",resultStr);

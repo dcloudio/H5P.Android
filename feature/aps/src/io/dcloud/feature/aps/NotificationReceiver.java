@@ -123,13 +123,13 @@ public class NotificationReceiver extends BroadcastReceiver {
 				if(bitmap != null) {
 					builder.setLargeIcon(bitmap);
 				}
-				int id_small = RInformation.getInt("drawable","push_small");
+				int id_small = RInformation.getInt(context,"drawable","push_small");
 				if(id_small <= 0){
 					builder.setSmallIcon(context.getApplicationInfo().icon); //设置图标
 				}else{
 					builder.setSmallIcon(id_small); //设置图标
 				}
-                int id = RInformation.getInt("drawable","push");
+                int id = RInformation.getInt(context,"drawable","push");
 				if(bitmap == null) {
 					Bitmap largeBitmap;
 					if(id <= 0){

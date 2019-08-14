@@ -1,0 +1,55 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        versionCode 1
+        versionName '1.0'
+    }
+
+//    packageBuildConfig(false)     // deprecated
+
+    lintOptions {
+        abortOnError false
+    }
+
+    buildTypes {
+        release {
+            zipAlignEnabled true
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile './AndroidManifest.xml'
+            assets.srcDirs = [
+                    './assets'
+            ]
+            jniLibs.srcDirs = [
+                    './libs']
+            java.srcDirs = ['./src'
+            ]
+            res.srcDirs = ['./res'
+            ]
+        }
+    }
+
+}
+
+dependencies {
+    compileOnly fileTree(include: ['*.aar'], dir: './libs')
+    compileOnly project(':lib.5plus.base')
+    compileOnly files('libs/alipayutdid.jar')
+}
+
+
+project.beforeEvaluate { // build.gradle解析前
+}
+
+project.afterEvaluate { // build.gradle解析后、task之前
+    generateReleaseBuildConfig.enabled = false
+}
+

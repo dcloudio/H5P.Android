@@ -67,7 +67,7 @@ public class MapPolygonProxy {
 	public Polygon getPolygon() {
 		return mMapPolygonImpl;
 	}
-	public void initMapPolygon(TextureMapView mapview){
+	public void initMapPolygon(DHMapView mapview){
 		mMapPolygonImpl = mapview.getMap().addPolygon(getPolygonOptions());
 	}
 	

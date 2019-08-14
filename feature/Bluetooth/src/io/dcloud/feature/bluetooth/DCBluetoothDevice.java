@@ -89,6 +89,13 @@ public class DCBluetoothDevice {
 
     }
 
+    static byte[] concat(byte[] a, byte[] b) {
+        byte[] c= new byte[a.length+b.length];
+        System.arraycopy(a, 0, c, 0, a.length);
+        System.arraycopy(b, 0, c, a.length, b.length);
+        return c;
+    }
+
     public static String bytesToHexString(byte[] bArray) {
         StringBuffer sb = new StringBuffer(bArray.length);
         String sTemp;
@@ -188,8 +195,9 @@ public class DCBluetoothDevice {
                         // manufacturer ids in little endian.
                         int manufacturerId = ((scanRecord[currentPos + 1] & 0xFF) << 8) +
                                 (scanRecord[currentPos] & 0xFF);
-                        byte[] manufacturerDataBytes = extractBytes(scanRecord, currentPos + 2,
-                                dataLength - 2);
+                        // 安卓默认将前两个字节加起来做key
+                        byte[] manufacturerDataBytes = extractBytes(scanRecord, currentPos,
+                                dataLength);
                         manufacturerData.put(manufacturerId, manufacturerDataBytes);
                         break;
                     default:
@@ -213,7 +221,12 @@ public class DCBluetoothDevice {
             setAdvertisServiceUUIDs(new JSONArray());
         }
         if (manufacturerData.size() > 0) {
-            setAdvertisData(bytesToHexString(manufacturerData.valueAt(0)));
+            byte[] all = new byte[]{};
+            for (int i = 0;i<manufacturerData.size();i++) {
+                if (manufacturerData.valueAt(i) != null)
+                    all = concat(all,manufacturerData.valueAt(i));
+            }
+            setAdvertisData(bytesToHexString(all));
         }
 
     }
@@ -273,7 +286,7 @@ public class DCBluetoothDevice {
         JSONObject object = new JSONObject();
         if (null != map)
             for (ParcelUuid key : map.keySet()) {
-                object.put(key.toString(), bytesToHexString(map.get(key)));
+                object.put(key.toString().toUpperCase(), bytesToHexString(map.get(key)));
             }
         if (object.length() <= 0) {
             return null;
@@ -285,7 +298,7 @@ public class DCBluetoothDevice {
         JSONArray array = new JSONArray();
         if (list != null) {
             for (Object object : list) {
-                array.put(object.toString());
+                array.put(object.toString().toUpperCase());
             }
         }
         return array;

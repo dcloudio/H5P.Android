@@ -13,6 +13,7 @@ import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 import io.dcloud.share.AbsWebviewClient;
 import io.dcloud.share.IFShareApi;
 import io.dcloud.share.ShareAuthorizeView;
@@ -238,7 +239,7 @@ public class TencentWeiboApiManager implements IFShareApi {
             Logger.e(TAG, "authorize: REDIRECT_URL"+REDIRECT_URL );
         }
         if(PdrUtil.isEmpty(APP_KEY)||PdrUtil.isEmpty(APP_SECRET)||PdrUtil.isEmpty(REDIRECT_URL)){
-            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
+            String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
             JSUtil.execCallback(pWebViewImpl, pCallbackId, msg, JSUtil.ERROR, true, false);
             return;
         }
@@ -334,7 +335,7 @@ public class TencentWeiboApiManager implements IFShareApi {
 				String msg = String.format(AUTHORIZE_TEMPLATE, true, mAccessToken);
 				JSUtil.execCallback(pWebViewImpl, mAuthorizeCallbackId, msg, JSUtil.OK, true, false);
 			} else {
-				String msg = String.format(DOMException.JSON_ERROR_INFO, errorCode, errorMsg);
+				String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, errorCode, errorMsg);
 				JSUtil.execCallback(pWebViewImpl, mAuthorizeCallbackId, msg, JSUtil.ERROR, true, false);
 			}
 			mAuthorizeCallbackId = null;

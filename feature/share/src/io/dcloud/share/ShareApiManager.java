@@ -1,8 +1,13 @@
 package io.dcloud.share;
 
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources.NotFoundException;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.view.View;
 
@@ -25,6 +30,7 @@ import io.dcloud.common.adapter.util.PlatformUtil;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 
 /**
  * <p>Description:分享api管理类</p>
@@ -208,7 +214,13 @@ public class ShareApiManager {
                 for (int i = 0; i < _pictures.length(); i++) {
                     String pic = _pictures.optString(i);
                     pic = pWebViewImpl.obtainApp().convert2AbsFullPath(pWebViewImpl.obtainFullUrl(), pic);
-                    localArrayList.add(Uri.fromFile(new File(pic)));
+                    Uri imageUri;
+                    if(Build.VERSION.SDK_INT >=24) {
+                        imageUri = getImageContentUri(pWebViewImpl.getContext(), new File(pic));
+                    } else {
+                        imageUri = Uri.fromFile(new File(pic));
+                    }
+                    localArrayList.add(imageUri);
                 }
                 intent = setSysShareIntent(_content, _title, localArrayList);
 
@@ -218,7 +230,7 @@ public class ShareApiManager {
             pWebViewImpl.getActivity().startActivity(Intent.createChooser(intent, "系统分享"));
             JSUtil.execCallback(pWebViewImpl, pCallbackId, "", JSUtil.OK, false, false);
         } catch (Exception e) {
-            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_UNKNOWN_ERROR, DOMException.MSG_UNKNOWN_ERROR);
+            String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_UNKNOWN_ERROR, DOMException.MSG_UNKNOWN_ERROR);
             JSUtil.execCallback(pWebViewImpl, pCallbackId, msg, JSUtil.ERROR, true, false);
         }
     }
@@ -248,6 +260,32 @@ public class ShareApiManager {
             intent.setType("text/plain");
         }
         return intent;
+    }
+
+    public Uri getImageContentUri(Context context, File imageFile) {
+        String filePath = imageFile.getAbsolutePath();
+        Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                new String[] { MediaStore.Images.Media._ID }, MediaStore.Images.Media.DATA + "=? ",
+                new String[] { filePath }, null);
+        Uri uri = null;
+
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                int id = cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID));
+                Uri baseUri = Uri.parse("content://media/external/images/media");
+                uri = Uri.withAppendedPath(baseUri, "" + id);
+            }
+
+            cursor.close();
+        }
+
+        if (uri == null) {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.DATA, filePath);
+            uri = context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+        }
+
+        return uri;
     }
     /**
      * 释放资源

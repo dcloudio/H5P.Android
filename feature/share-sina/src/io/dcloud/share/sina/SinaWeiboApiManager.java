@@ -34,6 +34,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -52,6 +53,7 @@ import io.dcloud.common.util.JSONUtil;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.NetTool;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 import io.dcloud.common.util.ThreadPool;
 import io.dcloud.share.IFShareApi;
 
@@ -153,7 +155,7 @@ public class SinaWeiboApiManager implements IFShareApi {
             if (suc) {
                 JSUtil.execCallback(pWebViewImpl, SEND_CALLBACKID, "", 1, false, false);
             } else {
-                String errorMsg = String.format(DOMException.JSON_ERROR_INFO, errorCode, msg);
+                String errorMsg = StringUtil.format(DOMException.JSON_ERROR_INFO, errorCode, msg);
                 JSUtil.execCallback(pWebViewImpl, SEND_CALLBACKID, errorMsg, JSUtil.ERROR, true, false);
             }
             SEND_CALLBACKID = null;
@@ -423,7 +425,7 @@ public class SinaWeiboApiManager implements IFShareApi {
             REDIRECT_URL = jsonOptions.optString(KEY_REDIRECT_URI, REDIRECT_URL);
         }
         if( TextUtils.isEmpty(APP_KEY)||TextUtils.isEmpty(REDIRECT_URL)) {
-            String msg = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
+            String msg = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_BUSINESS_PARAMETER_HAS_NOT, DOMException.toString(DOMException.MSG_BUSINESS_PARAMETER_HAS_NOT));
             JSUtil.execCallback(pWebViewImpl, pCallbackId, msg, JSUtil.ERROR, true, false);
             return;
         }
@@ -497,7 +499,7 @@ public class SinaWeiboApiManager implements IFShareApi {
                 if (suc) {
                     JSUtil.execCallback(mWebview, tAuthorizeCallbackId, getJsonObject(mWebview), JSUtil.OK, true, false);
                 } else {
-                    String errorMsg = String.format(DOMException.JSON_ERROR_INFO, errorCode, msg);
+                    String errorMsg = StringUtil.format(DOMException.JSON_ERROR_INFO, errorCode, msg);
                     JSUtil.execCallback(mWebview, tAuthorizeCallbackId, errorMsg, JSUtil.ERROR, true, false);
                 }
                 tAuthorizeCallbackId = null;
@@ -605,7 +607,7 @@ public class SinaWeiboApiManager implements IFShareApi {
         } else if(!TextUtils.isEmpty(type) && type.equals("web")) {
             weiboMessage.imageObject = getImageObject( pWebViewImpl,pShareMsg);
         } else if(!TextUtils.isEmpty(type)) {
-            String errorMsg = String.format(DOMException.JSON_ERROR_INFO, -100, "type参数无法正确识别，请按规范范围填写");
+            String errorMsg = StringUtil.format(DOMException.JSON_ERROR_INFO, -100, "type参数无法正确识别，请按规范范围填写");
             JSUtil.execCallback(pWebViewImpl, tAuthorizeCallbackId, errorMsg, JSUtil.ERROR, true, false);
         } else {
             //weiboMessage.textObject = getTextObj(pShareMsg);
@@ -677,7 +679,14 @@ public class SinaWeiboApiManager implements IFShareApi {
 //                    }.start();
                 } else {
                     file = pWebViewImpl.obtainFrameView().obtainApp().convert2LocalFullPath(pWebViewImpl.obtainFullUrl(), file);
-                    Bitmap bitmap = BitmapFactory.decodeFile(file);
+                    Bitmap bitmap;
+                    // 适配AndroidQ，沙盒外文件皆以"content://"开头
+                    if (file.startsWith("content://")) {
+                        InputStream inputStream = pWebViewImpl.getContext().getContentResolver().openInputStream(Uri.parse(file));
+                        bitmap = BitmapFactory.decodeStream(inputStream);
+                    } else {
+                        bitmap = BitmapFactory.decodeFile(file);
+                    }
                     imageObject.setImageObject(bitmap);
                 }
             }
@@ -698,7 +707,15 @@ public class SinaWeiboApiManager implements IFShareApi {
 //                    }.start();
                 } else {
                     thumb = pWebViewImpl.obtainFrameView().obtainApp().convert2LocalFullPath(pWebViewImpl.obtainFullUrl(), thumb);
-                    Bitmap bitmap = BitmapFactory.decodeFile(thumb);
+//                    Bitmap bitmap = BitmapFactory.decodeFile(thumb);
+                    Bitmap bitmap;
+                    // 适配AndroidQ，沙盒外文件皆以"content://"开头
+                    if (file.startsWith("content://")) {
+                        InputStream inputStream = pWebViewImpl.getContext().getContentResolver().openInputStream(Uri.parse(thumb));
+                        bitmap = BitmapFactory.decodeStream(inputStream);
+                    } else {
+                        bitmap = BitmapFactory.decodeFile(thumb);
+                    }
                     imageObject.setThumbImage(bitmap);
                 }
             }

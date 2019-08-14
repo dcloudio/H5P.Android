@@ -424,6 +424,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 			removeMapFrameItem(mContainerWebview);
 		}
 		mContainerWebview = frameView.obtainWebView();
+		//addToFrameItem(mOptions);
 		Message m = Message.obtain();
 		m.what = MSG_APPEND;
 		m.obj = mOptions;
@@ -618,7 +619,7 @@ public class DHMapFrameItem extends AdaFrameItem implements IFMapDispose,ISysEve
 			mContainerWebview.obtainFrameView().addFrameItem(DHMapFrameItem.this, _lp);
 		}else {//默认为"static",也可能为其它非法字符串
 			if(DeviceInfo.sDeviceSdkVer >= 11){//使用系统默认View硬件加速，可能引起闪屏，LAYER_TYPE_HARDWARE无效
-				mContainerWebview.obtainWebview().setLayerType(View.LAYER_TYPE_NONE, null);
+				mContainerWebview.obtainWindowView().setLayerType(View.LAYER_TYPE_NONE, null);
 			}
 			mContainerWebview.addFrameItem(DHMapFrameItem.this,_lp);
 		}

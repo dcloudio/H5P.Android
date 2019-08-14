@@ -7,6 +7,7 @@ import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.constant.StringConst;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
+import io.dcloud.common.util.StringUtil;
 import io.dcloud.js.geolocation.GeoManagerBase;
 
 
@@ -59,7 +60,7 @@ public class LocalGeoManager extends GeoManagerBase{
 				if(iswgs84){
 					getCurrentLocation(pWebViewImpl, pJsArgs[0], _enableHighAccuracy, _maximumAge);
 				}else{
-					String _json = String.format(DOMException.JSON_ERROR_INFO,DOMException.CODE_GEOLOCATION_PROVIDER_ERROR,"only support wgs84");
+					String _json = StringUtil.format(DOMException.JSON_ERROR_INFO,DOMException.CODE_GEOLOCATION_PROVIDER_ERROR,"only support wgs84");
 					JSUtil.execCallback(pWebViewImpl, pJsArgs[0], _json, JSUtil.ERROR, true, false);
 				}
 			}
@@ -89,7 +90,7 @@ public class LocalGeoManager extends GeoManagerBase{
 				if(iswgs84){
 					start(pWebViewImpl, pJsArgs[0], pJsArgs[1], _enableHighAccuracy, timeout, interval);
 				}else{
-					String _json = String.format(DOMException.JSON_ERROR_INFO,DOMException.CODE_GEOLOCATION_PROVIDER_ERROR,"only support wgs84");
+					String _json = StringUtil.format(DOMException.JSON_ERROR_INFO,DOMException.CODE_GEOLOCATION_PROVIDER_ERROR,"only support wgs84");
 					JSUtil.execCallback(pWebViewImpl, pJsArgs[0], _json, JSUtil.ERROR, true, false);
 				}
 			}

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 手机找回密码第三步 -->
+<com.qihoo360.accounts.ui.v.FindPwdByMobileSavePwdView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/findpwd_by_mobile_savePwd"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/qihoo_accounts_bg"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:padding="@dimen/qihoo_accounts_padding" >
+
+        <!-- 输入新密码 -->
+
+        <LinearLayout
+            android:id="@+id/findpwd_by_mobile_savePwd_pwd"
+            android:layout_width="fill_parent"
+            android:layout_height="@dimen/qihoo_accounts_input_box_height"
+            android:layout_marginTop="@dimen/qihoo_accounts_input_boxs_margin"
+            android:gravity="center_vertical"
+            android:orientation="horizontal" >
+
+            <RelativeLayout
+                android:id="@+id/findpwd_by_mobile_savePwd_psw_layout"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:background="@drawable/qihoo_accounts_input_border"
+                android:orientation="horizontal" >
+
+                <Button
+                    android:id="@+id/findpwd_by_mobile_savePwd_delete_password"
+                    style="@style/qihoo_accounts_input_delete_btn_style"
+                    android:layout_alignParentRight="true"
+                    android:visibility="gone" />
+
+                <EditText
+                    android:id="@+id/findpwd_by_mobile_savePwd_passwd_input"
+                    style="@style/qihoo_accounts_pwd_input_text_style"
+                    android:layout_toLeftOf="@id/findpwd_by_mobile_savePwd_delete_password"
+                    android:hint="@string/qihoo_accounts_findpwd_by_mobile_hint" />
+            </RelativeLayout>
+
+            <Button
+                android:id="@+id/findpwd_by_mobile_savePwd_show_password"
+                style="@style/qihoo_accounts_input_show_btn_style"
+                android:layout_marginLeft="@dimen/qihoo_accounts_show_pwd_margin_left"
+                android:text="@string/qihoo_accounts_hide_password" />
+        </LinearLayout>
+
+        <!-- 保存新密码 -->
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/qihoo_accounts_input_boxs_margin"
+            android:orientation="horizontal" >
+
+            <Button
+                android:id="@+id/findpwd_by_mobile_savePwd_click"
+                style="@style/qihoo_accounts_main_btn_style"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="@string/qihoo_accounts_findpwd_by_mobile_save" />
+        </LinearLayout>
+    </LinearLayout>
+
+</com.qihoo360.accounts.ui.v.FindPwdByMobileSavePwdView>

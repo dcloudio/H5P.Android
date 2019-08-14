@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="qihoo_accounts_white">#ffffff</color>
+    <color name="qihoo_accounts_black">#41434a</color>
+    <color name="qihoo_accounts_grey">#a1a9ae</color>
+    <color name="qihoo_accounts_green">#03a9f4</color>
+    <!-- <color name="qihoo_accounts_green">#4cb700</color> -->
+    <color name="qihoo_accounts_bg">#f0f0f0</color>
+    
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/icon_solid">
+        <shape android:shape="oval">
+            <stroke
+                android:width="1px"
+                android:color="#33000000" />
+            <solid android:color="#ffffff" />
+            <size
+                android:width="36dp"
+                android:height="36dp" />
+        </shape>
+    </item>
+    <item android:id="@+id/icon">
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/common_toobar_icon_back" />
+    </item>
+
+</layer-list>

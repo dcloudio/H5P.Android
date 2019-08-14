@@ -1,0 +1,7 @@
+<manifest package="io.dcloud.feature.oauth.sina"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <meta-data android:value="${plus.sina.redirect_uri}" android:name="SINA_REDIRECT_URI"/>
+        <meta-data android:value="_${plus.sina.appkey}" android:name="SINA_APPKEY"/>
+    </application>
+</manifest>

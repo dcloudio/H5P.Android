@@ -160,7 +160,7 @@ public class CameraFeatureImpl implements IFeature{
 											}
 											String backPath = _app.convert2RelPath(savePath);
 											JSUtil.execCallback(pWebViewImpl, pCallbackId, backPath, JSUtil.OK, false, false);
-										}else{
+                                        } else{
 											JSUtil.execCallback(pWebViewImpl, pCallbackId, null, JSUtil.ERROR, false, false);
 										}
 										_app.unregisterSysEventListener(this, pEventType);
@@ -170,8 +170,19 @@ public class CameraFeatureImpl implements IFeature{
 							}
 						}, SysEventType.onActivityResult);
 						Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-						Uri _uri = Uri.fromFile(destFile);
-						intent.putExtra(MediaStore.EXTRA_OUTPUT, _uri);
+						if(_option.videoMaximumDuration() != 0) {
+							intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, _option.videoMaximumDuration());
+						}
+						// 部分手机会出现以下问题
+						// 添加以下两行，录制的视频直接保存到_uri地址中，camera录制完视频点击播放时会调用onActivityResult的方法，resultCode=0，与取消录制resultCode相同，不便处理
+//						Uri _uri = Uri.fromFile(destFile);
+//						intent.putExtra(MediaStore.EXTRA_OUTPUT, _uri);
+						// android Q由于存储权限管理严格，无法通过File转移到doc文件下，所以需直接设置uri
+						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+							// 添加以下两行，录制的视频直接保存到_uri地址中，camera录制完视频点击播放时会调用onActivityResult的方法，resultCode=0，与取消录制resultCode相同，不便处理
+							Uri _uri = Uri.fromFile(destFile);
+							intent.putExtra(MediaStore.EXTRA_OUTPUT, _uri);
+						}
 						pWebViewImpl.getActivity().startActivityForResult(intent, CameraManager.VIDEO_CAPTURE);
 					}catch(Exception e){
 						String msg = DOMException.toJSON(DOMException.CODE_CAMERA_ERROR,e.getMessage());

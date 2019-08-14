@@ -1,0 +1,179 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".MainActivity" >
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="17dp"
+        android:orientation="vertical" >
+
+          <LinearLayout
+            android:id="@+id/llt_login_user"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="visible"  >
+
+            <TextView
+                android:id="@+id/textView_status_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="已登录帐号: " />
+
+            <TextView
+                android:id="@+id/textView_login_user"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="15dp"
+                android:textColor="@color/qihoo_accounts_green"
+                android:text="" />
+
+        </LinearLayout>
+        
+      <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="vertical" >
+ 
+             <TextView  
+			     android:layout_width="fill_parent" 
+			     android:layout_height="wrap_content" 
+			     android:text="请选择支持的手机注册类型："
+			     android:layout_marginTop="5dp"
+			     />
+
+             <RadioGroup
+		        android:id="@+id/radioGroup_mobile"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:orientation="horizontal"
+		        
+		         >    
+                <RadioButton
+                    android:id="@+id/radioButton_down"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="下行" />
+
+                <RadioButton
+                    android:id="@+id/radioButton_up"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="上行(不支持双卡)" />
+                
+            </RadioGroup>
+			
+              <TextView  
+			     android:layout_width="fill_parent" 
+			     android:layout_height="wrap_content" 
+			     android:text="请选择支持的邮箱注册类型："
+			     android:layout_marginTop="5dp"
+			     />
+              
+             <RadioGroup
+		        android:id="@+id/radioGroup_mail"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:orientation="horizontal"
+		         >    
+
+                   <RadioButton
+                    android:id="@+id/radioButton_active"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="验证" />
+
+                <RadioButton
+                    android:id="@+id/radioButton_no_active"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="非验证" />
+
+           
+                  <RadioButton
+                    android:id="@+id/radioButton_disable"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="不支持" />
+                  
+            </RadioGroup>
+             
+             
+               <TextView  
+			     android:layout_width="fill_parent" 
+			     android:layout_height="wrap_content" 
+			     android:text="请选择你的登入方式："
+			     android:layout_marginTop="5dp"
+			     />
+
+             <RadioGroup
+		        android:id="@+id/radioGroup_login"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:orientation="vertical"
+		        
+		         >    
+		         
+                 <RadioButton
+                    android:id="@+id/radioButton_common"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="普通方式登录" />
+                 
+                <RadioButton
+                    android:id="@+id/radioButton_sso"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="sso方式登录" />
+            </RadioGroup>
+            
+
+             
+            
+            <Button
+                android:id="@+id/button_login"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                style="@style/qihoo_accounts_main_btn_style"
+                android:text="登录" />
+        
+                
+             <Button
+                android:id="@+id/button_logout"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                style="@style/qihoo_accounts_main_btn_style"
+                android:text="退出" />
+            
+            <Button
+                android:id="@+id/button_register"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                style="@style/qihoo_accounts_main_btn_style"
+                android:text="注册" />
+            
+          <Button
+                android:id="@+id/button_change_pwd"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                style="@style/qihoo_accounts_main_btn_style"
+                android:text="修改密码" />
+        
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>

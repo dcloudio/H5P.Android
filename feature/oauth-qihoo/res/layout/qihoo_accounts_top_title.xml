@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- title -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/qihoo_accounts_top_title_style" >
+
+    <TextView
+        android:id="@+id/qihoo_accounts_top_title"
+        style="@style/qihoo_accounts_top_title_text_style"
+        android:text="@string/qihoo_accounts_register_top_title" />
+
+    <Button
+        android:id="@+id/qihoo_accounts_top_back"
+        style="@style/qihoo_accounts_top_title_back_style"
+        android:layout_alignParentLeft="true"
+        android:background="@drawable/qihoo_accounts_btn_top_back_selector" />
+
+</RelativeLayout>

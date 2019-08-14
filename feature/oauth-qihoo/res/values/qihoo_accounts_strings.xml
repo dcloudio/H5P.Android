@@ -1,0 +1,141 @@
+<resources>
+    <!-- 登录、注册公用 -->   
+    <string name="qihoo_accounts_image_captcha_hint">Enter the verification code</string>
+    <string name="qihoo_accounts_show_password">Show</string>
+    <string name="qihoo_accounts_hide_password">Hide</string>
+    <string name="qihoo_accounts_auto_read_license"></string>
+    <string name="qihoo_accounts_webview_findpwd">Find Password</string>
+    <string name="qihoo_accounts_webview_lisence">Terms and Privacy</string>
+    <string name="qihoo_accounts_webview_chpwd">Change Password</string>
+    <string name="qihoo_accounts_webview_bindmobile">Bind Mobile</string>
+    <string name="qihoo_accounts_webview_close">Close</string>
+    
+    <!-- 找回密码wap页定制皮肤 （默认绿色,目前提供绿、红、蓝、橙色四种，如有其他皮肤需求，请联系用户中心g-quc@360.cn）-->
+    <string name="qihoo_accounts_webview_findpwd_skin">green</string>
+    <!-- <string name="qihoo_accounts_webview_findpwd_skin">red</string>
+    <string name="qihoo_accounts_webview_findpwd_skin">blue</string>
+    <string name="qihoo_accounts_webview_findpwd_skin">orange</string> -->
+    
+    <!-- 图片验证码的相关提示 -->
+    <string name="qihoo_accounts_image_captcha_null">Enter the verification code</string>
+    <string name="qihoo_accounts_image_captcha_error">Get verification code failed</string>
+    
+    <!-- 自动完成 -->
+    <string name="qihoo_account_select_account_title">Detected logged 360 account</string>
+    <string name="qihoo_account_select_account_loginother">Log In Other Account</string>
+    <string name="qihoo_account_select_account_register"><u>Sign Up</u></string>
+    <string name="qihoo_account_select_account_no_account_note">Please login or register an account</string>
+    
+    <!-- 登录 -->
+    <string name="qihoo_accounts_login_top_title">Login</string>
+    <string name="qihoo_accounts_login_account_hint">Phone Number/Email/Name</string>
+    <string name="qihoo_accounts_login_password_hint">Enter password</string>
+    <string name="qihoo_accounts_login_forget_password"><u>Forget Password?</u></string>
+    <string name="qihoo_accounts_login_quick_register"><u>Sign Up</u></string>
+    <string name="qihoo_accounts_login_btn_text">Log In</string>
+    <string name="qihoo_accounts_login_error_captcha">Incorrect verification code, please try again</string>
+    <string name="qihoo_accounts_login_error_active_email">Please activate your account</string>
+    <string name="qihoo_accounts_login_pwd_error_first">Wrong password, </string>
+    <string name="qihoo_accounts_login_pwd_error_last">chances left today</string>
+    
+    <!-- 注册公用 -->
+    <string name="qihoo_accounts_register_phone"><u>Mobile Register</u></string>
+    <string name="qihoo_accounts_register_email"><u>Email Register</u></string>
+    <string name="qihoo_accounts_register_other"><u>Register By Other Ways </u></string>
+    <string name="qihoo_accounts_register_top_title">Register</string>
+    <string name="qihoo_accounts_register_btn_text">Sign Up</string>
+    <string name="qihoo_accounts_register_license">Read Terms and Privacy</string>
+    <string name="qihoo_accounts_register_error_license">Please Read "Terms and Privacy"</string>   
+   
+    <!-- 手机找回密码 -->
+    <string name="qihoo_accounts_findpwd_by_mobile_title">Find Password</string>
+    <string name="qihoo_accounts_findpwd_by_mobile_next">Next</string>
+    <string name="qihoo_accounts_findpwd_by_mobile_hint">Enter new password</string>
+    <string name="qihoo_accounts_findpwd_by_mobile_save">Save Password</string>
+    <string name="qihoo_accounts_findpwd_by_other"><u>Find Password By Other Ways</u></string>
+    <string name="qihoo_accounts_findpwd_valid_phone">Account not exist</string>
+    <string name="qihoo_accounts_findpwd_by_mobile_inputphone_hint">Enter phone number for verify code</string>
+    <string name="qihoo_accounts_findpwd_sms_tips">"Next" try to auto input the code</string>
+    
+    <!-- 上行、下行、邮件注册 -->
+    <string name="qihoo_accounts_register_password_hint">Enter 6~20 password</string>
+    <string name="qihoo_accounts_register_up_sms_tips_first">This&#160;</string>
+    <string name="qihoo_accounts_register_up_sms_tips">phone number</string>
+    <string name="qihoo_accounts_register_up_sms_tips_last">&#160;will be used as your account, operators will charge a text message</string>
+    <string name="qihoo_accounts_register_down_sms_account_hint">Enter phone number</string>
+    <string name="qihoo_accounts_register_down_sms_captcha_your_phone">Verification code has been sent to：</string>
+    <string name="qihoo_accounts_register_down_sms_captcha_hint">Verify code</string>
+    <string name="qihoo_accounts_register_down_sms_captcha_send_click">Resend Code</string>
+    <string name="qihoo_accounts_register_down_sms_captcha_send_time_first"></string>
+    <string name="qihoo_accounts_register_down_sms_captcha_send_time_last">s left to resend</string>
+    <string name="qihoo_accounts_register_email_account_hint">Enter email address</string>
+    <string name="qihoo_accounts_register_email_tips">The activation email has been sent to：</string>
+    <string name="qihoo_accounts_register_email_active_tips">Please check the email to finish activiation in 48 hours</string>
+    <string name="qihoo_accounts_register_email_commit">Go To MailBox</string>
+    
+    <!-- 邮箱有效性检测的错误提醒 -->
+    <string name="qihoo_accounts_valid_email_error_null">Enter valid email</string>
+    <string name="qihoo_accounts_valid_email_error_blankspace">Please enter your email</string>
+    <string name="qihoo_accounts_valid_email_error_no_email">Invalid Email, please re-enter</string>
+    <string name="qihoo_accounts_valid_email_error_no_browser">Please check whether the system has been installed browser</string>
+    
+    <!-- 手机号有效性检测的错误提醒 -->
+    <string name="qihoo_accounts_valid_phone_error_null">Enter valid phone number</string>
+    <string name="qihoo_accounts_valid_phone_error_blankspace">Please enter your phone number</string>
+    <string name="qihoo_accounts_valid_phone_error_no_number">Invalid Phone number, please try again</string>
+   
+    <!-- 密码有效性检测的错误提醒 -->
+    <string name="qihoo_accounts_valid_password_error_null">Incorrect password</string>
+    <string name="qihoo_accounts_valid_password_error_blankspace">Please enter password</string>
+    <string name="qihoo_accounts_valid_password_error_length_short">Password length is less than 6, please try again</string>
+    <string name="qihoo_accounts_valid_password_error_length_long">Password length is large than 20, please try again</string>
+    <string name="qihoo_accounts_valid_password_error_chinese">Invalid character in password, please try again</string>
+    <string name="qihoo_accounts_valid_password_error_samechars">Cannot use the same characters in password, please try again</string>
+    <string name="qihoo_accounts_valid_password_error_continuous">Cannot use continuous characters in password, please try again</string>
+    <string name="qihoo_accounts_valid_password_error_weak">Password is simple, please try again</string>
+    
+    <!-- 登录帐号有效性的错误提醒 -->
+    <string name="qihoo_accounts_valid_login_error_empty_username">Please enter your account</string>
+    
+    <!-- Dialog中使用 -->
+    <string name="qihoo_accounts_dialog_opt_succ">Success</string>
+    <string name="qihoo_accounts_dialog_doing_login">Log in now&#8230;</string>
+    <string name="qihoo_accounts_dialog_doing_register">Sign up now&#8230;</string>
+    <string name="qihoo_accounts_dialog_doing_commit">Submitting verification code&#8230;</string>
+    <string name="qihoo_accounts_dialog_doing_send">Sending&#8230;</string>
+    <string name="qihoo_accounts_dialog_doing_send_again">Sending&#8230;</string>
+    <string name="qihoo_accounts_dialog_doing_loading">Loading&#8230;</string>
+    <string name="qihoo_accounts_dialog_error_reg_title">Register Failed</string>
+    <string name="qihoo_accounts_dialog_error_login_title">Login Failed</string>
+    <string name="qihoo_accounts_dialog_error_active_title">Account Activation</string>
+    <string name="qihoo_accounts_dialog_error_btn_cancel">Cancel</string>
+    <string name="qihoo_accounts_dialog_error_btn_confirm">OK</string>
+    <string name="qihoo_accounts_dialog_error_btn_cancel_reg">Cancel</string>
+    <string name="qihoo_accounts_dialog_error_btn_confirm_reg">Log In Now</string>
+    <string name="qihoo_accounts_dialog_error_btn_cancel_active">Resend Email</string>
+    <string name="qihoo_accounts_dialog_error_btn_confirm_active">Log In Now</string>
+    <string name="qihoo_accounts_dialog_error_btn_cancel_login_active">Cancel</string>
+    <string name="qihoo_accounts_dialog_error_btn_confirm_login_active">Activate Now</string>
+    
+    <!-- Dialog特殊错误提示信息 -->
+    <string name="qihoo_accounts_dialog_error_message_default">Failed</string>
+    <string name="qihoo_accounts_dialog_error_message_active">Log in your account after activation</string>
+    <string name="qihoo_accounts_dialog_error_login_message_default">Login failed</string>
+    <string name="qihoo_accounts_dialog_error_reg_mobile_message_default_first"></string>
+    <string name="qihoo_accounts_dialog_error_reg_email_message_default_first"></string>
+    <string name="qihoo_accounts_dialog_error_reg_message_default_last">&#160;is already taken</string>
+    <string name="qihoo_accounts_dialog_error_commit_captcha_message_default">Submit failed</string>
+    <string name="qihoo_accounts_dialog_error_send_again_message_default">Re-send failed</string>
+    <string name="qihoo_accounts_dialog_error_up_reg_cannot_send">Send SMS Failed</string>
+    <string name="qihoo_accounts_dialog_error_no_network">Network is not available</string>
+    <string name="qihoo_accounts_dialog_error_out_of_valid_time">Invalid time, adjust the phone time</string>
+    <string name="qihoo_accounts_dialog_error_bad_data">Server Error</string>
+    <string name="qihoo_accounts_dialog_error_no_captcha">Cannot get the verification code, please check the SMS</string>
+    <string name="qihoo_accounts_dialog_error_empty_captcha">Please enter verification code</string>
+    <string name="qihoo_accounts_sms_cdoe_null">Please enter verification code</string>
+    <string name="qihoo_accounts_dialog_error_ssl_exception">Certificate error</string>
+    <string name="qihoo_accounts_dialog_error_trans_data">Network error</string>
+    <string name="qihoo_accounts_dialog_error_connect_timeout">Network error, connection timeout</string>
+    <string name="qihoo_accounts_dialog_error_trans_timeout">Network error, transmission timeout</string>
+    <string name="qihoo_accounts_dialog_error_http_error">Network error</string>
+</resources>

@@ -1,0 +1,7 @@
+<manifest package="io.dcloud.feature.share_weixin"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <application>
+        <meta-data android:value="${plus.weixin.appid}" android:name="WX_APPID"/>
+</application>
+</manifest>

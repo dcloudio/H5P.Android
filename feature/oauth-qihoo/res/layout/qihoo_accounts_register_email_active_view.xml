@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 邮箱注册激活页面 -->
+<com.qihoo360.accounts.ui.v.RegisterEmailActiveView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/register_email_active_view"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:padding="@dimen/qihoo_accounts_padding" >
+
+    <!-- 激活消息提示 -->
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/register_email_tip"
+            android:text="@string/qihoo_accounts_register_email_tips"
+            style="@style/qihoo_accounts_note_text_style"
+            android:layout_gravity="center_horizontal"
+             />
+
+        <TextView
+            android:id="@+id/register_email_addr"
+            style="@style/qihoo_accounts_account_text_style"    
+            android:layout_gravity="center_horizontal" 
+            android:layout_marginTop="@dimen/qihoo_accounts_input_boxs_margin"/>
+
+        <TextView
+            android:id="@+id/rigster_email_active_tip"
+            android:layout_marginTop="@dimen/qihoo_accounts_input_boxs_margin"
+            android:text="@string/qihoo_accounts_register_email_active_tips"
+            style="@style/qihoo_accounts_tip_text_style"
+            android:gravity="left"
+            android:layout_gravity="center_horizontal|clip_vertical"
+            />
+
+        <!-- 进入邮箱收信 -->
+
+        <Button
+            android:id="@+id/register_email_submit"
+            style="@style/qihoo_accounts_main_btn_style"
+            android:layout_width="fill_parent"
+            android:layout_marginTop="@dimen/qihoo_accounts_input_boxs_margin"
+            android:text="@string/qihoo_accounts_register_email_commit" />
+    </LinearLayout>
+
+</com.qihoo360.accounts.ui.v.RegisterEmailActiveView>

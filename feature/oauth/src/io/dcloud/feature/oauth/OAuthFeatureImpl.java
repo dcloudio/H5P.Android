@@ -6,6 +6,7 @@ import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.DHInterface.StandardFeature;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.JSUtil;
+import io.dcloud.common.util.StringUtil;
 
 public class OAuthFeatureImpl extends StandardFeature {
 
@@ -22,7 +23,7 @@ public class OAuthFeatureImpl extends StandardFeature {
 		if(service != null){
 			service.addPhoneNumber(pWebViewImpl, pJsArgs);
 		}else{
-			String json = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_OAUTH_LOGIN,DOMException.MSG_OAUTH_LOGIN);
+			String json = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_OAUTH_LOGIN,DOMException.MSG_OAUTH_LOGIN);
 			JSUtil.execCallback(pWebViewImpl, pJsArgs.getString(1), json, JSUtil.ERROR,false);
 		}
 	}
@@ -32,7 +33,7 @@ public class OAuthFeatureImpl extends StandardFeature {
 		if(service != null){
 			service.login(pWebViewImpl, pJsArgs);
 		}else{
-			String json = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_OAUTH_LOGIN,DOMException.MSG_OAUTH_LOGIN);
+			String json = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_OAUTH_LOGIN,DOMException.MSG_OAUTH_LOGIN);
 			JSUtil.execCallback(pWebViewImpl, pJsArgs.getString(1), json, JSUtil.ERROR,false);
 		}
 	}
@@ -43,7 +44,7 @@ public class OAuthFeatureImpl extends StandardFeature {
         if (service != null) {
             service.authorize(pwebview,pJsArgs);
         } else {
-            String json = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_OAUTH_LOGIN,DOMException.MSG_OAUTH_LOGIN);
+            String json = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_OAUTH_LOGIN,DOMException.MSG_OAUTH_LOGIN);
             JSUtil.execCallback(pwebview, pJsArgs.getString(1), json, JSUtil.ERROR,false);
         }
     }
@@ -53,7 +54,7 @@ public class OAuthFeatureImpl extends StandardFeature {
 		if(service != null){
 			service.logout(pWebViewImpl, pJsArgs);
 		}else{
-			String json = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_OAUTH_LOGOUT,DOMException.MSG_OAUTH_LOGOUT);
+			String json = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_OAUTH_LOGOUT,DOMException.MSG_OAUTH_LOGOUT);
 			JSUtil.execCallback(pWebViewImpl, pJsArgs.getString(1), json, JSUtil.ERROR,false);
 		}
 	}
@@ -63,7 +64,7 @@ public class OAuthFeatureImpl extends StandardFeature {
 		if(service != null){
 			service.getUserInfo(pWebViewImpl, pJsArgs);
 		}else{
-			String json = String.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_OAUTH_GET_USERINFO,DOMException.MSG_OAUTH_GET_USERINFO);
+			String json = StringUtil.format(DOMException.JSON_ERROR_INFO, DOMException.CODE_OAUTH_GET_USERINFO,DOMException.MSG_OAUTH_GET_USERINFO);
 			JSUtil.execCallback(pWebViewImpl, pJsArgs.getString(1), json, JSUtil.ERROR,false);
 		}
 	}

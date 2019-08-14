@@ -1,0 +1,82 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/qihoo_accounts_dialog_background"
+    android:paddingBottom="@dimen/qihoo_accounts_dialog_error_padding_bottom"
+    android:paddingLeft="@dimen/qihoo_accounts_dialog_error_padding_left"
+    android:paddingRight="@dimen/qihoo_accounts_dialog_error_padding_left"
+    android:paddingTop="@dimen/qihoo_accounts_dialog_error_padding_top" >
+
+    <LinearLayout
+        android:id="@+id/add_accounts_dialog_error_title"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal" >
+
+        <!-- 对话框Title -->
+
+        <TextView
+            android:id="@+id/add_accounts_dialog_error_title_text"
+            style="@style/qihoo_accounts_top_title_text_style"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="left|center"
+            android:text="" />
+        
+        <!-- 对话框 “X”图标 -->
+
+        <ImageView
+            android:id="@+id/add_accounts_dialog_error_title_icon"
+            style="@style/qihoo_accounts_dialog_exit_style"
+            android:background="@drawable/qihoo_accounts_dialog_exit" />
+    </LinearLayout>
+    
+    <!-- 对话框消息提示 -->
+
+    <TextView
+        android:id="@+id/add_accounts_dialog_error_message_text"
+        style="@style/qihoo_accounts_note_text_style"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/add_accounts_dialog_error_title"
+        android:layout_marginBottom="@dimen/qihoo_accounts_dialog_error_msg_margin_top"
+        android:layout_marginTop="@dimen/qihoo_accounts_dialog_error_msg_margin_top"
+        android:text="" />
+
+    <!-- 对话框按钮 -->
+
+    <LinearLayout
+        android:id="@+id/add_accounts_dialog_error_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/add_accounts_dialog_error_message_text"
+        android:orientation="horizontal" >
+
+        <!-- 对话框ok button -->
+
+        <Button
+            android:id="@+id/add_accounts_dialog_error_ok_btn"
+            style="@style/qihoo_accounts_main_btn_style"
+            android:layout_width="0dp"
+            android:layout_marginRight="@dimen/qihoo_accounts_dialog_error_btns_margin"
+            android:layout_weight="1"
+            android:text="@string/qihoo_accounts_dialog_error_btn_confirm"
+            android:textSize="@dimen/qihoo_accounts_btns_size" />
+
+        <!-- 对话框cancel button -->
+
+        <Button
+            android:id="@+id/add_accounts_dialog_error_cancel_btn"
+            style="@style/qihoo_accounts_second_btn_style"
+            android:layout_width="0dp"
+            android:layout_marginLeft="@dimen/qihoo_accounts_dialog_error_btns_margin"
+            android:layout_weight="1"
+            android:text="@string/qihoo_accounts_dialog_error_btn_cancel"
+            android:textSize="@dimen/qihoo_accounts_btns_size" />
+    </LinearLayout>
+
+</RelativeLayout>

@@ -3,7 +3,6 @@ package io.dcloud.feature.bluetooth;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
-import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -13,8 +12,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import io.dcloud.common.DHInterface.IWebview;
-import io.dcloud.common.adapter.util.PermissionUtil;
 import io.dcloud.common.util.JSUtil;
+import io.dcloud.common.util.StringUtil;
 
 public class BluetoothUnder21 extends BluetoothBaseAdapter {
 
@@ -39,7 +38,7 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
         JSONArray serviceIds = param.optJSONArray("services");
         allowDuplicatesDevice = param.optBoolean("allowDuplicatesKey", false);
         String interval = param.optString("interval");
-        PermissionUtil.requestPermissions(pwebview.getActivity(), new String[]{"android.permission.ACCESS_FINE_LOCATION", "android.permission.ACCESS_COARSE_LOCATION"}, 10010);
+//        PermissionUtil.requestPermissions(pwebview.getActivity(), new String[]{"android.permission.ACCESS_FINE_LOCATION", "android.permission.ACCESS_COARSE_LOCATION"}, 10010);
         if (isInit) {
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
             if (adapter != null) {
@@ -53,10 +52,10 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
                     intent.putExtra(BluetoothAdapter.EXTRA_STATE, 12);
                     pwebview.getContext().sendBroadcast(intent);
                     isSearchBTDevice = true;
-                    JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
+                    JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
                 }
             } else {
-                JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
+                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
             }
         }
     }
@@ -73,10 +72,10 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
                 intent.setAction(STATUS_ACTION);
                 intent.putExtra(BluetoothAdapter.EXTRA_STATE, 12);
                 pwebview.getContext().sendBroadcast(intent);
-                JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
+                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
             }
         } else {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
         }
     }
 
@@ -96,7 +95,7 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
             }
             JSUtil.execCallback(pwebview, callbackid, String.format("{devices:[%s]}", builder.toString()), JSUtil.OK, true, false);
         } else {
-            JSUtil.execCallback(pwebview, callbackid, String.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
         }
     }
 
@@ -123,13 +122,13 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
             DCBluetoothDevice dcDevice = new DCBluetoothDevice(device1,scanRecord);
             dcDevice.setRSSI(rssi);
             if (allowDuplicatesDevice) { // 允许重复设备上报
-                JSUtil.execCallback(deviceFoundWeview, deviceFoundCallbackId, String.format(__JS__FUNCTION,dcDevice.toString()), JSUtil.OK, true, true);
+                execJsCallback(CALLBACK_DEVICE_FOUND,String.format(__JS__FUNCTION,dcDevice.toString()));
+                scanList.put(device1.getAddress(), dcDevice);
             } else {
                 String deviceId = device1.getAddress();
                 if (!scanList.containsKey(deviceId)) {
                     scanList.put(deviceId, dcDevice);
-                    Log.e("LOGG_ZHANGLEI",dcDevice.toString());
-                    JSUtil.execCallback(deviceFoundWeview, deviceFoundCallbackId, String.format(__JS__FUNCTION,dcDevice.toString()), JSUtil.OK, true, true);
+                    execJsCallback(CALLBACK_DEVICE_FOUND,String.format(__JS__FUNCTION,dcDevice.toString()));
                 }
             }
         }

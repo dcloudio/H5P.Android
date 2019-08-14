@@ -1,5 +1,6 @@
 package io.dcloud.media.video.ijkplayer.media;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -149,6 +150,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     private ImageView mTvReload;
     private View mFlReload;
 
+    @SuppressLint("HandlerLeak")
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -533,6 +535,34 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     /**
+     * 设置播放资源，来自assets
+     * @param fd
+     * @return
+     */
+    public IjkPlayerView setVideoFileDescriptor(AssetsDataSourceProvider fd) {
+        mVideoView.setVideoFileDescriptor(fd);
+        if (mCurPosition != INVALID_VALUE) {
+            seekTo(mCurPosition);
+            mCurPosition = INVALID_VALUE;
+        } else {
+            seekTo(0);
+        }
+        return this;
+    }
+
+    /**
+     * 切换播放资源，来自assets
+     * @param fd
+     * @return
+     */
+    public IjkPlayerView switchVideoFileDescriptor(AssetsDataSourceProvider fd) {
+        reset();
+        _setControlBarVisible(true);
+        duration = -1;
+        return setVideoFileDescriptor(fd);
+    }
+
+    /**
      * 设置标题，全屏的时候可见
      *
      * @param title
@@ -782,6 +812,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         if (mIsNeverPlay) {
 //            if (mIvPlayCircle.getVisibility() != GONE)
 //                mIvPlayCircle.setVisibility(View.VISIBLE);
+            if (mIvPlayCircle.getVisibility() != VISIBLE)
+                mLlBottomBar.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
         } else if (mIsForbidTouch) {
         } else {
             mLlBottomBar.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
@@ -888,7 +920,17 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                 mOrientationListener.enable();
             }
             if(!mIsNeverPlay) {
-                mLlBottomBar.setVisibility(View.VISIBLE);
+//                mLlBottomBar.setVisibility(View.VISIBLE);
+                mIsShowBar = false;/*false 为了配合_toggleControlBar*/
+                _toggleControlBar();
+            } else {
+                if (mIvPlayCircle.getVisibility() != VISIBLE) {
+                    mIsShowBar = false;
+                    _toggleControlBar();
+                } else {
+                    mIsShowBar = false;
+                    mLlBottomBar.setVisibility(View.GONE);
+                }
             }
             if (mIsNeedRecoverScreen) {
                 mTvRecoverScreen.setVisibility(VISIBLE);
@@ -1550,6 +1592,12 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     }
 
 
+    public void isUseMediaCodec(boolean isUse) {
+        if (mVideoView != null) {
+            mVideoView.setmIsUsingMediaCodec(isUse);
+        }
+    }
+
     /**
      * 静音播放
      */
@@ -1558,11 +1606,10 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         this.isMutePlayer = isMute;
         if(isMute) {
             mAudioManager.abandonAudioFocus(null);
-            mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
+            mAudioManager.setStreamMute(AudioManager.STREAM_MUSIC, true);
         } else {
             mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-//            mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 5, 0);
-            //mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
+            mAudioManager.setStreamMute(AudioManager.STREAM_MUSIC, false);
         }
     }
 
@@ -1709,6 +1756,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                 mLoadingView.setVisibility(View.GONE);
                 mPlayerThumb.setVisibility(View.GONE);
                 // 更新进度
+                if (mLlBottomBar.getVisibility() == VISIBLE && !mIsShowBar)
+                    mIsShowBar = true;
                 mHandler.removeMessages(MSG_UPDATE_SEEK);
                 mHandler.sendEmptyMessage(MSG_UPDATE_SEEK);
                 if (mVideoView.isPlaying() && mIsNetConnected) {

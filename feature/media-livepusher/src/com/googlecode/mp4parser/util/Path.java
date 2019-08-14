@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.dcloud.common.util.StringUtil;
+
 public class Path {
 
     private Path() {
@@ -43,7 +45,7 @@ public class Path {
         } else {
             List<?> boxesOfBoxType = box.getParent().getBoxes(box.getClass());
             int index = boxesOfBoxType.indexOf(box);
-            path = String.format("/%s[%d]", box.getType(), index) + path;
+            path = StringUtil.format("/%s[%d]", box.getType(), index) + path;
 
             return createPath(box.getParent(), path);
         }

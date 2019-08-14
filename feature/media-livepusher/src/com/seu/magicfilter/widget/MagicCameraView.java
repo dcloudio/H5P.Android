@@ -337,20 +337,19 @@ public class MagicCameraView extends MagicBaseView {
     }
     protected void onFilterChanged() {
         super.onFilterChanged();
+        try {
         cameraInputFilter.onDisplaySizeChanged(surfaceWidth, surfaceHeight);
         if (filter != null)
             cameraInputFilter.initCameraFrameBuffer(imageWidth, imageHeight);
         else
             cameraInputFilter.destroyFramebuffers();
-
-        try {
             listener.onFilterChanged();
         }catch (Exception e){}
     }
 
     public void onBeautyLevelChanged() {
-        cameraInputFilter.onBeautyLevelChanged();
         try {
+            cameraInputFilter.onBeautyLevelChanged();
             listener.onBeautyLevelChanged();
         }catch (Exception e){}
     }

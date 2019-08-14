@@ -1,5 +1,8 @@
 package io.dcloud.js.geolocation;
 
+import android.os.Build;
+import android.text.TextUtils;
+
 import io.dcloud.common.DHInterface.AbsMgr;
 import io.dcloud.common.DHInterface.FeatureMessageDispatcher;
 import io.dcloud.common.DHInterface.IFeature;
@@ -7,7 +10,8 @@ import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.util.PermissionUtil;
 import io.dcloud.common.constant.DOMException;
 import io.dcloud.common.util.JSUtil;
-import android.text.TextUtils;
+
+import static io.dcloud.common.util.ReflectUtils.getApplicationContext;
 
 /**
  * <p>Description:定位接口类</p>
@@ -23,17 +27,34 @@ import android.text.TextUtils;
 public class GeolocationFeatureImpl implements IFeature {
 
     private GeoOptDispatcher mGeoBroker;
-
+    private boolean isPermissionGranted = false;
     @Override
     public String execute(final IWebview pWebViewImpl, final String pActionName,
                           final String[] pJsArgs) {
         if(FeatureMessageDispatcher.contains("record_address")){//辅助输入获取位置啥不进行流权限检测
             mGeoBroker.execute(pWebViewImpl, pActionName, pJsArgs);
         }else {
+            isPermissionGranted = false;
             PermissionUtil.usePermission(pWebViewImpl.getActivity(), pWebViewImpl.obtainApp().isStreamApp(), PermissionUtil.PMS_LOCATION, new PermissionUtil.StreamPermissionRequest(pWebViewImpl.obtainApp()) {
                 @Override
                 public void onGranted(String streamPerName) {
-                    mGeoBroker.execute(pWebViewImpl, pActionName, pJsArgs);
+                    if(!isPermissionGranted) {
+                        isPermissionGranted = true;
+                        mGeoBroker.execute(pWebViewImpl, pActionName, pJsArgs);
+                    }
+                    int targetSdkVersion = getApplicationContext().getApplicationInfo().targetSdkVersion;
+                    // 系统版本>=29 && target>=29，才需要申请后台权限，否则系统默认处理
+                    if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.Q && targetSdkVersion>=29 && isPermissionGranted) {
+                        PermissionUtil.usePermission(pWebViewImpl.getActivity(), pWebViewImpl.obtainApp().isStreamApp(), "android.permission.ACCESS_BACKGROUND_LOCATION", new PermissionUtil.StreamPermissionRequest(pWebViewImpl.obtainApp()) {
+                            @Override
+                            public void onGranted(String streamPerName) {
+                            }
+
+                            @Override
+                            public void onDenied(String streamPerName) {
+                            }
+                        });
+                    }
                 }
 
                 @Override
@@ -42,6 +63,8 @@ public class GeolocationFeatureImpl implements IFeature {
                     JSUtil.execCallback(pWebViewImpl, pJsArgs[0], _json, JSUtil.ERROR, true, false);
                 }
             });
+
+
         }
         return null;
     }

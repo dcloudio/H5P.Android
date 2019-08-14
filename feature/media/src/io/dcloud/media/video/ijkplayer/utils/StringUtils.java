@@ -3,6 +3,8 @@ package io.dcloud.media.video.ijkplayer.utils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import io.dcloud.common.util.StringUtil;
+
 public final class StringUtils {
 
     private StringUtils() {
@@ -19,7 +21,7 @@ public final class StringUtils {
         int minutes = totalSeconds / 60;
 //        int minutes = (totalSeconds / 60) % 60;
 //        int hours = totalSeconds / 3600;
-        return minutes > 99 ? String.format("%d:%02d", minutes, seconds) : String.format("%02d:%02d", minutes, seconds);
+        return minutes > 99 ? StringUtil.format("%d:%02d", minutes, seconds) : StringUtil.format("%02d:%02d", minutes, seconds);
     }
 
     /**
