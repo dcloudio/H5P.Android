@@ -1,0 +1,50 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 28
+
+
+
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main {
+            manifest.srcFile './AndroidManifest.xml'
+            assets.srcDirs = [
+                    './assets'
+            ]
+//            jniLibs.srcDirs = [
+//                    './libs']
+            java.srcDirs = ['./src'
+            ]
+            res.srcDirs = ['./res'
+            ]
+        }
+    }
+
+}
+
+dependencies {
+    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
+    compileOnly "com.android.support:recyclerview-v7:25.3.1"
+    compileOnly "com.android.support:support-v4:25.3.1"
+    compileOnly "com.android.support:appcompat-v7:25.3.1"
+    compileOnly project(':dc_weexsdk')
+    compileOnly project(':lib.5plus.base')
+    compileOnly "com.alibaba:fastjson:1.1.46.android"
+
+}

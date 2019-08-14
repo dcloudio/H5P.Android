@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="video_control_bar_height">46dp</dimen>
+    <dimen name="video_danmaku_input_options_height">48dp</dimen>
+    <dimen name="video_danmaku_input_options_color_radio_btn_width">32.0dip</dimen>
+    <dimen name="video_danmaku_input_options_color_radio_btn_height">25.0dip</dimen>
+    <dimen name="video_danmaku_input_options_color_radio_btn_margin">5.0dip</dimen>
+    <dimen name="video_danmaku_input_options_color_radio_btn_size">42.0dip</dimen>
+
+    <dimen name="video_aspect_btn_height">20dp</dimen>
+    <dimen name="video_aspect_btn_size">30dp</dimen>
+</resources>

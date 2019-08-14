@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="videos_bottom_bullet">弹幕</string>
+    <string name="videos_bottom_restore">还原屏幕</string>
+</resources>

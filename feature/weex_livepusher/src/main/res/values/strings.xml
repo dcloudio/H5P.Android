@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="livepusher_error_tips">当前环境无法正常运行推流功能!</string>
+</resources>

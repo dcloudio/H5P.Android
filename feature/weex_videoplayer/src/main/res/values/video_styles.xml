@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- 自定义电量进度条 -->
+    <style name="Video_ProgressBarBattery" parent="@android:style/Widget.ProgressBar.Horizontal">
+        <item name="android:layout_width">72px</item>
+        <item name="android:layout_height">43px</item>
+        <item name="android:background">@drawable/video_ic_battery</item>
+        <item name="android:paddingTop">6px</item>
+        <item name="android:paddingBottom">6px</item>
+        <item name="android:paddingLeft">6px</item>
+        <item name="android:paddingRight">10px</item>
+        <item name="android:indeterminateOnly">false</item>
+        <item name="android:indeterminateDrawable">@android:drawable/progress_indeterminate_horizontal</item>
+        <item name="android:progressDrawable">@drawable/weex_video_layer_battery_progress</item>
+    </style>
+
+    <!-- 弹幕参数选项 -->
+    <style name="Video_DanmakuInputOptionRadioButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginLeft">8.0dip</item>
+        <item name="android:layout_marginRight">8.0dip</item>
+        <item name="android:button">@null</item>
+    </style>
+
+    <!-- 屏幕宽高比选项 -->
+    <style name="Video_AspectRatioButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">@dimen/video_aspect_btn_height</item>
+        <item name="android:layout_margin">5dp</item>
+        <item name="android:button">@null</item>
+    </style>
+</resources>
