@@ -53,10 +53,10 @@ public class XMLHttpRequest implements IReqListener,IResponseListener{
 		mRequestData = new RequestData(pUrl,pReqmethod);
 		mRequestData.unTrustedCAType = pWebViewImpl.obtainApp().obtainConfigProperty(ConfigProperty.CONFIG_UNTRUSTEDCA);
 		mRequestData.addHeader(IWebview.USER_AGENT, pWebViewImpl.getWebviewProperty(IWebview.USER_AGENT));
-		String cookie = pWebViewImpl.getWebviewProperty(pUrl);
-		if(!PdrUtil.isEmpty(cookie)){
-			mRequestData.addHeader(IWebview.COOKIE, cookie);
-		}
+//		String cookie = pWebViewImpl.getWebviewProperty(pUrl);
+//		if(!PdrUtil.isEmpty(cookie)){
+//			mRequestData.addHeader(IWebview.COOKIE, cookie);
+//		}
 		mNetWork = new NetWork(NetWork.WORK_COMMON, mRequestData, this, this);
 		mWebview = pWebViewImpl;
 	}

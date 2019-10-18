@@ -3,6 +3,6 @@
     <application>
         <service
             android:name="io.dcloud.feature.aps.ApsActionService"
-            android:exported="true"/>
+            android:exported="false"/>
     </application>
 </manifest>

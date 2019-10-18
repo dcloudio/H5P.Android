@@ -141,7 +141,7 @@ public class TCPusherView extends LinearLayout implements ITXLivePushListener, T
     public void sCamera(JSCallback callback) {
         Map<String, Object> data = new HashMap<>();
 
-        if (mLivePusher.isPushing()) {
+        /*if (mLivePusher.isPushing())*/ {
             this.cameraType = !this.cameraType;
             mLivePusher.switchCamera();
             data.put("type", "success");
@@ -150,9 +150,9 @@ public class TCPusherView extends LinearLayout implements ITXLivePushListener, T
 //            } else if(cameraType.equals("back")) {
 //
 //            }
-        } else {
+        } /*else {
             data.put("type", "fail");
-        }
+        }*/
         if (callback != null)
             callback.invoke(data);
     }
@@ -240,7 +240,7 @@ public class TCPusherView extends LinearLayout implements ITXLivePushListener, T
         }
         this.beautyLevel = level;
         mLivePushConfig.setBeautyFilter(beautyLevel, whiteLevel, 0);
-//        mLivePusher.setBeautyFilter(0, beautyLevel, whiteLevel, 0);
+        mLivePusher.setBeautyFilter(0, beautyLevel, whiteLevel, 0);
     }
 
     public void setWhite(int level) {
@@ -251,6 +251,7 @@ public class TCPusherView extends LinearLayout implements ITXLivePushListener, T
         }
         this.whiteLevel = level;
         mLivePushConfig.setBeautyFilter(beautyLevel, whiteLevel, 0);
+        mLivePusher.setBeautyFilter(0, beautyLevel, whiteLevel, 0);
     }
 
     public void setMinBitrate(int bitrate) {

@@ -81,6 +81,26 @@ public class MarkerMgr extends MapAbsMgr {
     }
 
     /**
+     * 通过callout获取WXMarker
+     * @param m
+     * @return
+     */
+    public WXMarker getCalloutToWXMarker(Marker m) {
+        if(m != null) {
+            Set<String> keys = mMarkerCaches.keySet();
+            for(String key: keys) {
+                WXMarker marker = mMarkerCaches.get(key);
+                if(marker.getCallout() != null) {
+                    if(m.equals(marker.getCallout().getInstance())) {
+                        return marker;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * 清理不需要的marker
      * @param markers
      */

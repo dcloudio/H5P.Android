@@ -249,8 +249,8 @@ public class BluetoothBaseAdapter {
             }
             if (bleConnected.containsKey(deviceid) && bleConnected.get(deviceid) != null) {
                 bleConnected.get(deviceid).disconnect();
-                bleConnected.get(deviceid).close();
-                bleConnected.remove(deviceid);
+//                bleConnected.get(deviceid).close();
+//                bleConnected.remove(deviceid);
                 JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
                 return;
             } else {

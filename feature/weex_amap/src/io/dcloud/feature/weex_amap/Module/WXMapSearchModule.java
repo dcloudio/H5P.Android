@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.dcloud.common.DHInterface.ICallBack;
 import io.dcloud.common.util.PdrUtil;
 import io.dcloud.feature.weex_amap.adapter.MapResourceUtils;
 
@@ -98,76 +99,84 @@ public class WXMapSearchModule extends WXModule {
      * @param callback
      */
     @JSMethod(uiThread = true)
-    public void poiSearchNearBy(JSONObject data, final JSCallback callback) {
-        final Map<String, Object> params = new HashMap<>();
-        LatLonPoint point = MapResourceUtils.createLatLonPoint(data.getJSONObject("point"));
+    public void poiSearchNearBy(final JSONObject data, final JSCallback callback) {
+        final LatLonPoint point = MapResourceUtils.createLatLonPoint(data.getJSONObject("point"));
         if(data != null && point != null) {
-            int radius = 3000;
-            if(data.containsKey("radius")) {
-                radius = data.getIntValue("radius");
-            }
-            int pageNum = 0;
-            if(data.containsKey("index")) {
-                pageNum = data.getIntValue("index");
-            }
-            String keyCode = data.getString("key");
             RegeocodeQuery regeocodeQuery = new RegeocodeQuery(point, 200, GeocodeSearch.AMAP);
-            String city = getCityKey(regeocodeQuery);
-            PoiSearch.Query query = new PoiSearch.Query(keyCode, "", city);
-            query.setPageSize(10);
-            query.setDistanceSort(true);
-            query.setPageNum(pageNum);
-            PoiSearch poiSearch = new PoiSearch(mWXSDKInstance.getContext(), query);
-            poiSearch.setBound(new PoiSearch.SearchBound(point, radius));
-            poiSearch.setOnPoiSearchListener(new PoiSearch.OnPoiSearchListener() {
+            getCityKey(regeocodeQuery, new ICallBack() {
                 @Override
-                public void onPoiSearched(PoiResult result, int i) {
-                    switch (i) {
-                        case AMapException.CODE_AMAP_SUCCESS: {
-                            if (result != null && result.getQuery() != null) {
-                                int currentNumber = result.getPois().size();
-                                int pageNumber = result.getPageCount();
-                                int pageIndex = result.getQuery().getPageNum();
-                                ArrayList<PoiItem> pArray = result.getPois();
-                                params.put("currentNumber", currentNumber);
-                                params.put("pageNumber", pageNumber);
-                                params.put("pageIndex", pageIndex);
-                                JSONArray poiList = toPositionArray(pArray);
-                                params.put("poiList", poiList);
-                            }
-                            break;
-                        }
-                        case AMapException.CODE_AMAP_CLIENT_UNKNOWHOST_EXCEPTION:{
-                            params.put("type", "fail");
-                            params.put("msg", "网络错误");
-                            break;
-                        }
-                        case AMapException.CODE_AMAP_SIGNATURE_ERROR:{
-                            params.put("type", "fail");
-                            params.put("msg", "key验证无效！");
-                            break;
-                        }
-                        default:{
-                            params.put("type", "fail");
-                            params.put("msg", "未知错误");
-                            break;
-                        }
+                public Object onCallBack(int pType, Object pArgs) {
+                    if(pArgs != null) {
+                        searchPOI(data, "", point, callback);
                     }
-                    if(callback != null) {
-                        callback.invoke(params);
-                    }
-                }
-
-                @Override
-                public void onPoiItemSearched(PoiItem poiItem, int i) {
-
+                    return null;
                 }
             });
-            poiSearch.searchPOIAsyn();// 异步poi查询
         }
-        if(callback != null) {
-            callback.invoke(params);
+    }
+
+    private void searchPOI(JSONObject data, String city, LatLonPoint point, final JSCallback callback) {
+        final Map<String, Object> params = new HashMap<>();
+        int radius = 3000;
+        if(data.containsKey("radius")) {
+            radius = data.getIntValue("radius");
         }
+        int pageNum = 0;
+        if(data.containsKey("index")) {
+            pageNum = data.getIntValue("index");
+        }
+        String keyCode = data.getString("key");
+        PoiSearch.Query query = new PoiSearch.Query(keyCode, "", city);
+        query.setPageSize(10);
+        query.setDistanceSort(true);
+        query.setPageNum(pageNum);
+        PoiSearch poiSearch = new PoiSearch(mWXSDKInstance.getContext(), query);
+        poiSearch.setBound(new PoiSearch.SearchBound(point, radius));
+        poiSearch.setOnPoiSearchListener(new PoiSearch.OnPoiSearchListener() {
+            @Override
+            public void onPoiSearched(PoiResult result, int i) {
+                switch (i) {
+                    case AMapException.CODE_AMAP_SUCCESS: {
+                        if (result != null && result.getQuery() != null) {
+                            int currentNumber = result.getPois().size();
+                            int pageNumber = result.getPageCount();
+                            int pageIndex = result.getQuery().getPageNum();
+                            ArrayList<PoiItem> pArray = result.getPois();
+                            params.put("currentNumber", currentNumber);
+                            params.put("pageNumber", pageNumber);
+                            params.put("pageIndex", pageIndex);
+                            JSONArray poiList = toPositionArray(pArray);
+                            params.put("poiList", poiList);
+                        }
+                        break;
+                    }
+                    case AMapException.CODE_AMAP_CLIENT_UNKNOWHOST_EXCEPTION:{
+                        params.put("type", "fail");
+                        params.put("msg", "网络错误");
+                        break;
+                    }
+                    case AMapException.CODE_AMAP_SIGNATURE_ERROR:{
+                        params.put("type", "fail");
+                        params.put("msg", "key验证无效！");
+                        break;
+                    }
+                    default:{
+                        params.put("type", "fail");
+                        params.put("msg", "未知错误");
+                        break;
+                    }
+                }
+                if(callback != null) {
+                    callback.invoke(params);
+                }
+            }
+
+            @Override
+            public void onPoiItemSearched(PoiItem poiItem, int i) {
+
+            }
+        });
+        poiSearch.searchPOIAsyn();// 异步poi查询
     }
 
     private JSONArray toPositionArray(ArrayList<PoiItem> pArray) {
@@ -175,6 +184,12 @@ public class WXMapSearchModule extends WXModule {
         if(pArray != null) {
             for(PoiItem poi: pArray) {
                 JSONObject item = new JSONObject();
+                if(poi.getLatLonPoint() != null) {
+                    JSONObject location = new JSONObject();
+                    location.put("latitude", poi.getLatLonPoint().getLatitude());
+                    location.put("longitude", poi.getLatLonPoint().getLongitude());
+                    item.put("location", location);
+                }
                 item.put("address", PdrUtil.makeQueryStringAllRegExp(poi.getSnippet()));
                 item.put("city", PdrUtil.makeQueryStringAllRegExp(poi.getCityName()));
                 item.put("name", PdrUtil.makeQueryStringAllRegExp(poi.getTitle()));
@@ -191,18 +206,24 @@ public class WXMapSearchModule extends WXModule {
      * @param regeocodeQuery
      * @return
      */
-    private String getCityKey(RegeocodeQuery regeocodeQuery) {
+    private void getCityKey(RegeocodeQuery regeocodeQuery, final ICallBack callBack) {
         GeocodeSearch search = new GeocodeSearch(mWXSDKInstance.getContext());
-        try {
-            RegeocodeAddress address = search.getFromLocation(regeocodeQuery);
-            if (!PdrUtil.isEmpty(address)) {
-                return address.getCity();
+        search.setOnGeocodeSearchListener(new GeocodeSearch.OnGeocodeSearchListener() {
+            @Override
+            public void onRegeocodeSearched(RegeocodeResult regeocodeResult, int i) {
+                //Log.e("shutao", "onRegeocodeSearched-------"+regeocodeResult.getRegeocodeAddress().getCity());
+                if(regeocodeResult != null && regeocodeResult.getRegeocodeAddress() != null) {
+                    callBack.onCallBack(1, regeocodeResult.getRegeocodeAddress().getCity());
+                } else {
+                    callBack.onCallBack(-1, null);
+                }
             }
-        } catch (AMapException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return null;
+
+            @Override
+            public void onGeocodeSearched(GeocodeResult geocodeResult, int i) {
+            }
+        });
+        search.getFromLocationAsyn(regeocodeQuery);
     }
 
 

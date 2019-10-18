@@ -39,6 +39,7 @@ import org.json.JSONArray;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.dcloud.common.DHInterface.ICallBack;
 import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.constant.DOMException;
@@ -195,18 +196,26 @@ public class MapSearch {
 	 * Log ID: 1.0 (Log编号 依次递增)
 	 * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2012-11-9 上午11:57:05</pre>
 	 */
-	public void poiSearchNearBy(String pKeyCode, MapPoint pCenter, String pRadius, String index) {
-		int _radius = PdrUtil.parseInt(pRadius, 0);
+	public void poiSearchNearBy(final String pKeyCode, final MapPoint pCenter, String pRadius, final String index) {
+		final int _radius = PdrUtil.parseInt(pRadius, 0);
 		RegeocodeQuery regeocodeQuery = new RegeocodeQuery(pCenter.getLatLngPoint(), _radius, GeocodeSearch.AMAP);
-		String city = getCityKey(regeocodeQuery);
-		PoiSearch.Query query = new PoiSearch.Query(pKeyCode, "", city);
-		query.setPageSize(mPageCapacity);
-		mIndex = PdrUtil.parseInt(index, 0);
-		query.setPageNum(mIndex);
-		PoiSearch poiSearch = new PoiSearch(mIWebview.getContext(), query);
-		poiSearch.setBound(new SearchBound(pCenter.getLatLngPoint(), _radius));
-		poiSearch.setOnPoiSearchListener(mPoiSearchListener);
-		poiSearch.searchPOIAsyn();// 异步poi查询
+		getCityKey(regeocodeQuery, new ICallBack() {
+			@Override
+			public Object onCallBack(int pType, Object pArgs) {
+				if(pArgs != null) {
+					String city = (String) pArgs;
+					PoiSearch.Query query = new PoiSearch.Query(pKeyCode, "", city);
+					query.setPageSize(mPageCapacity);
+					mIndex = PdrUtil.parseInt(index, 0);
+					query.setPageNum(mIndex);
+					PoiSearch poiSearch = new PoiSearch(mIWebview.getContext(), query);
+					poiSearch.setBound(new SearchBound(pCenter.getLatLngPoint(), _radius));
+					poiSearch.setOnPoiSearchListener(mPoiSearchListener);
+					poiSearch.searchPOIAsyn();// 异步poi查询
+				}
+				return null;
+			}
+		});
 	}
 	/**
 	 * 
@@ -220,17 +229,25 @@ public class MapSearch {
 	 * Log ID: 1.0 (Log编号 依次递增)
 	 * Modified By: cuidengfeng Email:cuidengfeng@dcloud.io at 2012-11-16 下午4:04:45</pre>
 	 */
-	public void poiSearchInbounds(String pKeyCode, MapPoint ptLB, MapPoint ptRT, String index) {
+	public void poiSearchInbounds(final String pKeyCode, final MapPoint ptLB, final MapPoint ptRT, final String index) {
 		RegeocodeQuery regeocodeQuery = new RegeocodeQuery(ptLB.getLatLngPoint(), 200, GeocodeSearch.AMAP);
-		String city = getCityKey(regeocodeQuery);
-		PoiSearch.Query query = new PoiSearch.Query(pKeyCode, "", city);
-		query.setPageSize(mPageCapacity);
-		mIndex = PdrUtil.parseInt(index, 0);
-		query.setPageNum(mIndex);
-		PoiSearch poiSearch = new PoiSearch(mIWebview.getContext(), query);
-		poiSearch.setBound(new SearchBound(ptLB.getLatLngPoint(), ptRT.getLatLngPoint()));
-		poiSearch.setOnPoiSearchListener(mPoiSearchListener);
-		poiSearch.searchPOIAsyn();// 异步poi查询
+		getCityKey(regeocodeQuery, new ICallBack() {
+			@Override
+			public Object onCallBack(int pType, Object pArgs) {
+				if(pArgs != null) {
+					String city = (String) pArgs;
+					PoiSearch.Query query = new PoiSearch.Query(pKeyCode, "", city);
+					query.setPageSize(mPageCapacity);
+					mIndex = PdrUtil.parseInt(index, 0);
+					query.setPageNum(mIndex);
+					PoiSearch poiSearch = new PoiSearch(mIWebview.getContext(), query);
+					poiSearch.setBound(new SearchBound(ptLB.getLatLngPoint(), ptRT.getLatLngPoint()));
+					poiSearch.setOnPoiSearchListener(mPoiSearchListener);
+					poiSearch.searchPOIAsyn();// 异步poi查询
+				}
+				return null;
+			}
+		});
 	}
 
 	/**
@@ -425,18 +442,24 @@ public class MapSearch {
 	 * @param regeocodeQuery
 	 * @return
 	 */
-	private String getCityKey(RegeocodeQuery regeocodeQuery) {
+	private void getCityKey(RegeocodeQuery regeocodeQuery, final ICallBack callBack) {
 		GeocodeSearch search = new GeocodeSearch(mIWebview.getContext());
-		try {
-			RegeocodeAddress address = search.getFromLocation(regeocodeQuery);
-            if (!PdrUtil.isEmpty(address)) {
-                return address.getCity();
-            }
-        } catch (AMapException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
+		search.setOnGeocodeSearchListener(new GeocodeSearch.OnGeocodeSearchListener() {
+			@Override
+			public void onRegeocodeSearched(RegeocodeResult regeocodeResult, int i) {
+				//Log.e("shutao", "onRegeocodeSearched-------"+regeocodeResult.getRegeocodeAddress().getCity());
+				if(regeocodeResult != null && regeocodeResult.getRegeocodeAddress() != null) {
+					callBack.onCallBack(1, regeocodeResult.getRegeocodeAddress().getCity());
+				} else {
+					callBack.onCallBack(-1, null);
+				}
+			}
+
+			@Override
+			public void onGeocodeSearched(GeocodeResult geocodeResult, int i) {
+			}
+		});
+		search.getFromLocationAsyn(regeocodeQuery);
 	}
 	
 	private static final int POISEARCH_TYPE = 0;

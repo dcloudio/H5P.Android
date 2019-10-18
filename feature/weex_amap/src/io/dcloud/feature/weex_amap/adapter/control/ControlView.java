@@ -86,7 +86,9 @@ public class ControlView {
                 @Override
                 public void onClick(View v) {
                     Map<String, Object> params = new HashMap<>();
-                    params.put("id", id);
+                    JSONObject data = new JSONObject();
+                    data.put("controlId", id);
+                    params.put("detail", data);
                     mInstance.fireEvent(ref, Constant.EVENT.BIND_CONTROL_TAP, params);
                 }
             });

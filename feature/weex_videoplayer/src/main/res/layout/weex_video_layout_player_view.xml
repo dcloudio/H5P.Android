@@ -10,6 +10,7 @@
     <io.dcloud.media.weex.weex_video.ijkplayer.media.IjkVideoView
         android:id="@+id/video_view"
         android:layout_width="match_parent"
+        android:visibility="gone"
         android:layout_height="match_parent" />
 
     <ImageView

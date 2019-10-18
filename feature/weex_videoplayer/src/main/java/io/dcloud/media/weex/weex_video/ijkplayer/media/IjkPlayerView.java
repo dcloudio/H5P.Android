@@ -302,6 +302,12 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 //        mTvReload.setOnClickListener(this);
     }
 
+    public void setVideoVisibility(){
+        if (mVideoView != null) {
+            mVideoView.setVisibility(VISIBLE);
+        }
+    }
+
     private void setSeekBarColor() {
         LayerDrawable drawable = (LayerDrawable) mPlayerSeek.getProgressDrawable();
         drawable.findDrawableByLayerId(android.R.id.background).setColorFilter(Color.parseColor("#ff00ff"), PorterDuff.Mode.SRC_ATOP);
@@ -535,7 +541,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         } else {
             isRtmpUri = false;
             mPlayerSeek.setEnabled(true);
-            mPlayerSeek.setVisibility(View.VISIBLE);
+            mPlayerSeek.setVisibility(isShowProgress?VISIBLE:INVISIBLE);
             mTvEndTime.setVisibility(View.VISIBLE);
             mTvCurTime.setVisibility(View.VISIBLE);
         }
@@ -700,7 +706,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                 }
             } else {
                 if (null != mOnPlayerChangedListener) {
-                    mOnPlayerChangedListener.onChanged("error", "{message:'network error'}");
+                    mOnPlayerChangedListener.onChanged("error", "network error");
 //                    mFlReload.setVisibility(VISIBLE);
                     mLoadingView.setVisibility(GONE);
                 }
@@ -1012,10 +1018,12 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      */
     public void setProgressVisibility(boolean isShow) {
         if (mPlayerSeek != null && !isRtmpUri) {
+            isShowProgress = isShow;
             int v = isShow ? View.VISIBLE : View.INVISIBLE;
             mPlayerSeek.setVisibility(v);
         }
     }
+    private boolean isShowProgress = true;
 
     /**
      * 是否显示全屏按钮
@@ -1121,7 +1129,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     }
 
 
-    String fullCallFormat = "{detail:{fullScreen:%b, direction:'%s'}}";
+    String fullCallFormat = "{fullScreen:%b, direction:'%s'}";
 
     /**
      * 设置全屏或窗口模式
@@ -1384,6 +1392,10 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             if (isRecoverFromDanmaku) {
                 return true;
             }
+
+            if (mIsForbidTouch) {
+                return true;
+            }
             _toggleControlBar();
 
             return true;
@@ -1524,7 +1536,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         return position;
     }
 
-    String timeUpdateF = "{detail:{currentTime:%f,duration:%f}}";
+    String timeUpdateF = "{currentTime:%f,duration:%f}";
 
     /**
      * 视频时间更新回调
@@ -1882,7 +1894,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                     mInterruptPosition = Math.max(mVideoView.getInterruptPosition(), mInterruptPosition);
 //                    Toast.makeText(mAttachActivity, "网络异常", Toast.LENGTH_SHORT).show();
                     if (null != mOnPlayerChangedListener) {
-                        mOnPlayerChangedListener.onChanged("error", "{message:'network error'}");
+                        mOnPlayerChangedListener.onChanged("error", "network error");
 //                        mFlReload.setVisibility(VISIBLE);
                     }
                 } else {
@@ -2427,6 +2439,14 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 //        if (mDanmakuColorOptions.getWidth() != 0) {
 //            _toggleMoreColorOptions();
 //        }
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        if (!isFullscreen() && mIsForbidTouch && mIvPlayCircle.getVisibility() != VISIBLE ){ // 非全屏且control为false的时候
+            return true;
+        }
+        return super.onInterceptTouchEvent(ev);
     }
 
     /**

@@ -10,11 +10,11 @@ import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.view.Display;
 import android.widget.Toast;
 
+import com.nostra13.dcloudimageloader.core.ImageLoaderL;
 import com.tencent.mm.opensdk.modelbase.BaseResp;
 import com.tencent.mm.opensdk.modelbiz.WXLaunchMiniProgram;
 import com.tencent.mm.opensdk.modelmsg.SendMessageToWX;
@@ -844,17 +844,17 @@ public class WeiXinApiManager implements IFShareApi {
         try {
 //			The thumeImg size should be within 32KB * 1024 = 32768
             if (PdrUtil.isNetPath(thumeImgPath)) {//是网络地址
-                //bitmap=ImageLoaderL.getInstance().loadImageSync(AbsFullPath);
-                try {
-                    is = new URL(thumeImgPath).openStream();
-                    if(is != null){
-                        bitmap = BitmapFactory.decodeStream(is);
-                    }
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                bitmap=ImageLoaderL.getInstance().loadImageSync(thumeImgPath);
+//                try {
+//                    is = new URL(thumeImgPath).openStream();
+//                    if(is != null){
+//                        bitmap = BitmapFactory.decodeStream(is);
+//                    }
+//                } catch (MalformedURLException e) {
+//                    e.printStackTrace();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
             } else {
                 bitmap=scaleLoadPic(pWebViewImpl,AbsFullPath);
                 //bitmap=ImageLoaderL.getInstance().loadImageSync("file://"+AbsFullPath);

@@ -90,10 +90,10 @@ public class JsUpload implements IReqListener,IResponseListener{
 		mRequestData = new RequestData(mUrl, _requestMethod);
 		mRequestData.unTrustedCAType = pWebview.obtainApp().obtainConfigProperty(ConfigProperty.CONFIG_UNTRUSTEDCA);
 		mRequestData.addHeader(IWebview.USER_AGENT, pWebview.getWebviewProperty(IWebview.USER_AGENT));
-		String cookie = pWebview.getWebviewProperty(mUrl);
-		if(!PdrUtil.isEmpty(cookie)){
-			mRequestData.addHeader(IWebview.COOKIE, cookie);
-		}
+//		String cookie = pWebview.getWebviewProperty(mUrl);
+//		if(!PdrUtil.isEmpty(cookie)){
+//			mRequestData.addHeader(IWebview.COOKIE, cookie);
+//		}
 		mUploadNetWork = new UploadNetWork(NetWork.WORK_UPLOAD,mRequestData, this,this);
 		mUploadNetWork.mPriority = pJsonObject.optInt("priority");
 		if(pJsonObject.has("timeout")){

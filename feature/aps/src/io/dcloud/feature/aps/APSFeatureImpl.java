@@ -9,11 +9,9 @@ import android.os.Bundle;
 import org.json.JSONArray;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import io.dcloud.common.DHInterface.AbsMgr;
 import io.dcloud.common.DHInterface.BaseFeature;
-import io.dcloud.common.DHInterface.IMgr;
 import io.dcloud.common.DHInterface.IWebview;
 
 /**
@@ -147,14 +145,18 @@ public class APSFeatureImpl extends BaseFeature  {
 	}
 	@Override
 	public void dispose(String pAppid) {
-		if(mNotificationReceiver != null) {
-			mApplicationContext.unregisterReceiver(mNotificationReceiver);
-		}
-		ArrayList<BaseModule> modules =  loadModules();
-		if(modules != null && !modules.isEmpty()){
-			for(BaseModule bm : modules){
-				((AbsPushService)bm).onStop();
+		try {
+			if(mNotificationReceiver != null) {
+				mApplicationContext.unregisterReceiver(mNotificationReceiver);
 			}
+			ArrayList<BaseModule> modules =  loadModules();
+			if(modules != null && !modules.isEmpty()){
+				for(BaseModule bm : modules){
+					((AbsPushService)bm).onStop();
+				}
+			}
+		}catch (IllegalArgumentException e){
+			//e.printStackTrace();
 		}
 	}
 

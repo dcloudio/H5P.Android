@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/midBTN"
+    android:layout_width="100dp"
+    android:layout_height="100dp">
+
+    <ImageView
+        android:id="@+id/bgImg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"/>
+
+    <LinearLayout
+        android:id="@+id/contentWrapper"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:gravity="center">
+        <ImageView
+            android:id="@+id/tabIV"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/dcloud_streamapp_icon"/>
+        <TextView
+            android:id="@+id/tabTV"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:includeFontPadding="false"/>
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/itemDot"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:src="@drawable/dcloud_tabbar_dot"
+        android:layout_toRightOf="@id/contentWrapper"
+        android:layout_alignTop="@id/contentWrapper"
+        android:layout_marginLeft="-5dp"
+        android:layout_marginTop="0dp"
+        android:visibility="invisible"/>
+
+    <TextView
+        android:id="@+id/itemBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dcloud_tabbar_badge"
+        android:layout_toRightOf="@id/contentWrapper"
+        android:layout_alignTop="@id/contentWrapper"
+        android:layout_marginLeft="-5dp"
+        android:layout_marginTop="0dp"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp"
+        android:gravity="center"
+        android:visibility="invisible"
+        android:maxLines="1"
+        android:maxEms="3"
+        android:ellipsize="end"
+        android:text=""
+        android:minHeight="18dp"
+        android:minWidth="18dp"
+        android:textColor="#FFFFFF"
+        android:textSize="10sp" />
+
+</RelativeLayout>

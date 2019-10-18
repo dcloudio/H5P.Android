@@ -758,7 +758,9 @@ public class BarcodeView extends AbsoluteLayout implements IBarHandler, TextureV
     private void fireEvent(String type, Map<String, Object> params) {
 //        if (null == events) return;
         if(component.containsEvent(type)) {
-            component.fireEvent(type, params);
+            Map<String ,Object> detail = new HashMap<>();
+            detail.put("detail",params);
+            component.fireEvent(type, detail);
         }
     }
 }

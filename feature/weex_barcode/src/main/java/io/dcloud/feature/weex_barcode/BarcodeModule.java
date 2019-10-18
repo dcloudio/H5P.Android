@@ -32,20 +32,26 @@ public class BarcodeModule extends WXModule {
                 values.put("code", result.getBarcodeFormat().toString());
                 values.put("message", JSONUtil.toJSONableString(result.getText()));
                 values.put("file", path == null ? "" : path);
-                callback.invoke(values);
+                Map<String,Object> details = new HashMap<>();
+                details.put("detail",values);
+                callback.invoke(details);
             } else {
                 Map<String, Object> values = new HashMap<>();
                 values.put("type", "fail");
                 values.put("code", DOMException.CODE_BARCODE_ERROR);
                 values.put("message", DOMException.MSG_BARCODE);
-                callback.invoke(values);
+                Map<String,Object> details = new HashMap<>();
+                details.put("detail",values);
+                callback.invoke(details);
             }
         }catch (Exception e) {
             Map<String, Object> values = new HashMap<>();
             values.put("type", "fail");
             values.put("code", DOMException.CODE_BARCODE_ERROR);
             values.put("message", e.getMessage());
-            callback.invoke(values);
+            Map<String,Object> details = new HashMap<>();
+            details.put("detail",values);
+            callback.invoke(details);
         }
     }
 }

@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.nostra13.dcloudimageloader.core.ImageLoaderL;
@@ -47,7 +48,7 @@ public class VideoPlayerView extends FrameLayout implements IMediaPlayer.OnInfoL
 
     private IjkPlayerView mPlayerView;
 
-    private WXVContainer component;
+    private WXVContainer mComponent;
 
     private Context mContext;
     // 子component放置view
@@ -56,24 +57,26 @@ public class VideoPlayerView extends FrameLayout implements IMediaPlayer.OnInfoL
     public VideoPlayerView(Context context, WXVContainer component) {
         super(context);
         this.mContext = context;
-        this.component = component;
+        this.mComponent = component;
         subViewContainer = new FrameLayout(context);
         addView(subViewContainer,new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
+        createVideoView();
+        subViewContainer.bringToFront();
         if (component.getInstance().isFrameViewShow()) {
-            createVideoView();
-            subViewContainer.bringToFront();
+            mPlayerView.setVideoVisibility();
         }else {
             component.getInstance().addFrameViewEventListener(new WXSDKInstance.FrameViewEventListener() {
                 @Override
                 public void onShowAnimationEnd() {
-                    createVideoView();
-                    subViewContainer.bringToFront();
-                    {
-                        setEnableDanmu(VideoPlayerView.this.component.getAttrs().containsKey("enableDanmu") && Boolean.parseBoolean(VideoPlayerView.this.component.getAttrs().get("enableDanmu").toString()));
-                        setDanmuBtn(VideoPlayerView.this.component.getAttrs().containsKey("danmuBtn") && Boolean.parseBoolean(VideoPlayerView.this.component.getAttrs().get("danmuBtn").toString()));
-                    }
-                    VideoPlayerView.this.component.updateProperties(VideoPlayerView.this.component.getAttrs());
+//                    createVideoView();
+//                    subViewContainer.bringToFront();
+//                    {
+//                        setEnableDanmu(mComponent.getAttrs().containsKey("enableDanmu") && Boolean.parseBoolean(mComponent.getAttrs().get("enableDanmu").toString()));
+//                        setDanmuBtn(mComponent.getAttrs().containsKey("danmuBtn") && Boolean.parseBoolean(mComponent.getAttrs().get("danmuBtn").toString()));
+//                    }
+                    mPlayerView.setVideoVisibility();
+//                    mComponent.updateProperties(mComponent.getAttrs());
+                    mComponent.getInstance().removeFrameViewEventListener(this);
                 }
             });
         }
@@ -92,7 +95,7 @@ public class VideoPlayerView extends FrameLayout implements IMediaPlayer.OnInfoL
         mPlayerView.setOnBufferingUpdateListener(this);// 新加
 
         if (fullScreenSize == null) {
-            View view = ((Activity) component.getInstance().getContext()).getWindow().getDecorView().findViewById(android.R.id.content);
+            View view = ((Activity) mComponent.getInstance().getContext()).getWindow().getDecorView().findViewById(android.R.id.content);
             fullScreenSize = new GraphicSize(view.getWidth(), view.getHeight());
         }
     }
@@ -104,7 +107,7 @@ public class VideoPlayerView extends FrameLayout implements IMediaPlayer.OnInfoL
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (PdrUtil.isEmpty(component.getStyles().getBackgroundColor()))
+        if (PdrUtil.isEmpty(mComponent.getStyles().getBackgroundColor()))
             setBackgroundColor(Color.BLACK);
     }
 
@@ -112,12 +115,12 @@ public class VideoPlayerView extends FrameLayout implements IMediaPlayer.OnInfoL
         if (mPlayerView == null) return;
         AssetsDataSourceProvider fd = null;
         if (!PdrUtil.isNetPath(willBeSetSrc)) {
-            willBeSetSrc = component.getInstance().rewriteUri(Uri.parse(willBeSetSrc), URIAdapter.VIDEO).getPath();
+            willBeSetSrc = mComponent.getInstance().rewriteUri(Uri.parse(willBeSetSrc), URIAdapter.VIDEO).getPath();
             if (willBeSetSrc != null && !PdrUtil.isDeviceRootDir(willBeSetSrc)) {
                 try {
                     if (willBeSetSrc.startsWith("/"))
                         willBeSetSrc = willBeSetSrc.replace("/", "");
-                    fd = new AssetsDataSourceProvider(component.getContext().getAssets().openFd(willBeSetSrc));
+                    fd = new AssetsDataSourceProvider(mComponent.getContext().getAssets().openFd(willBeSetSrc));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -361,11 +364,15 @@ public class VideoPlayerView extends FrameLayout implements IMediaPlayer.OnInfoL
     public void onChanged(String type, String msg) {
         Map<String, Object> values = new HashMap<>();
         if (!TextUtils.isEmpty(msg)) {
-            values.put("message", msg);
+            try {
+                values.put("detail", JSON.parse(msg));
+            } catch (Exception e) {
+                values.put("detail", msg);
+            }
         }
         execCallBack(type, values);
         if (mPlayerView == null) return;
-        WXComponent child = component.getChild(0);
+        WXComponent child = mComponent.getChild(0);
         if (child instanceof VideoInnerViewComponent) {
             if (originalSize == null)
                 originalSize = child.getLayoutSize();
@@ -443,8 +450,8 @@ public class VideoPlayerView extends FrameLayout implements IMediaPlayer.OnInfoL
     }
 
     private void execCallBack(String type, Map<String, Object> values) {
-        if (component.getEvents().contains(type)) {
-            component.fireEvent(type, values);
+        if (mComponent.getEvents().contains(type)) {
+            mComponent.fireEvent(type, values);
         }
     }
 

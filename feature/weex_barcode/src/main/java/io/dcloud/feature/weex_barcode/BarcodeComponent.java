@@ -77,6 +77,7 @@ public class BarcodeComponent extends WXComponent<BarcodeView> {
                     isAnimationEnd = true;
                     if (isstart)
                         start(null);
+                    getInstance().removeFrameViewEventListener(this);
                 }
             });
         } else {

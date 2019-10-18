@@ -44,11 +44,16 @@ public class Constant {
         String KEYS = "subkey";
         String MARKERS = "markers";
         String POLYLINE = "polyline";
-        String POLYGON = "polygon";
-        String CIRCLE = "circle";
+        String POLYGONS = "polygons";
+        String CIRCLES = "circles";
         String CONTROLS = "controls";
         String SHOW_LOCATION = "showLocation";
         String INCLUDE_POINTS = "includePoints";
+        String ROTATE = "rotate";
+        String SKEW = "skew";
+        String ENABLE_SATELLITE = "enableSatellite";
+        String ENABLE_TRAFFIC = "enableTraffic";
+        String SHOW_SCALE = "showScale";
 
 
         // marker
@@ -93,12 +98,12 @@ public class Constant {
     public static interface EVENT {
         String ZOOM_CHANGE = "zoomchange";
         String DRAG_CHANGE = "dragend";
-        String BINDTAP = "bindtap";
+        String BINDTAP = "tap";
         String UPDATED = "updated";
-        String BINDREGION_CHANGE = "bindregionchange";
-        String BIND_MARKER_TAP = "bindmarkertap";
-        String BIND_CALLOUT_TAP = "bindcallouttap";
-        String BIND_POI_TAP = "bindpoitap";
-        String BIND_CONTROL_TAP = "bindcontroltap";
+        String BINDREGION_CHANGE = "regionchange";
+        String BIND_MARKER_TAP = "markertap";
+        String BIND_CALLOUT_TAP = "callouttap";
+        String BIND_POI_TAP = "poitap";
+        String BIND_CONTROL_TAP = "controltap";
     }
 }
