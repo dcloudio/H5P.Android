@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@layout/getui_notification,
+    @layout/push_expandable_big_image_notification,
+    @layout/push_expandable_big_text_notification,
+    @layout/push_pure_pic_notification,
+    @drawable/push,
+    @drawable/push_small,
+    @drawable/mz_push_notification_small_icon,
+    @layout/hms_*,
+    @layout/upsdk_*,
+    @layout/hwpush_*,
+    @drawable/upsdk_*,
+    @string/upsdk_*,
+    @string/hms_*,
+    @string/connect_server_fail_prompt_toast,
+    @string/getting_message_fail_prompt_toast,
+    @string/no_available_network_prompt_toast,
+    @string/third_app_dl_*"/>
