@@ -1,6 +1,6 @@
-# H5P.Android
+# Android平台5+App/uni-app运行环境开源项目
 
-**开源工程适配HBuilderX2.3.6-20191020**
+**开源项目需与HBuilderX2.3.6-20191020配套使用**
 
 ## 模块与源码对应关系
 | 文件夹						| 说明						| 5+APP项目			| uni-app项目		|
