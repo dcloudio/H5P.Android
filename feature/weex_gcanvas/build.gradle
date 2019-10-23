@@ -1,0 +1,30 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 28
+
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+    }
+    sourceSets {
+        main {
+            jniLibs.srcDirs = [
+                    './libs']
+        }
+    }
+
+}
+
+dependencies {
+//    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    compileOnly "com.android.support:support-v4:${rootProject.ext.supportLibVersion}"
+    compileOnly project(':dc_weexsdk')
+    compileOnly project(':lib.5plus.base')
+    compileOnly 'com.facebook.fresco:fresco:1.13.0'
+//    implementation project(path: ':gcanvas_core')
+    compileOnly 'com.alibaba:fastjson:1.2.56'
+}
