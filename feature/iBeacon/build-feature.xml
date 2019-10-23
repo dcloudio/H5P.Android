@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="MSC_Android" default="build-feature">
+	<property file="${build.dir}/build.properties"/>
+
+	<property name="out.dir" value="bin" />
+	<condition property="outdir-classes" value="${out.dir}\classes" else="${out.dir}/classes"  >
+		<os family="windows" />
+	</condition>
+
+	<property name="android-jar" value="${sdk.folder}android.jar" />
+	<property name="external-libs" value="${build.dir}/libs" />
+	<property name="thirdpart-libs" value="libs" />
+	<property name="entry-jar" value="${build.dir}/feature/jar/entry.jar"/>
+
+
+	<target name="clean">
+		<delete includeemptydirs="true" verbose="true" failonerror="false" dir="${basedir}/bin"/>
+	</target>
+
+	<!--编译pdr-->
+	<target name="compile" depends="clean">
+		<echo> sub-ant  </echo>
+		<mkdir dir="${out.dir}" />
+		<mkdir dir="${outdir-classes}" />
+		<basename property="antfile.dir" file="${basedir}"/>
+
+		<echo>outdir:"${outdir-classes}" android-jar:"${android-jar}"  external:"${external-libs}" </echo>
+        <javac encoding="UTF-8" source="1.7" target="1.7" debug="true" extdirs="" destdir="${outdir-classes}" bootclasspath="${android-jar}">
+			<src path="src" />
+			<classpath>
+				<fileset dir="${external-libs}" includes="*.jar" />
+				<fileset dir="${thirdpart-libs}" includes="*.jar" />
+				<!-- <fileset dir="${build.dir}/feature/jar/" includes="*.jar" />   -->
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="build-feature" depends="compile">
+		<echo>jdkhome ${apk.tools}</echo>
+		<property name="obfuscate.absolute.dir" location="${out.dir}" />
+		<property name="preobfuscate.jar.file" value="bin/${antfile.dir}.jar" />
+		<property name="obfuscated.jar.file" value="libs/${antfile.dir}.jar" />
+		<!-- input for dex will be proguard's output -->
+		<property name="out.dex.input.absolute.dir" value="${obfuscated.jar.file}" />
+		<!-- Add Proguard Tasks -->
+		<property name="proguard.jar" location="${apk.tools}/proguard/lib/proguard.jar" />
+		<taskdef name="proguard" classname="proguard.ant.ProGuardTask" classpath="${proguard.jar}" />
+		<path id="project.jars.ref">
+			<pathelement location="${preobfuscate.jar.file}" />
+		</path>
+		<!--
+                     Set the project jar files Path object into a single property. It'll be
+                     all the jar files separated by a platform path-separator.
+        -->
+		<property name="android.libraryjars" value="project.jars.ref" />
+		<property name="project.jars" refid="project.jars.ref" />
+		<mkdir dir="${obfuscate.absolute.dir}" />
+		<delete file="${preobfuscate.jar.file}" />
+		<delete file="${obfuscated.jar.file}" />
+		<jar basedir="bin/classes" destfile="${preobfuscate.jar.file}" />
+		<property name="proguard.config" value="${build.dir}/proguard.cfg" />
+		<proguard>
+			@${proguard.config}
+			-injars ${project.jars}
+			-outjars ${obfuscated.jar.file}
+			-libraryjars ${android-jar}
+			-libraryjars ${entry-jar}
+			-libraryjars ${external-libs}
+			-libraryjars ${thirdpart-libs}
+			-dump ${obfuscate.absolute.dir}/dump.txt
+			-printseeds ${obfuscate.absolute.dir}/seeds.txt
+			-printusage ${obfuscate.absolute.dir}/usage.txt
+			-printmapping ${obfuscate.absolute.dir}/mapping.txt
+		</proguard>
+
+		<copy todir="${external-libs}">
+			<fileset dir="${thirdpart-libs}" includes="**/*"/>
+		</copy>
+		<!-- -->
+	</target>
+
+	<path id="jar.libs.ref">
+		<fileset dir="libs" includes="*.jar" />
+	</path>
+</project>
