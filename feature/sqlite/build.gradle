@@ -1,0 +1,34 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    buildTypes {
+        release {
+            zipAlignEnabled true
+        }
+    }
+
+}
+project.beforeEvaluate { // build.gradle解析前
+}
+
+project.afterEvaluate { // build.gradle解析后、task之前
+    generateReleaseBuildConfig.enabled = false
+}
+
+dependencies {
+    compileOnly project(':lib.5plus.base')
+}
