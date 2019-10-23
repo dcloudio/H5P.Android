@@ -1,0 +1,78 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        versionCode 1
+        versionName '1.0'
+    }
+
+//    packageBuildConfig(false)     // deprecated
+
+    lintOptions {
+        abortOnError false
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            zipAlignEnabled true
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile './AndroidManifest.xml'
+            assets.srcDirs = [
+                    './assets'
+            ]
+            jniLibs.srcDirs = [
+                    './libs']
+            java.srcDirs = ['./src'
+            ]
+            res.srcDirs = ['./res'
+            ]
+        }
+    }
+
+    // 自定义aar文件名称，准备处理第三方jar 
+    libraryVariants.all { variant ->
+        variant.outputs.all { output ->
+            if (output.outputFile != null && output.outputFile.name.endsWith('.aar')) {
+                outputFileName = "${archivesBaseName}-temp.aar"
+            }
+        }
+    }
+}
+
+dependencies {
+    compileOnly fileTree(include: ['*.jar'], dir: './libs')
+    compileOnly project(':lib.5plus.base')
+    compileOnly project(':feature:aps')
+}
+
+
+project.beforeEvaluate { // build.gradle解析前
+}
+
+project.afterEvaluate { // build.gradle解析后、task之前
+    generateReleaseBuildConfig.enabled = false
+    tasks.getByName('assembleRelease') {
+        it.finalizedBy mergeJar2Aar
+    }
+}
+
+// 合并jar到aar中
+task mergeJar2Aar(type: Zip) {
+    from (zipTree(file("${buildDir}/outputs/aar/${archivesBaseName}-temp.aar"))) {
+        exclude '/libs/*.jar'
+    }
+    from ('./libs') {
+        include('/*.jar')
+        into('/libs')
+    }
+    archiveName = "${archivesBaseName}-release.aar"
+    destinationDir = file("${buildDir}/outputs/aar/")
+}

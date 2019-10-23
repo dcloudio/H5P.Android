@@ -1,0 +1,14 @@
+<resources>
+
+    <!--个推隐私条款开始-->
+    <string name="getui_privacy_desc_user">点击“同意”，即表示您同意上述内容及</string>
+    <string name="getui_privacy_name">个推用户隐私政策。</string>
+    <string name="getui_privacy_detail_activity_title">个推用户隐私政策</string>
+    <string name="getui_privacy_alert_title">推送服务授权</string>
+    <string name="getui_privacy_alert_agree">同意</string>
+    <string name="getui_privacy_alert_refuse">拒绝</string>
+    <string name="getui_privacy_alert_file_name">getui_privacy_alert_cn.html</string>
+    <string name="getui_privacy_detail_url">https://legal.igexin.com/privacy_zh.html</string>
+    <!--个推隐私条款结束-->
+
+</resources>

@@ -1,0 +1,14 @@
+<resources>
+
+    <!--个推隐私条款开始-->
+    <string name="getui_privacy_desc_user">By clicking \"Agree\", you agree to the above and the</string>
+    <string name="getui_privacy_name">&#160;Getui User Privacy Policy.</string>
+    <string name="getui_privacy_detail_activity_title">Getui User Privacy Policy</string>
+    <string name="getui_privacy_alert_title">Push Service Permissions</string>
+    <string name="getui_privacy_alert_agree">Agree</string>
+    <string name="getui_privacy_alert_refuse">Deny</string>
+    <string name="getui_privacy_alert_file_name">getui_privacy_alert_en.html</string>
+    <string name="getui_privacy_detail_url">https://legal.igexin.com/privacy_en.html</string>
+    <!--个推隐私条款结束-->
+
+</resources>
