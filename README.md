@@ -68,9 +68,12 @@
 
 如果模块中不存在build.gradle文件，可以将文件夹中的目录直接拷贝到主项目中。例如xhr模块，可以将src下的文件夹拷贝到主项目的src下，如果存在其他文件夹（如libs），直接将文件夹下的内容拷贝到同名文件夹下即可。
 
+
+**参考HBuilder-SourceTool-as项目**
+
 ## 项目配置及打包
 
-clone示例项目到本地，直接运行即可。如果运行uni-app时出现问题，可参考：https://ask.dcloud.net.cn/article/35139。
+clone HBuilder-SourceTool-as项目到本地，直接运行即可。如果运行uni-app时出现问题，可参考：https://ask.dcloud.net.cn/article/35139。
 
 安卓打包配置参考：https://www.cnblogs.com/lsdb/p/9337342.html。
 
