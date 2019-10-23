@@ -1,0 +1,53 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 29
+
+    defaultConfig {
+        minSdkVersion 19
+        versionCode 1
+        versionName '1.0'
+    }
+
+//    packageBuildConfig(false)     // deprecated
+
+    lintOptions {
+        abortOnError false
+    }
+
+    buildTypes {
+        release {
+            zipAlignEnabled true
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile './AndroidManifest.xml'
+            assets.srcDirs = [
+                    './assets'
+            ]
+            jniLibs.srcDirs = [
+                    './libs']
+            java.srcDirs = ['./src'
+            ]
+            res.srcDirs = ['./res'
+            ]
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: './libs')
+    compileOnly fileTree(include: ['*.aar'], dir: '../app/libs')
+}
+
+
+project.beforeEvaluate { // build.gradle解析前
+}
+
+project.afterEvaluate { // build.gradle解析后、task之前
+    generateReleaseBuildConfig.enabled = false
+}
+

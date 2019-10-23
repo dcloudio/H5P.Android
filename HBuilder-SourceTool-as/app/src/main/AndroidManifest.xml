@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="io.dcloud.devtool">
+
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <application
+        android:allowClearUserData="true"
+        android:icon="@drawable/icon"
+        android:label="@string/app_name"
+        android:largeHeap="true">
+        <!-- 流应用 -->
+        <!-- 独立包 -->
+        <activity
+            android:name="io.dcloud.PandoraEntry"
+            android:theme="@style/TranslucentTheme"
+            android:configChanges="orientation|keyboardHidden|screenSize|mcc|mnc|fontScale"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <data android:scheme="hbuilder"/>
+                <action android:name="android.intent.action.VIEW"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+            </intent-filter>
+            <intent-filter>
+                <data android:mimeType="image/*"/>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <meta-data android:name="dcloud_uninview_background"
+            android:value="true"/>
+                <provider
+                    android:name="io.dcloud.common.util.DCloud_FileProvider"
+                    android:authorities="io.dcloud.devtool.dc.fileprovider"
+                    android:exported="false"
+                    android:grantUriPermissions="true">
+                    <meta-data
+                        android:name="android.support.FILE_PROVIDER_PATHS"
+                        android:resource="@xml/dcloud_file_provider" />
+                </provider>
+    </application>
+
+</manifest>
