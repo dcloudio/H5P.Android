@@ -18,7 +18,7 @@
 
 ## 模块与源码对应关系
 | 功能模块                  | 源码目录                  | 5+APP项目                | uni-app项目              |
-| :-------:                | :-------:                | :-------:                | :-------:                |
+| :-------                | :-------                | :-------                | :-------                |
 | Audio(音频)              | feature/audio             | [plus.audio](https://www.html5plus.org/doc/zh_cn/audio.html)    | https://uniapp.dcloud.io/api/media/record-manager https://uniapp.dcloud.io/api/media/audio-context |
 | Audio(MP3格式音频支持库)  | feature/audio-mp3acc      | [plus.audio](https://www.html5plus.org/doc/zh_cn/audio.html)    |  |
 | Barcode(二维码)          | feature/barcode           | [plus.barcode](https://www.html5plus.org/doc/zh_cn/barcode.html) | https://uniapp.dcloud.io/api/system/barcode |
