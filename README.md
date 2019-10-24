@@ -1,61 +1,76 @@
 # Android平台5+App/uni-app运行环境开源项目
 
-**开源项目需与HBuilderX2.3.6-20191020配套使用**
+**重要：请使用HBuilderX2.3.6-20191020生成本地打包App资源，否则uni-app项目可能提示“运行环境版本和编译器版本不一致”，详情参考[https://ask.dcloud.net.cn/article/35627](https://ask.dcloud.net.cn/article/35627)**
+
+## 说明
+此次更新梳理了工程结构，现在开发者可以直接修改引擎中的代码，自主编译出新的引擎。
+
+如果开发者要修改本工程源码，请注意“引擎”和“插件”的分界线。
+“引擎”是对5+/uni-app规范的实现，修改引擎源码可以优化对规范的实现，但不是提供规范外的功能。规范外的功能，应该做成“插件”。如需公开，则放到[插件市场](https://ext.dcloud.net.cn/)。
+比如扫码，5+/uni-app的规范已经存在，但开发者对扫码效率不满意，提供自己更好的实现，则可以改动本源码，重新Build引擎。
+而如果是想新增一个ar功能，则应该做成插件，而不是加入到本工程中。即，开发者不能自主新增5+/uni-app的js API规范。
+
+任何一个项目的源码，吃透整体都不是一件容易的事情。一般开发者有改动需求，也多集中在一些能力或SDK的实现上。
+比如扫码、视频、地图、直播、摄像头、相册、蓝牙等，以及某些界面的文字。
+只关注某些能力模块，吃透和修改会更加容易。
+
+受精力所限，某些模块，比如DCloud定制过的weex源码，还未规整好，暂时以库的方式提供，未来会提供完整源码。不过这不影响开发者修改其他源码和编译工程。
 
 ## 模块与源码对应关系
-| 文件夹						| 说明						| 5+APP项目			| uni-app项目		|
-| :-------:					| :-------:					| :-------:			| :-------:			|
-| feature/aps				        | 推送(基础库)                | [plus.push](https://www.html5plus.org/doc/zh_cn/push.html)                       | https://uniapp.dcloud.io/api/plugins/push |
-| feature/aps-igexin		    | 个推推送                    | [plus.push](https://www.html5plus.org/doc/zh_cn/push.html)                       |
-| feature/aps-igexin-gp		  | 个推推送(google play版)     | [plus.push](https://www.html5plus.org/doc/zh_cn/push.html)                       |
-| feature/aps-unipush		    | unipush推送                 | [plus.push](https://www.html5plus.org/doc/zh_cn/push.html)                       |
-| feature/aps-unipush-gp	  | unipush推送(google play版)  | [plus.push](https://www.html5plus.org/doc/zh_cn/push.html)                       |
-| feature/aps-xiaomi		    | 小米推送					          | [plus.push](https://www.html5plus.org/doc/zh_cn/push.html)                       |
-| feature/audio				      | 音频                        | [plus.audio](https://www.html5plus.org/doc/zh_cn/audio.html)                     | https://uniapp.dcloud.io/api/media/record-manager https://uniapp.dcloud.io/api/media/audio-context |
-| feature/audio-mp3acc		  | 音频(MP3格式支持库)          | [plus.audio](https://www.html5plus.org/doc/zh_cn/audio.html)    |
-| feature/barcode			      | 二维码                      | [plus.barcode](https://www.html5plus.org/doc/zh_cn/barcode.html)                 | https://uniapp.dcloud.io/api/system/barcode |
-| feature/bluetooth			    | 低功耗蓝牙                  | [plus.bluetooth](https://www.html5plus.org/doc/zh_cn/bluetooth.html)             | https://uniapp.dcloud.io/api/system/bluetooth |
-| feature/contacts			    | 通讯录                      | [plus.contacts](https://www.html5plus.org/doc/zh_cn/contacts.html) |
-| feature/camera			      | 摄像头                      | [plus.camera](https://www.html5plus.org/doc/zh_cn/camera.html)     |
-| feature/device			      | 设备信息				            | [plus.device](https://www.html5plus.org/doc/zh_cn/device.html)                   | https://uniapp.dcloud.io/api/system/info |
-| feature/downloader		    | 文件下载					          | [plus.downloader](https://www.html5plus.org/doc/zh_cn/downloader.html)           | https://uniapp.dcloud.io/api/request/network-file?id=downloadfile |
-| feature/file				      | 文件系统					          | [plus.io](https://www.html5plus.org/doc/zh_cn/io.html)                           | https://uniapp.dcloud.io/api/file/file |
-| feature/fingerprint		    | 指纹识别                    | [plus.fingerprint](https://www.html5plus.org/doc/zh_cn/fingerprint.html)         | https://uniapp.dcloud.io/api/other/authentication |
-| feature/ibeacon			      | iBeacon                    | [plus.ibeacon](https://www.html5plus.org/doc/zh_cn/ibeacon.html)                 | https://uniapp.dcloud.io/api/system/ibeacon |
-| feature/geolacation		    | 定位(基础库)					       | [plus.geolocation](https://www.html5plus.org/doc/zh_cn/geolocation.html)         | https://uniapp.dcloud.io/api/location/location |
-| feature/geolacation-amap	| 高德定位                    | [plus.geolocation](https://www.html5plus.org/doc/zh_cn/geolocation.html) |
-| feature/geolacation-baidu	| 百度定位                    | [plus.geolocation](https://www.html5plus.org/doc/zh_cn/geolocation.html) |
-| feature/geolacation-system| 系统定位                    | [plus.geolocation](https://www.html5plus.org/doc/zh_cn/geolocation.html) |
-| feature/map-amap			    | 高德地图                    | [plus.map](https://www.html5plus.org/doc/zh_cn/maps.html)                         | https://uniapp.dcloud.io/api/location/map |
-| feature/map-baidu			    | 百度地图                    | [plus.map](https://www.html5plus.org/doc/zh_cn/maps.html)                         | https://uniapp.dcloud.io/api/location/map |
-| feature/media				      | 视频播放                    | [plus.video.VideoPlayer](https://www.html5plus.org/doc/zh_cn/video.html#plus.video.VideoPlayer)      | https://uniapp.dcloud.io/api/media/video |
-| feature/media-livepusher	| 直播推流                    | [plus.video.LivePusher](https://www.html5plus.org/doc/zh_cn/video.html#plus.video.LivePusher)       | https://uniapp.dcloud.io/api/media/live-player-context |
-| feature/messaging			    | 短彩邮件消息                | [plus.messaging](https://www.html5plus.org/doc/zh_cn/messaging.html)     |
-| feature/navigatorui		    | 浏览器运行环境信息           | [plus.navigator](https://www.html5plus.org/doc/zh_cn/navigator.html)             | https://uniapp.dcloud.io/api/system/info |
-| feature/oauth				      | 登录鉴权(基础库)						 | [plus.oauth](https://www.html5plus.org/doc/zh_cn/oauth.html)                     | https://uniapp.dcloud.io/api/plugins/login |
-| feature/oauth-miui		    | 小米登录                    | [plus.oauth](https://www.html5plus.org/doc/zh_cn/oauth.html) |
-| feature/oauth-qq			    | qq登录                      | [plus.oauth](https://www.html5plus.org/doc/zh_cn/oauth.html) |
-| feature/oauth-sina		    | 新浪微博登录                | [plus.oauth](https://www.html5plus.org/doc/zh_cn/oauth.html) |
-| feature/oauth-weixin		  | 微信登录                    | [plus.oauth](https://www.html5plus.org/doc/zh_cn/oauth.html)  |
-| feature/payment			      | 支付(基础库)	               | [plus.payment](https://www.html5plus.org/doc/zh_cn/payment.html)                 | https://uniapp.dcloud.io/api/plugins/payment |
-| feature/payment-alipay	  | 支付宝支付                  | [plus.payment](https://www.html5plus.org/doc/zh_cn/payment.html) |
-| feature/payment-weixin	  | 微信支付                    | [plus.payment](https://www.html5plus.org/doc/zh_cn/payment.html) |
-| feature/share				      | 分享(基础库)                | [plus.share](https://www.html5plus.org/doc/zh_cn/share.html)                     | https://uniapp.dcloud.io/api/plugins/share |
-| feature/share-qq			    | QQ分享                     | [plus.share](https://www.html5plus.org/doc/zh_cn/share.html) |
-| feature/share-sina		    | 新浪微博分享                | [plus.share](https://www.html5plus.org/doc/zh_cn/share.html) |
-| feature/share-weixin		  | 微信分享                   | [plus.share](https://www.html5plus.org/doc/zh_cn/share.html) |
-| feature/speech			      | 语音识别(基础库)            | [plus.speech](https://www.html5plus.org/doc/zh_cn/speech.html)                   | https://uniapp.dcloud.io/api/plugins/voice |
-| feature/speech_baidu		  | 百度语音识别				        | [plus.speech](https://www.html5plus.org/doc/zh_cn/speech.html) |
-| feature/speech_ifly		    | 讯飞语音识别                | [plus.speech](https://www.html5plus.org/doc/zh_cn/speech.html) |
-| feature/statistics-umeng	| 友盟统计                    | [plus.statistic](https://www.html5plus.org/doc/zh_cn/statistic.html) |
-| feature/uploader			    | 文件上传					          | [plus.uploader](https://www.html5plus.org/doc/zh_cn/uploader.html)               | https://uniapp.dcloud.io/api/request/network-file?id=uploadfile |
-| feature/xhr               | 网络请求                    | [plus.net](https://www.html5plus.org/doc/zh_cn/xhr.html)                         | https://uniapp.dcloud.io/api/request/request?id=request |
-| feature/sqlite            | 数据库                      | [plus.sqlite](https://www.html5plus.org/doc/zh_cn/sqlite.html)  |
-| feature/weex_amap				  | nvue原生组件: 高德地图       | 不支持 | https://uniapp.dcloud.io/component/map |
-| feature/weex_barcode			| nvue原生组件: 二维码         | 不支持 | https://uniapp.dcloud.io/component/barcode |
-| feature/weex_livepusher		| nvue原生组件: 推流           | 不支持 | https://uniapp.dcloud.io/component/live-pusher |
-| feature/weex_videoplayer  | nvue原生组件: 视频           | 不支持 | https://uniapp.dcloud.io/component/live-player |
-| feature/weex_gcanvas			| nvue原生组件: canvas         | 不支持 | https://github.com/dcloudio/NvueCanvasDemo |
+| 功能模块                  | 源码目录                  | 5+APP项目                | uni-app项目              |
+| :-------:                | :-------:                | :-------:                | :-------:                |
+| Audio(音频)              | feature/audio             | [plus.audio](https://www.html5plus.org/doc/zh_cn/audio.html)    | https://uniapp.dcloud.io/api/media/record-manager https://uniapp.dcloud.io/api/media/audio-context |
+| Audio(MP3格式音频支持库)  | feature/audio-mp3acc      | [plus.audio](https://www.html5plus.org/doc/zh_cn/audio.html)    |  |
+| Barcode(二维码)          | feature/barcode           | [plus.barcode](https://www.html5plus.org/doc/zh_cn/barcode.html) | https://uniapp.dcloud.io/api/system/barcode |
+| Bluetooth(低功耗蓝牙)     | feature/bluetooth        | [plus.bluetooth](https://www.html5plus.org/doc/zh_cn/bluetooth.html) | https://uniapp.dcloud.io/api/system/bluetooth |
+| Camera(摄像头)            | feature/camera           | [plus.camera](https://www.html5plus.org/doc/zh_cn/camera.html)     |  |
+| Contacts(通讯录)          | feature/contacts         | [plus.contacts](https://www.html5plus.org/doc/zh_cn/contacts.html) |  |
+| Device(设备信息)          | feature/device           | [plus.device](https://www.html5plus.org/doc/zh_cn/device.html)   | https://uniapp.dcloud.io/api/system/info |
+| Downloader(文件下载)      | feature/downloader       | [plus.downloader](https://www.html5plus.org/doc/zh_cn/downloader.html) | https://uniapp.dcloud.io/api/request/network-file?id=downloadfile |
+| Fingerprint(指纹识别)     | feature/fingerprint      | [plus.fingerprint](https://www.html5plus.org/doc/zh_cn/fingerprint.html) | https://uniapp.dcloud.io/api/other/authentication |
+| Geolocation(基础定位库)   | feature/geolacation      | [plus.geolocation](https://www.html5plus.org/doc/zh_cn/geolocation.html) | https://uniapp.dcloud.io/api/location/location |
+| Geolocation(高德定位)     | feature/geolacation-amap	| [plus.geolocation](https://www.html5plus.org/doc/zh_cn/geolocation.html) | https://uniapp.dcloud.io/api/location/location |
+| Geolocation(百度定位)     | feature/geolacation-baidu	| [plus.geolocation](https://www.html5plus.org/doc/zh_cn/geolocation.html) | https://uniapp.dcloud.io/api/location/location |
+| Geolocation(系统定位)     | feature/geolacation-system | [plus.geolocation](https://www.html5plus.org/doc/zh_cn/geolocation.html) | https://uniapp.dcloud.io/api/location/location |
+| iBeacon                  | feature/ibeacon            | [plus.ibeacon](https://www.html5plus.org/doc/zh_cn/ibeacon.html)     | https://uniapp.dcloud.io/api/system/ibeacon |
+| IO(文件系统)              | feature/file               | [plus.io](https://www.html5plus.org/doc/zh_cn/io.html)               | https://uniapp.dcloud.io/api/file/file |
+| LivePusher(直播推流)      | feature/media-livepusher   | [plus.video.LivePusher](https://www.html5plus.org/doc/zh_cn/video.html#plus.video.LivePusher) | https://uniapp.dcloud.io/api/media/live-player-context |
+| Maps(高德地图)            | feature/map-amap           | [plus.map](https://www.html5plus.org/doc/zh_cn/maps.html)            | https://uniapp.dcloud.io/api/location/map |
+| Maps(百度地图)            | feature/map-baidu          | [plus.map](https://www.html5plus.org/doc/zh_cn/maps.html)            | https://uniapp.dcloud.io/api/location/map |
+| Messaging(短彩邮件消息)    | feature/messaging          | [plus.messaging](https://www.html5plus.org/doc/zh_cn/messaging.html) |
+| Navigator(运行环境信息)    | feature/navigatorui        | [plus.navigator](https://www.html5plus.org/doc/zh_cn/navigator.html) | https://uniapp.dcloud.io/api/system/info |
+| Oauth(登录基础库)         | feature/oauth              | [plus.oauth](https://www.html5plus.org/doc/zh_cn/oauth.html)        | https://uniapp.dcloud.io/api/plugins/login |
+| Oauth(小米登录)           | feature/oauth-miui         | [plus.oauth](https://www.html5plus.org/doc/zh_cn/oauth.html)        | https://uniapp.dcloud.io/api/plugins/login |
+| Oauth(QQ登录)             | feature/oauth-qq           | [plus.oauth](https://www.html5plus.org/doc/zh_cn/oauth.html)        | https://uniapp.dcloud.io/api/plugins/login |
+| Oauth(新浪微博登录)        | feature/oauth-sina         | [plus.oauth](https://www.html5plus.org/doc/zh_cn/oauth.html)        | https://uniapp.dcloud.io/api/plugins/login |
+| Oauth(微信登录)           | feature/oauth-weixin       | [plus.oauth](https://www.html5plus.org/doc/zh_cn/oauth.html)         | https://uniapp.dcloud.io/api/plugins/login |
+| Payment(支付基础库)       | feature/payment            | [plus.payment](https://www.html5plus.org/doc/zh_cn/payment.html)     | https://uniapp.dcloud.io/api/plugins/payment |
+| Payment(支付宝支付)       | feature/payment-alipay     | [plus.payment](https://www.html5plus.org/doc/zh_cn/payment.html)     | https://uniapp.dcloud.io/api/plugins/payment |
+| Payment(微信支付)         | feature/payment-weixin     | [plus.payment](https://www.html5plus.org/doc/zh_cn/payment.html)     | https://uniapp.dcloud.io/api/plugins/payment |
+| Push(推送基础库)           | feature/aps               | [plus.push](https://www.html5plus.org/doc/zh_cn/push.html)           | https://uniapp.dcloud.io/api/plugins/push |
+| Push(个推推送)             | feature/aps-igexin        | [plus.push](https://www.html5plus.org/doc/zh_cn/push.html)           | https://uniapp.dcloud.io/api/plugins/push |
+| Push(个推推送-GooglePlay专版) | feature/aps-igexin-gp   | [plus.push](https://www.html5plus.org/doc/zh_cn/push.html)           | https://uniapp.dcloud.io/api/plugins/push |
+| Push(UniPush推送)            | feature/aps-unipush     | [plus.push](https://www.html5plus.org/doc/zh_cn/push.html)           | https://uniapp.dcloud.io/api/plugins/push |
+| Push(UniPush推送-GooglePlay专版) | feature/aps-unipush-gp | [plus.push](https://www.html5plus.org/doc/zh_cn/push.html)        | https://uniapp.dcloud.io/api/plugins/push |
+| Push(小米推送)             | feature/aps-xiaomi        | [plus.push](https://www.html5plus.org/doc/zh_cn/push.html)           | https://uniapp.dcloud.io/api/plugins/push |
+| Share(分享基础库)          | feature/share             | [plus.share](https://www.html5plus.org/doc/zh_cn/share.html)          | https://uniapp.dcloud.io/api/plugins/share |
+| Share(QQ分享)             | feature/share-qq           | [plus.share](https://www.html5plus.org/doc/zh_cn/share.html)         | https://uniapp.dcloud.io/api/plugins/share |
+| Share(新浪微博分享)        | feature/share-sina         | [plus.share](https://www.html5plus.org/doc/zh_cn/share.html)         | https://uniapp.dcloud.io/api/plugins/share |
+| Share(微信分享)            | feature/share-weixin      | [plus.share](https://www.html5plus.org/doc/zh_cn/share.html)          | https://uniapp.dcloud.io/api/plugins/share |
+| Speech(语音识别基础库)      | feature/speech            | [plus.speech](https://www.html5plus.org/doc/zh_cn/speech.html)        | https://uniapp.dcloud.io/api/plugins/voice |
+| Speech(百度语音识别)        | feature/speech_baidu      | [plus.speech](https://www.html5plus.org/doc/zh_cn/speech.html)        | https://uniapp.dcloud.io/api/plugins/voice |
+| Speech(讯飞语音识别)        | feature/speech_ifly       | [plus.speech](https://www.html5plus.org/doc/zh_cn/speech.html)        |
+| SQLite(数据库)             | feature/sqlite             | [plus.sqlite](https://www.html5plus.org/doc/zh_cn/sqlite.html)       |
+| Statistic(友盟统计)        | feature/statistics-umeng   | [plus.statistic](https://www.html5plus.org/doc/zh_cn/statistic.html)  |
+| Uploader(文件上传)         | feature/uploader           | [plus.uploader](https://www.html5plus.org/doc/zh_cn/uploader.html)    | https://uniapp.dcloud.io/api/request/network-file?id=uploadfile |
+| VideoPlayer(视频播放)      | feature/media              | [plus.video.VideoPlayer](https://www.html5plus.org/doc/zh_cn/video.html#plus.video.VideoPlayer) | https://uniapp.dcloud.io/api/media/video |
+| XHR(网络请求)              | feature/xhr                | [plus.net](https://www.html5plus.org/doc/zh_cn/xhr.html)              | https://uniapp.dcloud.io/api/request/request?id=request |
+| nvue原生组件: map(高德地图) | feature/weex_amap          | 不支持 | https://uniapp.dcloud.io/component/map |
+| nvue原生组件: barcode(二维码) | feature/weex_barcode     | 不支持 | https://uniapp.dcloud.io/component/barcode |
+| nvue原生组件: live-pusher(直播推流) | feature/weex_livepusher | 不支持 | https://uniapp.dcloud.io/component/live-pusher |
+| nvue原生组件: video视频    | feature/weex_videoplayer    | 不支持 | https://uniapp.dcloud.io/component/video |
+| nvue原生组件: canvas       | feature/weex_gcanvas        | 不支持 | https://github.com/dcloudio/NvueCanvasDemo |
+
 
 
 ## 源码配置
