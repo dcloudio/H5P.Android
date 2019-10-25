@@ -177,8 +177,8 @@ public static final String TAG=UploadNetWork.class.getSimpleName();
 		mRequest.setRequestProperty("Charset", "UTF-8");
 		mRequest.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
 		mRequest.setUseCaches(false);
-		int maxBufferSize = 10 * 1024;
-		mRequest.setChunkedStreamingMode(maxBufferSize);
+		/*int maxBufferSize = 10 * 1024;
+		mRequest.setChunkedStreamingMode(maxBufferSize);*/
 		initContentLength();
 		DataOutputStream ds = new DataOutputStream(mRequest.getOutputStream());
 		//设置所有应该上传的数据
@@ -198,7 +198,7 @@ public static final String TAG=UploadNetWork.class.getSimpleName();
 					ds.write(contentType.getBytes());
 					ds.writeBytes(end);
 					FileInputStream fStream = ((UploadFile) ui).mFileInputS;
-					int bytesAvailable = fStream.available();
+					/*int bytesAvailable = fStream.available();
 					int bufferSize = Math.min(bytesAvailable, maxBufferSize);
 					byte[] buffer = new byte[bufferSize];
                     long curbytes = 0;
@@ -212,6 +212,17 @@ public static final String TAG=UploadNetWork.class.getSimpleName();
 						bytesAvailable = fStream.available();
 						bufferSize = Math.min(bytesAvailable, maxBufferSize);
 						bytesRead = fStream.read(buffer, 0, bufferSize);
+					}*/
+					int bufferSize = 1024*10;
+					byte[] buffer = new byte[bufferSize];
+					int length = -1;
+					long curbytes = 0;
+					while ((length = fStream.read(buffer)) != -1) {
+						curbytes += length;
+						mUploadedSize = curbytes;
+						Log.e("UploadNetWort", "initUploadData: mUploadedSize=="+mUploadedSize );
+						mReqListener.onNetStateChanged(NetState.NET_HANDLE_ING,isAbort);
+						ds.write(buffer, 0, length);
 					}
 					ds.writeBytes(end);
 					fStream.close();

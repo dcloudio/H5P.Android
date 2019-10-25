@@ -8,13 +8,17 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Display;
 import android.widget.Toast;
 
+import com.nostra13.dcloudimageloader.core.DisplayImageOptions;
 import com.nostra13.dcloudimageloader.core.ImageLoaderL;
+import com.nostra13.dcloudimageloader.core.assist.ImageScaleType;
 import com.tencent.mm.opensdk.modelbase.BaseResp;
 import com.tencent.mm.opensdk.modelbiz.WXLaunchMiniProgram;
 import com.tencent.mm.opensdk.modelmsg.SendMessageToWX;
@@ -829,7 +833,7 @@ public class WeiXinApiManager implements IFShareApi {
         Bitmap tmp;
         while (orgBitmap.getHeight() * orgBitmap.getRowBytes() >= 32 * 1024) {
             tmp = Bitmap.createScaledBitmap(orgBitmap, orgBitmap.getWidth() * 2 / 3, orgBitmap.getHeight() * 2 / 3, true);
-	        orgBitmap.recycle();
+            orgBitmap.recycle();
             orgBitmap = tmp;
 
         }
@@ -844,7 +848,10 @@ public class WeiXinApiManager implements IFShareApi {
         try {
 //			The thumeImg size should be within 32KB * 1024 = 32768
             if (PdrUtil.isNetPath(thumeImgPath)) {//是网络地址
-                bitmap=ImageLoaderL.getInstance().loadImageSync(thumeImgPath);
+                DisplayImageOptions displayImageOptions = new DisplayImageOptions.Builder()
+                        .cacheOnDisc(false).cacheInMemory(false).imageScaleType(ImageScaleType.NONE).bitmapConfig(Bitmap.Config.RGB_565)
+                        .showImageOnLoading(new ColorDrawable(Color.TRANSPARENT)).build();
+                bitmap=ImageLoaderL.getInstance().loadImageSync(thumeImgPath, displayImageOptions);
 //                try {
 //                    is = new URL(thumeImgPath).openStream();
 //                    if(is != null){
