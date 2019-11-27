@@ -210,7 +210,12 @@ public class VideoComponent extends WXVContainer<VideoPlayerView> implements ISy
 
     @JSMethod
     public void requestFullScreen(JSONObject param) {
-        int direction = param.getInteger("direction");
+        int direction;
+        try {
+            direction = param.getInteger("direction");
+        }catch (Exception e) {
+            direction = -90;
+        }
         getHostView().requestFullScreen(direction);
     }
 
@@ -266,13 +271,15 @@ public class VideoComponent extends WXVContainer<VideoPlayerView> implements ISy
     @Override
     public void onActivityResume() {
         super.onActivityResume();
-        getHostView().resume();
+//        if (getHostView() != null)
+//            getHostView().play();
     }
 
     @Override
     public void onActivityPause() {
         super.onActivityPause();
-        getHostView().pause();
+        if (getHostView() != null)
+            getHostView().pause();
     }
 
     @Override

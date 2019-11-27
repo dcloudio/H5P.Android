@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -86,6 +87,8 @@ public class BarcodeView extends AbsoluteLayout implements IBarHandler, TextureV
     private static final int ID_UPDATE_VIEW = 202;
     private static final int ID_START_SCAN = 203;
 
+    private boolean isSurfaceAvaliable = false;
+
     @SuppressLint("HandlerLeak")
     Handler mHandler = new Handler() {
         @Override
@@ -117,7 +120,8 @@ public class BarcodeView extends AbsoluteLayout implements IBarHandler, TextureV
         surfaceView = new TextureView(context);
         viewfinderView = new ViewfinderView(context, this);
         inactivityTimer = new InactivityTimer((Activity) context);
-        CameraManager.init(context);
+        boolean isVerticalScreen = context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
+        CameraManager.init(context, isVerticalScreen);
         this.context = context;
         //更换位置
         onResume(false);
@@ -302,17 +306,22 @@ public class BarcodeView extends AbsoluteLayout implements IBarHandler, TextureV
         PermissionUtil.useSystemPermissions((Activity) context, new String[]{Manifest.permission.CAMERA}, new PermissionUtil.Request() {
             @Override
             public void onGranted(String streamPerName) {
-                ThreadPool.self().addThreadTask(new Runnable() {
+                final long timeout = isSurfaceAvaliable?0:200;
+                BarcodeView.this.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        LayoutParams params = setLayoutParams();
-                        if (params == null) return;
-                        Message msg = new Message();
-                        msg.what = ID_START_SCAN;
-                        msg.obj = params;
-                        mHandler.sendMessage(msg);
+                        if (!isSurfaceAvaliable) {
+                            BarcodeView.this.postDelayed(this,100);
+                        } else {
+                            LayoutParams params = setLayoutParams();
+                            if (params == null) return;
+                            Message msg = new Message();
+                            msg.what = ID_START_SCAN;
+                            msg.obj = params;
+                            mHandler.sendMessage(msg);
+                        }
                     }
-                });
+                },timeout);
             }
 
             @Override
@@ -408,10 +417,12 @@ public class BarcodeView extends AbsoluteLayout implements IBarHandler, TextureV
             surfaceViewWidth = surfaceViewHeight * camearResolution.y / camearResolution.x;
             left = (viewWidth - surfaceViewWidth) / 2;
             DetectorViewConfig.detectorRectOffestLeft = left;
+            DetectorViewConfig.detectorRectOffestTop = 0;
         } else {
             surfaceViewHeight = surfaceViewWidth * camearResolution.x / camearResolution.y;
             top = (viewHeight - surfaceViewHeight) / 2;
             DetectorViewConfig.detectorRectOffestTop = top;
+            DetectorViewConfig.detectorRectOffestLeft = 0;
         }
         LayoutParams lllp = new LayoutParams(surfaceViewWidth, surfaceViewHeight, left, top);
         DetectorViewConfig.getInstance().initSurfaceViewRect(left, top, surfaceViewWidth, surfaceViewHeight);
@@ -682,6 +693,7 @@ public class BarcodeView extends AbsoluteLayout implements IBarHandler, TextureV
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+        isSurfaceAvaliable = true;
         if (!hasSurface) {
             hasSurface = true;
             if (!isCancelScan) {

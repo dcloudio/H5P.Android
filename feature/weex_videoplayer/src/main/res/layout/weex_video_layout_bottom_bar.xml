@@ -54,6 +54,8 @@
             android:background="@android:color/transparent"
             android:maxHeight="1.5dp"
             android:minHeight="1.5dp"
+            android:paddingTop="15dp"
+            android:paddingBottom="15dp"
             android:progressDrawable="@drawable/weex_video_layer_seek_progress"
             android:thumb="@drawable/weex_video_shape_seek_ball" />
 

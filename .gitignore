@@ -1,0 +1,5 @@
+/feature/*/build/
+/HBuilder-SourceTool-as/.gradle/
+/HBuilder-SourceTool-as/.idea/
+/HBuilder-SourceTool-as/*/build/
+/HBuilder-SourceTool-as/gradle.properties

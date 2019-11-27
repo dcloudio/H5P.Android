@@ -54,6 +54,7 @@ public class Constant {
         String ENABLE_SATELLITE = "enableSatellite";
         String ENABLE_TRAFFIC = "enableTraffic";
         String SHOW_SCALE = "showScale";
+        String SETTING = "setting";
 
 
         // marker
@@ -105,5 +106,7 @@ public class Constant {
         String BIND_CALLOUT_TAP = "callouttap";
         String BIND_POI_TAP = "poitap";
         String BIND_CONTROL_TAP = "controltap";
+        String BIND_LABEL_TAP = "labeltap";
+        String BIND_USER_LOCATION_CHANGE = "userlocationchange";
     }
 }

@@ -106,7 +106,9 @@ public class VideoPlayerView extends FrameLayout implements IVideoPlayer{
         isAutoPlay = mOptions.optBoolean("autoplay", isAutoPlay);
         isLoopPlay = mOptions.optBoolean("loop", isLoopPlay);
         setPoster(mOptions.optString("poster"));
-        playerView.setMutePlayer(mOptions.optBoolean("muted", false));
+        if (!mOptions.isNull("muted")) {
+            playerView.setMutePlayer(mOptions.optBoolean("muted", false));
+        }
         playerView.setPageGesture(mOptions.optBoolean("page-gesture", false));
         playerView.setProgressVisibility(mOptions.optBoolean("show-progress", true));
         playerView.setFullscreenBntVisibility(mOptions.optBoolean("show-fullscreen-btn", true));

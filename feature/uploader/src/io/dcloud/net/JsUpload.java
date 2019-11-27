@@ -88,6 +88,7 @@ public class JsUpload implements IReqListener,IResponseListener{
 		
 		String _requestMethod = pJsonObject.optString("method","POST");
 		mRequestData = new RequestData(mUrl, _requestMethod);
+		mRequestData.mChunkSize = pJsonObject.optInt("chunkSize", 0);
 		mRequestData.unTrustedCAType = pWebview.obtainApp().obtainConfigProperty(ConfigProperty.CONFIG_UNTRUSTEDCA);
 		mRequestData.addHeader(IWebview.USER_AGENT, pWebview.getWebviewProperty(IWebview.USER_AGENT));
 //		String cookie = pWebview.getWebviewProperty(mUrl);

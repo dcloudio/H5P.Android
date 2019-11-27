@@ -36,23 +36,35 @@ public class MapResourceUtils {
 
     public static LatLng crateLatLng(JSONObject item) {
         if(item != null && item.containsKey("latitude") && item.containsKey("longitude")) {
-            return new LatLng(item.getDouble("latitude"), item.getDouble("longitude"));
+            try {
+                return new LatLng(item.getDouble("latitude"), item.getDouble("longitude"));
+            } catch (Exception e){
+
+            }
         }
         return null;
     }
 
     public static LatLonPoint createLatLonPoint(JSONObject item) {
         if(item != null && item.containsKey("latitude") && item.containsKey("longitude")) {
-            return new LatLonPoint(item.getDouble("latitude"), item.getDouble("longitude"));
+            try {
+                return new LatLonPoint(item.getDouble("latitude"), item.getDouble("longitude"));
+            }catch (Exception e){
+
+            }
         }
         return null;
     }
 
     public static LatLng crateLatLng(Object latitude, Object longitude) {
         if(latitude != null && longitude != null) {
-            double lat = Double.valueOf(latitude.toString());
-            double lng = Double.valueOf(longitude.toString());
-            return new LatLng(lat, lng);
+            try {
+                double lat = Double.valueOf(latitude.toString());
+                double lng = Double.valueOf(longitude.toString());
+                return new LatLng(lat, lng);
+            } catch (Exception e){
+
+            }
         }
         return null;
     }

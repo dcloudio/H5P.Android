@@ -428,6 +428,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         mAttachActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         // 关闭静音，部分手机
         setMutePlayer(false);
+        mAudioManager.abandonAudioFocus(null);
         // 退出时亮度调回默认值
         WindowManager.LayoutParams lp = mAttachActivity.getWindow().getAttributes();
         lp.screenBrightness = defaultScreenBrightness;
@@ -1703,7 +1704,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             mAudioManager.abandonAudioFocus(null);
             mAudioManager.setStreamMute(AudioManager.STREAM_MUSIC, true);
         } else {
-            mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+            mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
             mAudioManager.setStreamMute(AudioManager.STREAM_MUSIC, false);
         }
     }

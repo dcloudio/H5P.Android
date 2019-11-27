@@ -1608,7 +1608,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             mAudioManager.abandonAudioFocus(null);
             mAudioManager.setStreamMute(AudioManager.STREAM_MUSIC, true);
         } else {
-            mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+            mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
             mAudioManager.setStreamMute(AudioManager.STREAM_MUSIC, false);
         }
     }

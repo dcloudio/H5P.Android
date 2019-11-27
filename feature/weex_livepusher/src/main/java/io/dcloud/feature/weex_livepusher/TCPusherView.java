@@ -227,7 +227,7 @@ public class TCPusherView extends LinearLayout implements ITXLivePushListener, T
             mLivePushConfig.setHomeOrientation(TXLiveConstants.VIDEO_ANGLE_HOME_DOWN);
             mLivePusher.setRenderRotation(TXLiveConstants.RENDER_ROTATION_PORTRAIT);
         } else if (oritation.equals("horizontal")) {
-            mLivePushConfig.setHomeOrientation(TXLiveConstants.VIDEO_ANGLE_HOME_RIGHT);
+            mLivePushConfig.setHomeOrientation(TXLiveConstants.VIDEO_ANGLE_HOME_LEFT);
             mLivePusher.setRenderRotation(TXLiveConstants.RENDER_ROTATION_LANDSCAPE);
         }
     }

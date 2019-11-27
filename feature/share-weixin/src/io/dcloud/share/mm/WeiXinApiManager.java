@@ -833,7 +833,7 @@ public class WeiXinApiManager implements IFShareApi {
         Bitmap tmp;
         while (orgBitmap.getHeight() * orgBitmap.getRowBytes() >= 32 * 1024) {
             tmp = Bitmap.createScaledBitmap(orgBitmap, orgBitmap.getWidth() * 2 / 3, orgBitmap.getHeight() * 2 / 3, true);
-            orgBitmap.recycle();
+	        orgBitmap.recycle();
             orgBitmap = tmp;
 
         }

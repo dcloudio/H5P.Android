@@ -57,6 +57,10 @@ public class WXMarker {
         return mCallout;
     }
 
+    public MarkerLabel getLabel() {
+        return mLabel;
+    }
+
     public void isShowInfoWindow() {
         if(mCallout != null && mCallout.isAlwaysDisPlay()) {
             mCallout.setVisible(true);

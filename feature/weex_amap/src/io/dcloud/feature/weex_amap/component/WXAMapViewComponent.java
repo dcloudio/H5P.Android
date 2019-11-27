@@ -3,7 +3,6 @@ package io.dcloud.feature.weex_amap.component;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.location.Location;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -247,7 +246,10 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
                 @Override
                 public void onMapClick(LatLng latLng) {
                     mMarkerMgr.hideMarkerCallout();
-                    fireEventMapEvent(Constant.EVENT.BINDTAP, null);
+                    JSONObject data = new JSONObject();
+                    data.put("longitude", latLng.longitude);
+                    data.put("latitude", latLng.latitude);
+                    fireEventMapEvent(Constant.EVENT.BINDTAP, data);
                 }
             });
 
@@ -269,6 +271,12 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
                             if(marker != null) {
                                 data.put("markerId", marker.getId());
                                 fireEventMapEvent(Constant.EVENT.BIND_CALLOUT_TAP, data);
+                            } else {
+                                marker = mMarkerMgr.getLabelToWXMarker(m);
+                                if(marker != null) {
+                                    data.put("markerId", marker.getId());
+                                    fireEventMapEvent(Constant.EVENT.BIND_LABEL_TAP, data);
+                                }
                             }
                         }
                     }
@@ -293,13 +301,11 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
                 @Override
                 public void onCameraChange(CameraPosition cameraPosition) {
                     mMapCenterPoint.update(cameraPosition.target.latitude, cameraPosition.target.longitude);
-                    if(!isChangeStart && (mDragged || isSetUpdate)) {
-                        if(isSetUpdate) {
-                            mCameraType = "update";
-                        } else if(cameraPosition.zoom != mZoomLevel) {
-                            mCameraType = "scale";
+                    if(!isChangeStart && isMapLoaded.get()) {
+                        if(mDragged) {
+                            mCameraType = "gesture";
                         } else {
-                            mCameraType = "drag";
+                            mCameraType = "update";
                         }
                         mZoomLevel = cameraPosition.zoom;
                         isChangeStart = true;
@@ -309,8 +315,15 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
 
                 @Override
                 public void onCameraChangeFinish(CameraPosition cameraPosition) {
-                    if(isChangeStart) {
+                    if(isChangeStart && isMapLoaded.get()) {
                         isChangeStart = false;
+                        if(isSetUpdate) {
+                            mCameraType = "update";
+                        } else if(cameraPosition.zoom != mZoomLevel) {
+                            mCameraType = "scale";
+                        } else {
+                            mCameraType = "drag";
+                        }
                         isSetUpdate = false;
                         fireEventMapEvent(Constant.EVENT.BINDREGION_CHANGE, "end");
                     }
@@ -545,6 +558,7 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
             @Override
             public void execute(WXMapView mapView) {
                 mRotate = rotate;
+                isSetUpdate = true;
                 mAMap.moveCamera(CameraUpdateFactory.changeBearing(mRotate));
             }
         });
@@ -560,6 +574,7 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
             @Override
             public void execute(WXMapView mapView) {
                 mSkew = skew;
+                isSetUpdate = true;
                 mAMap.moveCamera(CameraUpdateFactory.changeTilt(mSkew));
             }
         });
@@ -681,25 +696,104 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
         });
     }
 
+    @WXComponentProp(name = Constant.Name.SETTING)
+    public void setSetting(final JSONObject setting) {
+        postTask(new MapOperationTask() {
+            @Override
+            public void execute(WXMapView mapView) {
+                for (String str : setting.keySet()) {
+                    try {
+                        switch (str) {
+                            case Constant.Name.SKEW: {
+                                setSkew(setting.getFloatValue(Constant.Name.SKEW));
+                                break;
+                            }
+                            case Constant.Name.ROTATE: {
+                                setRotate(setting.getFloatValue(Constant.Name.ROTATE));
+                                break;
+                            }
+                            case Constant.Name.SHOW_LOCATION: {
+                                showMyLocation(setting.getBooleanValue(Constant.Name.SHOW_LOCATION));
+                                break;
+                            }
+                            case Constant.Name.SHOW_SCALE: {
+                                showScale(setting.getBooleanValue(Constant.Name.SHOW_SCALE));
+                                break;
+                            }
+                            case Constant.Name.KEYS: {
+                                setApiKey(setting.getString(Constant.Name.KEYS));
+                                break;
+                            }
+                            case "layerStyle" : {
+                                break;
+                            }
+                            case Constant.Name.ENABLE_ZOOM: {
+                                setZoomEnable(setting.getBooleanValue(Constant.Name.ENABLE_ZOOM));
+                                break;
+                            }
+                            case Constant.Name.ENABLE_SCROLL: {
+                                setScrollEnable(setting.getBooleanValue(Constant.Name.ENABLE_SCROLL));
+                                break;
+                            }
+                            case Constant.Name.ENABLE_ROTATE: {
+                                setRotateEnable(setting.getBooleanValue(Constant.Name.ENABLE_ROTATE));
+                                break;
+                            }
+                            case Constant.Name.SHOW_COMPASS: {
+                                setCompass(setting.getBooleanValue(Constant.Name.SHOW_COMPASS));
+                                break;
+                            }
+                            case Constant.Name.ENABLE3D: {
+                                setBuilding3D(setting.getBooleanValue(Constant.Name.ENABLE3D));
+                                break;
+                            }
+                            case Constant.Name.ENABLE_OVERLOOKING: {
+                                setOverLookingEnable(setting.getBooleanValue(Constant.Name.ENABLE_OVERLOOKING));
+                                break;
+                            }
+                            case Constant.Name.ENABLE_SATELLITE: {
+                                setEnableSatellite(setting.getBooleanValue(Constant.Name.ENABLE_SATELLITE));
+                                break;
+                            }
+                            case Constant.Name.ENABLE_TRAFFIC: {
+                                setEnableTraffic(setting.getBooleanValue(Constant.Name.ENABLE_TRAFFIC));
+                                break;
+                            }
+                        }
+                    } catch (Exception e){
+
+                    }
+                }
+                isSetUpdate = true;
+            }
+        });
+    }
+
+
     /**
      * 显示带有方向的当前定位点
      */
-    AMap.OnMyLocationChangeListener mMyLocation;
+    AMap.OnMyLocationChangeListener mMyLocationCallBack;
     private MyLocationStyle myLocationStyle;
+    private Location mMyLocation;
     @WXComponentProp(name = Constant.Name.SHOW_LOCATION)
     public void showMyLocation(final boolean isShow) {
         postTask(new MapOperationTask() {
             @Override
             public void execute(WXMapView mapView) {
                 if(isShow) {
-                    if(mMyLocation == null && requestPermissions()) {
-                        mMyLocation = new AMap.OnMyLocationChangeListener() {
+                    if(mMyLocationCallBack == null && requestPermissions()) {
+                        mMyLocationCallBack = new AMap.OnMyLocationChangeListener() {
                             @Override
                             public void onMyLocationChange(Location location) {
+                                if(!equalsLocation(mMyLocation, location)) {
+                                    mMyLocation = location;
+                                    fireEventMapEvent(Constant.EVENT.BIND_USER_LOCATION_CHANGE, location);
+                                }
                             }
                         };
                         mapView.getMap().setMyLocationEnabled(true);
-                        mapView.getMap().setOnMyLocationChangeListener(mMyLocation);
+                        mapView.getMap().setOnMyLocationChangeListener(mMyLocationCallBack);
                         myLocationStyle = new MyLocationStyle();
                         mapView.getMap().setMyLocationStyle(myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE_NO_CENTER));
                     }
@@ -709,6 +803,16 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
                 }
             }
         });
+    }
+
+    private boolean equalsLocation(Location a, Location b) {
+        if(a == null || b == null) {
+            return false;
+        }
+        if(a.getLatitude() == b.getLatitude() && a.getLongitude() == a.getLongitude() && a.getBearing() == b.getBearing()) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -732,6 +836,7 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
                     }
                     mapView.getMap().animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), padding));
                 }
+                isSetUpdate = true;
             }
         });
     }
@@ -741,11 +846,18 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
         switch (event) {
             case Constant.EVENT.BINDREGION_CHANGE: {
                 if(containsEvent(Constant.EVENT.BINDREGION_CHANGE)) {
+                    String type = (String) data;
                     params.put("type", data);
-                    Map<String, Object> target = new HashMap<>();
-                    target.put("id", getAttrs().get("id"));
-                    params.put("target", target);
+                    //Map<String, Object> target = new HashMap<>();
+                    //target.put("id", getAttrs().get("id"));
+                    //params.put("target", target);
                     params.put("causedBy", mCameraType);
+                    if(type.equals("end")) {
+                        JSONObject detail = new JSONObject();
+                        detail.put("rotate", mAMap.getCameraPosition().bearing);
+                        detail.put("skew", mAMap.getCameraPosition().tilt);
+                        params.put("detail", detail);
+                    }
                     fireEvent(Constant.EVENT.BINDREGION_CHANGE, params);
                 }
                 break;
@@ -766,8 +878,20 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
                 fireEvent(Constant.EVENT.BIND_CALLOUT_TAP, params);
                 break;
             }
+            case Constant.EVENT.BIND_LABEL_TAP: {
+                if(containsEvent(Constant.EVENT.BIND_LABEL_TAP)) {
+                    if(data != null) {
+                        params.put("detail", data);
+                    }
+                    fireEvent(Constant.EVENT.BIND_LABEL_TAP, params);
+                }
+                break;
+            }
             case Constant.EVENT.BINDTAP: {
                 if(containsEvent(Constant.EVENT.BINDTAP)) {
+                    if(data != null) {
+                        params.put("detail", data);
+                    }
                     params.put("type", "tap");
                     fireEvent(Constant.EVENT.BINDTAP, params);
                 }
@@ -786,6 +910,16 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
 					params.put("type", Constant.EVENT.UPDATED);
                     params.put("detail", data);
                     fireEvent(Constant.EVENT.BIND_POI_TAP, params);
+                }
+                break;
+            }
+            case Constant.EVENT.BIND_USER_LOCATION_CHANGE: {
+                if(containsEvent(Constant.EVENT.BIND_USER_LOCATION_CHANGE)) {
+                    if(data != null && data instanceof Location) {
+                        params.put("latitude", ((Location) data).getLatitude());
+                        params.put("longitude", ((Location) data).getLongitude());
+                        fireEvent(Constant.EVENT.BIND_USER_LOCATION_CHANGE, params);
+                    }
                 }
                 break;
             }
@@ -859,7 +993,7 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
         Map<String, Object> params = new HashMap<>();
         if(isMapLoaded.get()) {
             params.put("type", "success");
-            params.put("rotate", mRotate);
+            params.put("rotate", mAMap.getCameraPosition().bearing);
         } else {
             params.put("type", "fail");
         }
@@ -916,14 +1050,28 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
      * 将地图中心移动到当前定位点。需要配合map组件的show-location使用
      */
     @JSMethod
-    public void moveToLocation() {
+    public void moveToLocation(final JSONObject data, final JSCallback callback) {
         postTask(new MapOperationTask() {
             @Override
             public void execute(WXMapView mapView) {
-                if(mMyLocation != null) {
-                    Location l = mapView.getMap().getMyLocation();
-                    LatLng latLng = new LatLng(l.getLatitude(), l.getLongitude());
+                Map<String, Object> params = new HashMap<>();
+                Location l = mapView.getMap().getMyLocation();
+                LatLng latLng = null;
+                if(data != null) {
+                    latLng = MapResourceUtils.crateLatLng(data);
+                } else {
+                    if(l != null) {
+                        latLng = new LatLng(l.getLatitude(), l.getLongitude());
+                    }
+                }
+                if(latLng != null) {
                     mapView.getMap().animateCamera(CameraUpdateFactory.changeLatLng(latLng));
+                    params.put("type", "success");
+                } else {
+                    params.put("type", "fail");
+                }
+                if(callback != null) {
+                    callback.invoke(params);
                 }
             }
         });
@@ -941,6 +1089,26 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
             public void execute(WXMapView mapView) {
                 if(mMarkerMgr != null) {
                     mMarkerMgr.translateMarker(data, callback);
+                }
+            }
+        });
+    }
+
+    @JSMethod
+    public void getUserLocation(final JSCallback callback){
+        postTask(new MapOperationTask() {
+            @Override
+            public void execute(WXMapView mapView) {
+                Location c = mapView.getMap().getMyLocation();
+                Map<String, Object> params = new HashMap<>();
+                if(c != null) {
+                    params.put("type", "success");
+                    params.put("latitude", c.getLatitude());
+                    params.put("longitude", c.getLongitude());
+                    callback.invoke(params);
+                } else {
+                    params.put("type", "fail");
+                    callback.invoke(params);
                 }
             }
         });
@@ -991,6 +1159,7 @@ public class WXAMapViewComponent extends WXVContainer<FrameLayout> implements Ma
             mMapView.setVisibility(View.GONE);
             mMapView.onDestroy();
             mMapContainer.removeView(mMapView);
+            mMyLocation = null;
             mAMap.clear();
             if(mMarkerMgr != null) {
                 mMarkerMgr.destroy();

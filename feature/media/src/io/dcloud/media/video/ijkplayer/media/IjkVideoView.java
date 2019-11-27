@@ -472,9 +472,6 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         // we shouldn't clear the target state, because somebody might have
         // called start() previously
         release(false);
-        // 声音控制
-        AudioManager am = (AudioManager) mAppContext.getSystemService(Context.AUDIO_SERVICE);
-        am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
 
         try {
             mMediaPlayer = createPlayer(2);
@@ -976,6 +973,9 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     @Override
     public void start() {
         Log.e("TTAG", "start " + isInPlaybackState());
+        // 声音控制
+        AudioManager am = (AudioManager) mAppContext.getSystemService(Context.AUDIO_SERVICE);
+        am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
         if (isInPlaybackState()) {
             mMediaPlayer.start();
             mCurrentState = MediaPlayerParams.STATE_PLAYING;

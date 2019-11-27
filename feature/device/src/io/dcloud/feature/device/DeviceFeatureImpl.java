@@ -21,6 +21,8 @@ import android.text.TextUtils;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.bun.miitmdid.core.JLibrary;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -34,6 +36,8 @@ import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.adapter.util.DeviceInfo;
 import io.dcloud.common.adapter.util.Logger;
 import io.dcloud.common.adapter.util.PermissionUtil;
+import io.dcloud.common.constant.DOMException;
+import io.dcloud.common.miitmdid.MiitHelper;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
 import io.dcloud.common.util.StringUtil;
@@ -64,7 +68,7 @@ public class DeviceFeatureImpl implements IFeature, ISysEventListener {
     private Context mContext;
 
     @Override
-    public String execute(final IWebview pWebViewImpl, String pActionName, final String[] pJsArgs) {
+    public String execute(final IWebview pWebViewImpl, final String pActionName, final String[] pJsArgs) {
         switch(pActionName) {
             case "getCurrentType": {
                 return DeviceInfo.getNetWorkType();
@@ -238,8 +242,52 @@ public class DeviceFeatureImpl implements IFeature, ISysEventListener {
 			        }
 		        });
                 break;
+            case "getOAID":
+            case "getVAID":
+            case "getAAID":
+                final String callbackDeviceId = pJsArgs[0];
+                if (DeviceInfo.oaids == null || DeviceInfo.oaids.equalsIgnoreCase("||")) {
+                    JLibrary.InitEntry(pWebViewImpl.getContext());
+                    MiitHelper helper = new MiitHelper(new MiitHelper.AppIdsUpdater() {
+                        @Override
+                        public void OnIdsAvalid(String ids, boolean isSupport) {
+                            if (isSupport) {
+                                execDeviceId(pWebViewImpl, pActionName, callbackDeviceId, ids);
+                            }
+                        }
+                    });
+                    boolean isSupport = helper.getDeviceIds(pWebViewImpl.getActivity());
+                    if (!isSupport){
+                        JSUtil.execCallback(pWebViewImpl,callbackDeviceId,DOMException.toJSON(401,"not support"),JSUtil.ERROR,true,false);
+                    }
+                } else {
+                    execDeviceId(pWebViewImpl, pActionName, callbackDeviceId, DeviceInfo.oaids);
+                }
+                break;
         }
         return null;
+    }
+
+    private void execDeviceId(IWebview pWebViewImpl, String pActionName, String callbackId, String oaids) {
+        String[] idArray = oaids.split("\\|");
+        try {
+            switch (pActionName) {
+                case "getOAID":
+                    String oaid = idArray.length > 0 ? idArray[0] : "";
+                    JSUtil.execCallback(pWebViewImpl, callbackId, new JSONObject("{'oaid':'" + oaid + "'}"), JSUtil.OK, false);
+                    break;
+                case "getVAID":
+                    String vaid = idArray.length > 1 ? idArray[1] : "";
+                    JSUtil.execCallback(pWebViewImpl, callbackId, new JSONObject("{'vaid':'" + vaid + "'}"), JSUtil.OK, false);
+                    break;
+                case "getAAID":
+                    String aaid = idArray.length > 2 ? idArray[2] : "";
+                    JSUtil.execCallback(pWebViewImpl, callbackId, new JSONObject("{'aaid':'" + aaid + "'}"), JSUtil.OK, false);
+                    break;
+            }
+        }catch (Exception e) {
+            JSUtil.execCallback(pWebViewImpl, callbackId, DOMException.toJSON(401,e.getMessage()), JSUtil.ERROR, true,false);
+        }
     }
 
     static final int MAX_BRIGHTNESS = 255;

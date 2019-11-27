@@ -3,7 +3,7 @@
        android:shape="oval">
 
     <size
-        android:width="14dip"
-        android:height="14dip"/>
+        android:width="16dip"
+        android:height="16dip"/>
     <solid android:color="@color/video_seek_ball"/>
 </shape>

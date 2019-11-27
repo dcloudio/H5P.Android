@@ -100,6 +100,21 @@ public class MarkerMgr extends MapAbsMgr {
         return null;
     }
 
+    public WXMarker getLabelToWXMarker(Marker m) {
+        if(m != null) {
+            Set<String> keys = mMarkerCaches.keySet();
+            for(String key: keys) {
+                WXMarker marker = mMarkerCaches.get(key);
+                if(marker.getLabel() != null) {
+                    if(m.equals(marker.getLabel().getInstance())) {
+                        return marker;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     /**
      * 清理不需要的marker
      * @param markers

@@ -54,6 +54,8 @@
             android:layout_weight="1"
             android:maxHeight="1.5dp"
             android:minHeight="1.5dp"
+            android:paddingTop="15dp"
+            android:paddingBottom="15dp"
             android:background="@android:color/transparent"
             android:progressDrawable="@drawable/video_layer_seek_progress"
             android:thumb="@drawable/video_shape_seek_ball"/>
