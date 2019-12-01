@@ -1,5 +1,14 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
+ext {
+    compileSdkVersion = 26
+    buildToolsVersion = '28.0.3'
+    //兼容的最低 SDK 版本
+    minSdkVersion = 19
+    //向前兼容，保存新旧两种逻辑，并通过 if-else 方法来判断执行哪种逻辑
+    targetSdkVersion = 23
+}
+
 buildscript {
     repositories {
         google()
