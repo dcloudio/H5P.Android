@@ -1,4 +1,4 @@
-<manifest package="io.dcloud.feature"
+<manifest package="io.dcloud.feature.barcode"
     xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.CAMERA"></uses-permission>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE">

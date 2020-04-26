@@ -24,7 +24,7 @@ android {
 
     sourceSets {
         main {
-            manifest.srcFile '../AndroidManifest.xml'
+            manifest.srcFile './AndroidManifest.xml'
             assets.srcDirs = [
                     './assets'
             ]
@@ -33,8 +33,8 @@ android {
             java.srcDirs = ['./src'
             ]
             res.srcDirs = ['./res'
-            ]
-        }
+            ]        
+	}
     }
 
 }
@@ -42,6 +42,7 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: './libs')
     compileOnly project(':lib.5plus.base')
+    compileOnly fileTree(dir: '../../libs', include: ['*.aar'])
 }
 
 

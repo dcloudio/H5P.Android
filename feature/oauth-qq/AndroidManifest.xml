@@ -1,4 +1,4 @@
-<manifest package="io.dcloud.feature"
+<manifest package="io.dcloud.feature.oauth.qq"
     xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <application>

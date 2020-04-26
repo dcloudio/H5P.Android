@@ -1,0 +1,12 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="io.dcloud.feature.statistics.umeng">
+
+    <application>
+        <meta-data
+            android:name="UMENG_APPKEY"
+            android:value="${plus.umeng.appkey_android}" />
+        <meta-data
+            android:name="UMENG_CHANNEL"
+            android:value="${plus.umeng.channelid_android}" />
+    </application>
+</manifest>

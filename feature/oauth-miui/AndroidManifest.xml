@@ -1,4 +1,4 @@
-<manifest package="io.dcloud.feature" xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest package="io.dcloud.feature.oauth.miui" xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="com.xiaomi.permission.AUTH_SERVICE"/>
     <application>
         <meta-data android:value="_${plus.oauth.xiaomi.appid_android}"

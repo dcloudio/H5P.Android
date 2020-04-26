@@ -1,0 +1,27 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 29
+
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+    }
+
+}
+
+dependencies {
+    compileOnly files('../../libs/miit_mdid_1.0.10.aar')
+
+    compileOnly "com.android.support:recyclerview-v7:${rootProject.ext.supportLibVersion}"
+    compileOnly "com.android.support:support-v4:${rootProject.ext.supportLibVersion}"
+    compileOnly "com.android.support:appcompat-v7:${rootProject.ext.supportLibVersion}"
+    compileOnly project(':lib.5plus.base')
+    compileOnly 'com.alibaba.android:bindingx-core:1.0.3'
+    compileOnly 'com.alibaba.android:bindingx_weex_plugin:1.0.3'
+    compileOnly "com.alibaba:fastjson:1.1.46.android"
+    compileOnly 'com.facebook.fresco:fresco:1.13.0'
+}

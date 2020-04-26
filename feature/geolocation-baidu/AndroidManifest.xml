@@ -1,4 +1,4 @@
-<manifest package="io.dcloud.feature"
+<manifest package="io.dcloud.feature.geolocation.baidu"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />

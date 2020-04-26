@@ -51,6 +51,7 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: './libs')
     compileOnly project(':lib.5plus.base')
     compileOnly project(':feature:aps')
+    compileOnly fileTree(dir: '../../libs', include: ['*.aar'])
 }
 
 

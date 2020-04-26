@@ -28,4 +28,5 @@ dependencies {
     compileOnly project(':dc_weexsdk')
     compileOnly project(':lib.5plus.base')
     compileOnly 'com.alibaba:fastjson:1.2.56'
+    compileOnly fileTree(dir: '../../libs', include: ['*.aar'])
 }

@@ -42,6 +42,7 @@ android {
 dependencies {
     compileOnly fileTree(include: ['*.aar'], dir: './libs')
     compileOnly project(':lib.5plus.base')
+    compileOnly fileTree(dir: '../../libs', include: ['*.aar'])
 }
 
 

@@ -5,13 +5,52 @@ android {
     defaultConfig {
         applicationId "io.dcloud.devtool"
         minSdkVersion 19
-        targetSdkVersion 29
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
         ndk {
             abiFilters 'x86','armeabi-v7a'  //使用uniapp时必须同时选择二者或选其一
         }
         multiDexEnabled true
+        manifestPlaceholders = [
+                // 小米推送
+                "plus.push.xiaomi.appid_android" : "XXXX",
+                "plus.push.xiaomi.appkey_android" : "XXXX",
+                // unipush
+                "plus.unipush.appid" : "XXXX",
+                "plus.unipush.appkey" : "XXXX",
+                "plus.unipush.appsecret": "XXXX",
+                // 小米登录
+                "plus.oauth.xiaomi.appid_android" : "XXXX",
+                "plus.oauth.xiaomi.appsecret_android" : "XXXX",
+                "plus.oauth.xiaomi.redirect_uri_android" : "XXXX",
+                // 微信
+                "plus.weixin.appsecret" : "XXXX",
+                "plus.weixin.appid" : "XXXX",
+                // qq
+                "plus.qq.appid" : "XXXX",
+                // 新浪
+                "plus.sina.appkey" : "XXXX",
+                "plus.sina.appsecret" : "XXXX",
+                "plus.sina.redirect_uri" : "XXXX",
+                // 高德地图定位
+                "plus.amap.appkey_android" : "XXXX",
+                // 百度地图定位
+                "plus.baidu.appkey_android" : "XXXX",
+                // 百度语音
+                "plus.speech.baidu.appid" : "XXXX",
+                "plus.speech.baidu.apikey" : "XXXX",
+                "plus.speech.baidu.secretkey" : "XXXX",
+                // 个推
+                "plus.igexin.appid" : "XXXX",
+                "plus.igexin.appkey" : "XXXX",
+                "plus.igexin.appsecret" : "XXXX",
+                // 友盟
+                "plus.umeng.appkey_android" : "XXXX",
+                "plus.umeng.channelid_android" : "XXXX",
+
+                "apk.applicationId":"io.dcloud.devtool"
+        ]
     }
     buildTypes {
         release {
@@ -24,24 +63,72 @@ android {
         additionalParameters '--auto-add-overlay'
         ignoreAssetsPattern "!.svn:!.git:.*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~"
     }
+
+    sourceSets {
+        main {
+            java.srcDirs = []
+            jniLibs.srcDirs = [
+                    "../../feature/map-baidu/libs" // 百度地图所需so文件
+            ]
+            assets.srcDirs = ["src/main/assets"]
+            res.srcDirs = ["src/main/res"]
+        }
+    }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation fileTree(dir: 'libs', include: ['*.aar'])
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'com.google.android.material:material:1.0.0'
-    implementation 'androidx.multidex:multidex:2.0.1'
+    implementation fileTree(dir: '../../libs', include: ['*.aar', '*.jar'], exclude: [])
+    implementation "com.android.support:recyclerview-v7:${rootProject.ext.supportLibVersion}"
+    implementation "com.android.support:support-v4:${rootProject.ext.supportLibVersion}"
+    implementation "com.android.support:appcompat-v7:${rootProject.ext.supportLibVersion}"
     implementation "com.alibaba:fastjson:1.1.46.android"
     implementation 'com.github.bumptech.glide:glide:4.9.0'
 
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.recyclerview:recyclerview:1.0.0'
     implementation 'com.alibaba.android:bindingx-core:1.0.3'
     implementation 'com.alibaba.android:bindingx_weex_plugin:1.0.3'
     implementation 'com.facebook.fresco:fresco:1.13.0'
     implementation "com.facebook.fresco:animated-gif:1.13.0"
-    implementation project(path: ':map-amap')
+    implementation project(path: ':lib.5plus.base')
+    implementation project(path: ':dc_weexsdk')
+
+    implementation fileTree(include: ['*.jar'], dir: '../../feature/oauth-weixin/libs') // 微信分享、登录、支付
+    implementation fileTree(include: ['*.jar'], dir: '../../feature/oauth-qq/libs') // qq分享、登录
+    implementation fileTree(include: ['*.aar'], dir: '../../feature/oauth-sina/libs') // 新浪微博登录、分享
+    implementation fileTree(include: ['*.jar','*.aar'], dir: '../../feature/payment-alipay/libs') // 支付宝支付
+    implementation fileTree(include: ['*.jar'], dir: '../../feature/map-amap/libs') // 高德地图、定位
+    implementation fileTree(include: ['*.jar'], dir: '../../feature/map-baidu/libs') // 百度地图、定位
+    implementation fileTree(include: ['*.jar'], dir: '../../feature/aps-igexin/libs') // 百度地图、定位
+//    implementation fileTree(include: ['*.jar'], dir: '../../feature/aps-unipush/libs') // unipush
+
+
+    implementation project(path: ':feature:oauth-weixin')
+    implementation project(path: ':feature:weex_videoplayer')
+    implementation project(path: ':feature:oauth-sina')
+    implementation project(path: ':feature:messaging')
+    implementation project(path: ':feature:share-sina')
+    implementation project(path: ':feature:Bluetooth')
+    implementation project(path: ':feature:share-qq')
+    implementation project(path: ':feature:map-amap')
+    implementation project(path: ':feature:speech')
+    implementation project(path: ':feature:weex_gcanvas')
+    implementation project(path: ':feature:oauth-miui')
+    implementation project(path: ':feature:sqlite')
+    implementation project(path: ':feature:media-livepusher')
+    implementation project(path: ':feature:media')
+    implementation project(path: ':feature:aps')
+    implementation project(path: ':feature:payment-weixin')
+    implementation project(path: ':feature:share-weixin')
+    implementation project(path: ':feature:fingerprint')
+//    implementation project(path: ':feature:aps-unipush')
+    implementation project(path: ':feature:aps-igexin')
+    implementation project(path: ':feature:oauth-qq')
+    implementation project(path: ':feature:contacts')
+    implementation project(path: ':feature:weex_livepusher')
+    implementation project(path: ':feature:geolocation-amap')
+    implementation project(path: ':feature:weex_amap')
+    implementation project(path: ':feature:iBeacon')
+    implementation project(path: ':feature:speech_baidu')
+    implementation project(path: ':feature:audio-mp3aac')
+    implementation project(path: ':feature:payment-alipay')
+    implementation project(path: ':feature:statistics-umeng')
 }

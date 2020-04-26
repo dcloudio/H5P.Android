@@ -45,6 +45,7 @@ dependencies {
     compileOnly "com.android.support:support-v4:${rootProject.ext.supportLibVersion}"
     compileOnly "com.android.support:appcompat-v7:${rootProject.ext.supportLibVersion}"
     compileOnly project(':lib.5plus.base')
+    compileOnly fileTree(dir: '../../libs', include: ['*.aar'])
 }
 
 

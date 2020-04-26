@@ -46,5 +46,6 @@ dependencies {
     compileOnly project(':dc_weexsdk')
     compileOnly project(':lib.5plus.base')
     compileOnly "com.alibaba:fastjson:1.1.46.android"
+    compileOnly fileTree(dir: '../../libs', include: ['*.aar'])
 
 }

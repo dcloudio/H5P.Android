@@ -43,6 +43,7 @@ dependencies {
     compileOnly fileTree(include: ['*.aar'], dir: './libs')
     compileOnly project(':lib.5plus.base')
     compileOnly files('libs/alipayutdid.jar')
+    compileOnly fileTree(dir: '../../libs', include: ['*.aar'])
 }
 
 

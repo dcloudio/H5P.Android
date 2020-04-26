@@ -44,6 +44,7 @@ dependencies {
     api files('libs/ijkplayer.jar')
     compileOnly "com.android.support:support-v4:${rootProject.ext.supportLibVersion}"
     compileOnly project(':lib.5plus.base')
+    compileOnly fileTree(dir: '../../libs', include: ['*.aar'])
 }
 
 

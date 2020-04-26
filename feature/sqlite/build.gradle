@@ -31,4 +31,5 @@ project.afterEvaluate { // build.gradle解析后、task之前
 
 dependencies {
     compileOnly project(':lib.5plus.base')
+    compileOnly fileTree(dir: '../../libs', include: ['*.aar'])
 }

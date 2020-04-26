@@ -27,4 +27,5 @@ dependencies {
     compileOnly 'com.facebook.fresco:fresco:1.13.0'
 //    implementation project(path: ':gcanvas_core')
     compileOnly 'com.alibaba:fastjson:1.2.56'
+    compileOnly fileTree(dir: '../../libs', include: ['*.aar'])
 }

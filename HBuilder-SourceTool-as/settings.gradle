@@ -1,1 +1,124 @@
-include ':app', "map-amap"
+include ":feature:aps"
+project(":feature:aps").projectDir= new File("../feature/aps")
+
+include ":feature:aps-igexin"
+project(":feature:aps-igexin").projectDir= new File("../feature/aps-igexin")
+
+include ":feature:aps-igexin-gp"
+project(":feature:aps-igexin-gp").projectDir= new File("../feature/aps-igexin-gp")
+
+include ":feature:aps-unipush"
+project(":feature:aps-unipush").projectDir= new File("../feature/aps-unipush")
+
+include ":feature:aps-unipush-gp"
+project(":feature:aps-unipush-gp").projectDir= new File("../feature/aps-unipush-gp")
+
+include ":feature:aps-xiaomi"
+project(":feature:aps-xiaomi").projectDir= new File("../feature/aps-xiaomi")
+
+/*include ":feature:audio"
+project(":feature:audio").projectDir= new File("../feature/audio")*/
+
+include ":feature:audio-mp3aac"
+project(":feature:audio-mp3aac").projectDir= new File("../feature/audio-mp3aac")
+
+include ":feature:barcode"
+project(":feature:barcode").projectDir= new File("../feature/barcode")
+
+include ":feature:Bluetooth"
+project(":feature:Bluetooth").projectDir= new File("../feature/Bluetooth")
+
+include ":feature:contacts"
+project(":feature:contacts").projectDir= new File("../feature/contacts")
+
+include ":feature:fingerprint"
+project(":feature:fingerprint").projectDir= new File("../feature/fingerprint")
+
+include ":feature:geolocation-amap"
+project(":feature:geolocation-amap").projectDir= new File("../feature/geolocation-amap")
+
+include ":feature:geolocation-baidu"
+project(":feature:geolocation-baidu").projectDir= new File("../feature/geolocation-baidu")
+
+include ":feature:iBeacon"
+project(":feature:iBeacon").projectDir= new File("../feature/iBeacon")
+
+include ":feature:map-amap"
+project(":feature:map-amap").projectDir= new File("../feature/map-amap")
+
+include ":feature:map-baidu"
+project(":feature:map-baidu").projectDir= new File("../feature/map-baidu")
+
+include ":feature:media"
+project(":feature:media").projectDir= new File("../feature/media")
+
+include ":feature:media-livepusher"
+project(":feature:media-livepusher").projectDir= new File("../feature/media-livepusher")
+
+include ":feature:oauth-miui"
+project(":feature:oauth-miui").projectDir= new File("../feature/oauth-miui")
+
+include ":feature:oauth-qq"
+project(":feature:oauth-qq").projectDir= new File("../feature/oauth-qq")
+
+include ":feature:oauth-sina"
+project(":feature:oauth-sina").projectDir= new File("../feature/oauth-sina")
+
+include ":feature:oauth-weixin"
+project(":feature:oauth-weixin").projectDir= new File("../feature/oauth-weixin")
+
+include ":feature:messaging"
+project(":feature:messaging").projectDir= new File("../feature/messaging")
+
+include ":feature:payment-alipay"
+project(":feature:payment-alipay").projectDir= new File("../feature/payment-alipay")
+
+include ":feature:payment-weixin"
+project(":feature:payment-weixin").projectDir= new File("../feature/payment-weixin")
+
+include ":feature:share-qq"
+project(":feature:share-qq").projectDir= new File("../feature/share-qq")
+
+include ":feature:share-sina"
+project(":feature:share-sina").projectDir= new File("../feature/share-sina")
+
+include ":feature:share-weixin"
+project(":feature:share-weixin").projectDir= new File("../feature/share-weixin")
+
+include ":feature:speech"
+project(":feature:speech").projectDir= new File("../feature/speech")
+
+include ":feature:speech_baidu"
+project(":feature:speech_baidu").projectDir= new File("../feature/speech_baidu")
+
+//include ":feature:speech_ifly"
+//project(":feature:speech_ifly").projectDir= new File("../feature/speech_ifly")
+
+include ":feature:sqlite"
+project(":feature:sqlite").projectDir= new File("../feature/sqlite")
+
+include ":feature:statistics-umeng"
+project(":feature:statistics-umeng").projectDir= new File("../feature/statistics-umeng")
+
+include ":feature:weex_amap"
+project(":feature:weex_amap").projectDir= new File("../feature/weex_amap")
+
+include ":feature:weex_barcode"
+project(":feature:weex_barcode").projectDir= new File("../feature/weex_barcode")
+
+include ":feature:weex_gcanvas"
+project(":feature:weex_gcanvas").projectDir= new File("../feature/weex_gcanvas")
+
+include ":feature:weex_livepusher"
+project(":feature:weex_livepusher").projectDir= new File("../feature/weex_livepusher")
+
+include ":feature:weex_videoplayer"
+project(":feature:weex_videoplayer").projectDir= new File("../feature/weex_videoplayer")
+
+include ':app', ':lib.5plus.base', ':dc_weexsdk'
+
+//include ":lib.5plus.base"
+//project(":feature:lib.5plus.base").projectDir= new File("../lib.5plus.base")
+
+//include ":dc_weexsdk"
+//project(":feature:dc_weexsdk").projectDir= new File("../dc_weexsdk")

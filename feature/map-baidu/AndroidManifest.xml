@@ -1,4 +1,4 @@
-<manifest package="io.dcloud.feature.amap"
+<manifest package="io.dcloud.feature.map.baidu"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />

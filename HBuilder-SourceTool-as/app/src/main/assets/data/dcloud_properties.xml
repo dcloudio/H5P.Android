@@ -2,7 +2,7 @@
 	<features>
 		<feature name="Barcode" value="io.dcloud.feature.barcode2.BarcodeFeatureImpl"/>
 		<feature name="Speech" value="io.dcloud.feature.speech.SpeechFeatureImpl">
-			<module name="iFly" value="io.dcloud.feature.speech.IflySpeechEngine"/>
+			<module name="baidu" value="io.dcloud.feature.speech.BaiduSpeechEngine"/>
 		</feature>
 		<feature name="Maps" value="io.dcloud.js.map.amap.JsMapPluginImpl"/>
         <!--<feature name="Maps" value="io.dcloud.js.map.JsMapPluginImpl"/>-->
@@ -44,7 +44,7 @@
 		</feature>
 		<feature name="Share" value="io.dcloud.share.ShareFeatureImpl">
 			<module name="Sina" value="io.dcloud.share.sina.SinaWeiboApiManager"/>
-			<module name="Tencent" value="io.dcloud.share.tencent.TencentWeiboApiManager"/>
+			<module name="QQ" value="io.dcloud.share.qq.QQApiManager"/>
 			<module name="Weixin" value="io.dcloud.share.mm.WeiXinApiManager"/>
 		</feature>
 		<feature name="OAuth" value="io.dcloud.feature.oauth.OAuthFeatureImpl">
@@ -66,6 +66,6 @@
 		<service name="Downloader" value="io.dcloud.net.DownloaderBootImpl"/>
 		<service name="Weex" value="io.dcloud.feature.weex.WeexFeature"/>
         <!--<service name="Maps" value="io.dcloud.js.map.MapInitImpl"/>-->
-        <!--<service name="Maps" value="io.dcloud.js.map.amap.JsMapPluginImpl"/>-->
+        <service name="Maps" value="io.dcloud.js.map.amap.JsMapPluginImpl"/>
 	</services>
 </properties>

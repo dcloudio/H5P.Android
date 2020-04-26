@@ -42,6 +42,7 @@ android {
 dependencies {
     compileOnly files('libs/support-annotations-23.1.1.jar')
     compileOnly project(':lib.5plus.base')
+    compileOnly fileTree(dir: '../../libs', include: ['*.aar'])
 }
 
 

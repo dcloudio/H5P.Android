@@ -1,4 +1,4 @@
-<manifest package="io.dcloud.feature"
+<manifest package="io.dcloud.feature.fingerprint"
     xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
     <application></application>
