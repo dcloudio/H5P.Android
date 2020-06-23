@@ -973,13 +973,10 @@ public class WeiXinApiManager implements IFShareApi {
     }
 
     private boolean hasWXEntryActivity(Context context) {
-        String clsName = context.getPackageName() + ".wxapi.WXEntryActivity";
-        try {
-            Class.forName(clsName);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
+        String pkgName = context.getPackageName();
+        Intent intent = new Intent();
+        intent.setClassName(pkgName, pkgName + ".wxapi.WXEntryActivity");
+        return context.getPackageManager().resolveActivity(intent, 0) != null;
     }
 
     /**
