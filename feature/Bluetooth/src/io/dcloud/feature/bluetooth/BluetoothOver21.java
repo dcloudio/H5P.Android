@@ -24,7 +24,7 @@ import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
 import io.dcloud.common.util.StringUtil;
-
+@Deprecated
 public class BluetoothOver21 extends BluetoothBaseAdapter {
 
     private BTScanCallback mScanCallback;
@@ -72,7 +72,6 @@ public class BluetoothOver21 extends BluetoothBaseAdapter {
         JSONArray serviceIds = param.optJSONArray("services");
         allowDuplicatesDevice = param.optBoolean("allowDuplicatesKey", false);
         String interval = param.optString("interval");
-//        PermissionUtil.requestPermissions(pwebview.getActivity(), new String[]{"android.permission.ACCESS_FINE_LOCATION", "android.permission.ACCESS_COARSE_LOCATION"}, 10010);
         if (isInit) {
             mScanCallback = new BTScanCallback();
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();

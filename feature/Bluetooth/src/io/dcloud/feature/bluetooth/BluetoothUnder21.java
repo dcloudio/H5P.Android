@@ -38,7 +38,6 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
         JSONArray serviceIds = param.optJSONArray("services");
         allowDuplicatesDevice = param.optBoolean("allowDuplicatesKey", false);
         String interval = param.optString("interval");
-//        PermissionUtil.requestPermissions(pwebview.getActivity(), new String[]{"android.permission.ACCESS_FINE_LOCATION", "android.permission.ACCESS_COARSE_LOCATION"}, 10010);
         if (isInit) {
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
             if (adapter != null) {
@@ -87,7 +86,7 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
             if (null != m21ScanCallback) {
                 Map<String, DCBluetoothDevice> scanresult = m21ScanCallback.getScanList();
                 for (String deviceid : scanresult.keySet()) {
-                    builder.append(scanresult.get(deviceid).toString() + ",");
+                    builder.append(scanresult.get(deviceid).toString()).append(",");
                 }
             }
             if (builder.lastIndexOf(",") > 5) {

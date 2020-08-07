@@ -114,6 +114,9 @@ public class BluetoothFeature extends StandardFeature {
     public void writeBLECharacteristicValue(IWebview pwebview, JSONArray args) {
         bluetoothF.writeBLECharacteristicValue(pwebview, args);
     }
+    public void setBLEMTU(IWebview pwebview, JSONArray args){
+
+    }
 
     @Override
     public void dispose(String pAppid) {
