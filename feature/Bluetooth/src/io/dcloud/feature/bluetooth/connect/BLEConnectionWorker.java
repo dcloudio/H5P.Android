@@ -176,8 +176,9 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
                     characteristicItem.put("uuid", characteristic.getUuid().toString().toUpperCase());
                     JSONObject properties = new JSONObject();
                     int property = characteristic.getProperties();
+                    properties.put("write",isSupportWritePropertis(characteristic));
                     properties.put("read", (property & BluetoothGattCharacteristic.PROPERTY_READ) > 0);
-                    properties.put("write", (property & BluetoothGattCharacteristic.PROPERTY_WRITE) > 0);
+                    properties.put("write", (property & BluetoothGattCharacteristic.PROPERTY_WRITE) > 0||(property & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)>0);
                     properties.put("notify", (property & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0);
                     properties.put("indicate", (property & BluetoothGattCharacteristic.PROPERTY_INDICATE) > 0);
                     characteristicItem.put("properties", properties);
