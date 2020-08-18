@@ -76,6 +76,7 @@ public class BluetoothBaseAdapter {
     public void openBluetoothAdapter(IWebview pwebview, JSONArray args) {
         Log.i("console", "openBluetoothAdapter" + args);
         String callbackid = args.optString(0);
+        isInit = true;
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         if (Build.VERSION.SDK_INT < 18 || !pwebview.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10009, "system not support"), JSUtil.ERROR, true, false);
@@ -88,7 +89,6 @@ public class BluetoothBaseAdapter {
             return;
         }
         adapter.enable();
-        isInit = true;
         JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
     }
 
