@@ -75,6 +75,10 @@ public class BluetoothBaseAdapter {
 
     public void openBluetoothAdapter(IWebview pwebview, JSONArray args) {
         Log.i("console", "openBluetoothAdapter" + args);
+//        JSONObject param = args.optJSONObject(1);
+//        if (param != null) {
+//            BluetoothFeature.isPrintLog = param.optBoolean("debug", false);
+//        }
         String callbackid = args.optString(0);
         isInit = true;
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();

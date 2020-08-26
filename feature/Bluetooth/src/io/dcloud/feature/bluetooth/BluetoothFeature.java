@@ -1,6 +1,7 @@
 package io.dcloud.feature.bluetooth;
 
 import android.os.Build;
+import android.util.Log;
 
 import org.json.JSONArray;
 
@@ -10,7 +11,7 @@ import io.dcloud.common.DHInterface.StandardFeature;
 import io.dcloud.common.adapter.util.PermissionUtil;
 
 public class BluetoothFeature extends StandardFeature {
-
+   public static boolean isPrintLog=false;
 
     private BluetoothBaseAdapter bluetoothF;
 
@@ -118,6 +119,21 @@ public class BluetoothFeature extends StandardFeature {
 
     }
 
+    public void openDebugMode(IWebview pwebview, JSONArray args) {
+        isPrintLog = true;
+    }
+
+    public static void Log(int level, Object... arg) {
+        if (level == Log.ERROR || BluetoothFeature.isPrintLog) {
+            if (arg != null) {
+                StringBuilder stringBuilder = new StringBuilder();
+                for (int i = 0; i < arg.length; i++) {
+                    stringBuilder.append(arg[i]).append(" ");
+                }
+                Log.println(level, "console", "[APP]" + stringBuilder);
+            }
+        }
+    }
     @Override
     public void dispose(String pAppid) {
         bluetoothF.dispose(pAppid);

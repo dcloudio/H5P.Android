@@ -25,6 +25,7 @@ import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.StringUtil;
 import io.dcloud.feature.bluetooth.BluetoothBaseAdapter;
+import io.dcloud.feature.bluetooth.BluetoothFeature;
 
 import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 import static io.dcloud.feature.bluetooth.BluetoothBaseAdapter.DESCRIPTOR_UUID;
@@ -217,20 +218,14 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
         handleBluetoothGattEvent();
     }
 
-    private void Log(Object ...arg) {
-        if (arg != null) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (int i = 0; i < arg.length; i++) {
-                stringBuilder.append(arg[i]).append(" ");
-            }
-            Log.i("console", "[APP]" + stringBuilder);
-        }
-
+    private void Log(int level, Object... arg) {
+        BluetoothFeature.Log(level, arg);
     }
+
     private void handleBluetoothGattEvent() {
         if (mCurrentGattMessage != null) {
             //正在处理msg
-            Log("当前正在处理 拦截>" ,mCurrentGattMessage.toString());
+            Log(Log.INFO,"当前正在处理 拦截>" ,mCurrentGattMessage.toString());
             return;
         }
         if (mGattEventQueue == null || mGattEventQueue.size() == 0) {
@@ -242,7 +237,7 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
         }
         removeBluetoothGattEventTimeout();
         mCurrentGattMessage = nextGattAction;
-        Log("处理Action >" , mCurrentGattMessage.toString());
+        Log(Log.DEBUG,"处理Action >" , mCurrentGattMessage.toString());
         if (mCurrentGattMessage.getType() == BluetoothGattMessage.NOTIFY) {
             postNotifyBLECharacteristicValueChange(mCurrentGattMessage);
         } else if (mCurrentGattMessage.getType() == BluetoothGattMessage.WRITE) {
@@ -260,7 +255,7 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
 
     private void callbackMessageFail(int code, String msg) {
         if (mCurrentGattMessage != null) {
-            Log("cb fail " ,code , msg , mCurrentGattMessage);
+            Log(Log.ERROR,"cb fail " ,code , msg , mCurrentGattMessage);
             removeBluetoothGattEventTimeout();
             if (!mCurrentGattMessage.isCallback) {
                 mCurrentGattMessage.setCallback(true);
@@ -393,12 +388,12 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
                     //以indicate的方式打开特征通道
                     descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
                     isSucceed = mBluetoothGatt.writeDescriptor(descriptor);
-                    Log( "writeDescriptor INDICATION characteristic" + characteristic.getUuid().toString());
+                    Log(Log.INFO, "writeDescriptor INDICATION characteristic" + characteristic.getUuid().toString());
                 } else {
                     //以notify的方式打开特征通道
                     descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                     isSucceed = mBluetoothGatt.writeDescriptor(descriptor);
-                    Log( "writeDescriptor NOTIFICATION characteristic" + characteristic.getUuid().toString());
+                    Log( Log.INFO,"writeDescriptor NOTIFICATION characteristic" + characteristic.getUuid().toString());
                 }
             } else {
                 descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
@@ -500,7 +495,7 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
     @Override
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicRead(gatt, characteristic, status);
-        Log("onCharacteristicRead" , characteristic.getUuid());
+        Log(Log.INFO,"onCharacteristicRead" , characteristic.getUuid());
         if (mCurrentGattMessage != null && mCurrentGattMessage.getType() == BluetoothGattMessage.READ) {
             callbackMessageSucceed();
         } else {
