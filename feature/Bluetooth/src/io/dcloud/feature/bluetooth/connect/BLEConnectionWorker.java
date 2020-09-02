@@ -496,7 +496,8 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicRead(gatt, characteristic, status);
         Log(Log.INFO,"onCharacteristicRead" , characteristic.getUuid());
-        if (mCurrentGattMessage != null && mCurrentGattMessage.getType() == BluetoothGattMessage.READ) {
+        if (mCurrentGattMessage != null
+                && mCurrentGattMessage.getType() == BluetoothGattMessage.READ) {
             callbackMessageSucceed();
         } else {
             handleBluetoothGattEvent();

@@ -119,8 +119,9 @@ public class BluetoothFeature extends StandardFeature {
 
     }
 
-    public void openDebugMode(IWebview pwebview, JSONArray args) {
+    public void openBleDebugMode(IWebview pwebview, JSONArray args) {
         isPrintLog = true;
+        Log(Log.INFO, "打开蓝牙调试模式");
     }
 
     public static void Log(int level, Object... arg) {
