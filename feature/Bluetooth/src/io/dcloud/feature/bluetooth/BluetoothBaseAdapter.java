@@ -437,11 +437,18 @@ public class BluetoothBaseAdapter {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-                int blueState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, 0);
-                execJsCallback(CALLBACK_ADAPTER_STATUS_CHANGED, String.format("{discovering:%b,available:%b}", isSearchBTDevice, blueState == BluetoothAdapter.STATE_ON));
-            } else if (action.equalsIgnoreCase(STATUS_ACTION)) {
-                execJsCallback(CALLBACK_ADAPTER_STATUS_CHANGED, String.format("{discovering:%b,available:%b}", isSearchBTDevice, true));
+            if (action != null && action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+                        BluetoothAdapter.ERROR);
+                if (state == BluetoothAdapter.STATE_OFF || state == BluetoothAdapter.STATE_ON) {
+                    execJsCallback(CALLBACK_ADAPTER_STATUS_CHANGED,
+                            String.format("{discovering:%b,available:%b}", isSearchBTDevice, state == BluetoothAdapter.STATE_ON));
+                }
+
+            } else if (action != null&&action.equalsIgnoreCase(STATUS_ACTION)) {
+
+                BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+                execJsCallback(CALLBACK_ADAPTER_STATUS_CHANGED, String.format("{discovering:%b,available:%b}", isSearchBTDevice, adapter.isEnabled()));
             }
         }
     };

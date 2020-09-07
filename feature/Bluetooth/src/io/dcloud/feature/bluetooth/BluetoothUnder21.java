@@ -45,16 +45,18 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
                 if (serviceIds != null) {
                     UUID[] uuids = new UUID[serviceIds.length()];
                 }
-                if (adapter.startLeScan(m21ScanCallback)) {
+                if (adapter.isEnabled() && adapter.startLeScan(m21ScanCallback)) {
                     Intent intent = new Intent();
                     intent.setAction(STATUS_ACTION);
                     intent.putExtra(BluetoothAdapter.EXTRA_STATE, 12);
                     pwebview.getContext().sendBroadcast(intent);
                     isSearchBTDevice = true;
                     JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
+                } else {
+                    JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not available\t"), JSUtil.ERROR, true, false);
                 }
             } else {
-                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
+                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10001, "not init"), JSUtil.ERROR, true, false);
             }
         }
     }
@@ -72,6 +74,9 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
                 intent.putExtra(BluetoothAdapter.EXTRA_STATE, 12);
                 pwebview.getContext().sendBroadcast(intent);
                 JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
+            }else{
+                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10008, "system error"), JSUtil.ERROR, true, false);
+
             }
         } else {
             JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
