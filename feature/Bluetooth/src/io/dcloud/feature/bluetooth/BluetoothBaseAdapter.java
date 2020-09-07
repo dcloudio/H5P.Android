@@ -63,8 +63,17 @@ public class BluetoothBaseAdapter {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             String deviceid = gatt.getDevice().getAddress();
+            boolean connected=newState == BluetoothProfile.STATE_CONNECTED;
             execJsCallback(CALLBACK_CONNECTION_STATUS_CHANGED, StringUtil.format("{deviceId:'%s',connected:%b}",
-                    deviceid, newState == BluetoothProfile.STATE_CONNECTED));
+                    deviceid, connected));
+            if(!connected){
+                //断开连接，清掉缓存
+                BLEConnectionWorker bleConnectionWorker= mWorkerHashMap.get(deviceid);
+                if (bleConnectionWorker != null) {
+                    bleConnectionWorker.dispose(null);
+                }
+                mWorkerHashMap.remove(deviceid);
+            }
         }
 
         @Override
@@ -301,7 +310,8 @@ public class BluetoothBaseAdapter {
             if (null != lastWorker && lastWorker.isConnected()) {
                 lastWorker.getBLEDeviceServices(pwebview, callbackid);
             } else {
-                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10006, "no connection"), JSUtil.ERROR, true, false);
+                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION,
+                        10006, "no connection"), JSUtil.ERROR, true, false);
             }
         } else {
             JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);

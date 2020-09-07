@@ -442,6 +442,7 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
         }
         mBluetoothGatt = gatt;
         removeConnectTimeout();
+        Log(Log.ERROR, mDeviceId + " status :" + status + "  newState:" + newState);
         if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
             if (isDispose) {
                 //关闭了
