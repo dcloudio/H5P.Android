@@ -21,6 +21,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -443,6 +444,18 @@ public class BluetoothBaseAdapter {
                 if (state == BluetoothAdapter.STATE_OFF || state == BluetoothAdapter.STATE_ON) {
                     execJsCallback(CALLBACK_ADAPTER_STATUS_CHANGED,
                             String.format("{discovering:%b,available:%b}", isSearchBTDevice, state == BluetoothAdapter.STATE_ON));
+
+                    if (state == BluetoothAdapter.STATE_OFF) {
+                        Object[] keys = mWorkerHashMap.keySet().toArray();
+                        for (Object key : keys) {
+                            //断开连接，清掉缓存
+                            BLEConnectionWorker bleConnectionWorker = mWorkerHashMap.get(key);
+                            if (bleConnectionWorker != null) {
+                                bleConnectionWorker.dispose(null);
+                            }
+                        }
+                        mWorkerHashMap.clear();
+                    }
                 }
 
             } else if (action != null&&action.equalsIgnoreCase(STATUS_ACTION)) {
