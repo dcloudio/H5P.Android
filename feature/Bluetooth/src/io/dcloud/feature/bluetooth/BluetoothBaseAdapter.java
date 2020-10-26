@@ -44,7 +44,7 @@ public class BluetoothBaseAdapter {
     boolean isSearchBTDevice = false;
     public static final String _JS_FUNCTION = "{code:%d,message:'%s'}";
     String STATUS_ACTION = "io.dcloud.bluetooth.sendsearch";
-    private Map<String, HashMap<String, IWebview>> callbacks;
+    private Map<String, HashMap<String, IWebview>> callbacks=new HashMap<>();
     private static String CALLBACK_ADAPTER_STATUS_CHANGED = "callback_adapter_status_changed";
     static String CALLBACK_DEVICE_FOUND = "callback_device_found";
     private static String CALLBACK_BLECHARACTERISTIC_VALUE_CHANGE = "callback_blecharacteristicvaluechange";
@@ -140,7 +140,7 @@ public class BluetoothBaseAdapter {
         }
         isInit = false;
         if (callbacks != null) {
-            callbacks.clear();
+//            callbacks.clear();
         }
         if (mWorkerHashMap.size() > 0) {
             for (String key : mWorkerHashMap.keySet()) {
@@ -188,7 +188,7 @@ public class BluetoothBaseAdapter {
         HashMap<String, IWebview> adapter = getStringIWebviewHashMap(CALLBACK_ADAPTER_STATUS_CHANGED);
         adapter.put(args.optString(0), pwebview);
         callbacks.put(CALLBACK_ADAPTER_STATUS_CHANGED, adapter);
-
+        Log.i("console", "[APP]onBluetoothAdapterStateChange" + args);
         IntentFilter stateChangeFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         IntentFilter connectedFilter = new IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED);
         IntentFilter disConnectedFilter = new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED);
@@ -426,6 +426,7 @@ public class BluetoothBaseAdapter {
     protected void execJsCallback(String type, String msg) {
         if (callbacks == null) return;
         HashMap<String, IWebview> jscallback = callbacks.get(type);
+        Log.i("console", "[APP]execJsCallback:" + type + msg);
         if (jscallback != null) {
             for (String key : jscallback.keySet()) {
                 JSUtil.execCallback(jscallback.get(key), key, msg, JSUtil.OK, true, true);
@@ -438,6 +439,8 @@ public class BluetoothBaseAdapter {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+            Log.i("console", "[APP]bluetoothStatusReceiver:" + action);
+
             if (action != null && action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                 int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
                         BluetoothAdapter.ERROR);
