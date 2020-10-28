@@ -116,6 +116,8 @@ public class BluetoothFeature extends StandardFeature {
         bluetoothF.writeBLECharacteristicValue(pwebview, args);
     }
     public void setBLEMTU(IWebview pwebview, JSONArray args){
+        Log(Log.INFO, "setBLEMTU:"+args);
+        bluetoothF.setBLEMTU(pwebview,args);
 
     }
 

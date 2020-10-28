@@ -3,6 +3,7 @@ package io.dcloud.feature.bluetooth;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.text.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -123,7 +124,15 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
 
         @Override
         public void onLeScan(BluetoothDevice device1, int rssi, byte[] scanRecord) {
-            DCBluetoothDevice dcDevice = new DCBluetoothDevice(device1,scanRecord);
+
+            DCBluetoothDevice dcDevice = new DCBluetoothDevice(device1, scanRecord);
+            String name = dcDevice.getName();
+            String leName = dcDevice.getLocalName();
+            if (TextUtils.isEmpty(name) && TextUtils.isEmpty(leName)) {
+                return;//过滤掉没有名称的设备
+            }
+
+
             dcDevice.setRSSI(rssi);
             if (allowDuplicatesDevice) { // 允许重复设备上报
                 execJsCallback(CALLBACK_DEVICE_FOUND,String.format(__JS__FUNCTION,dcDevice.toString()));

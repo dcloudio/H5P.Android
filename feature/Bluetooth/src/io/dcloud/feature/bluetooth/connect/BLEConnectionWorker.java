@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
+import android.os.Build;
 import android.os.Handler;
 import android.util.Log;
 
@@ -177,9 +178,9 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
                     characteristicItem.put("uuid", characteristic.getUuid().toString().toUpperCase());
                     JSONObject properties = new JSONObject();
                     int property = characteristic.getProperties();
-                    properties.put("write",isSupportWritePropertis(characteristic));
+                    properties.put("write", isSupportWritePropertis(characteristic));
                     properties.put("read", (property & BluetoothGattCharacteristic.PROPERTY_READ) > 0);
-                    properties.put("write", (property & BluetoothGattCharacteristic.PROPERTY_WRITE) > 0||(property & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)>0);
+                    properties.put("write", (property & BluetoothGattCharacteristic.PROPERTY_WRITE) > 0 || (property & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) > 0);
                     properties.put("notify", (property & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0);
                     properties.put("indicate", (property & BluetoothGattCharacteristic.PROPERTY_INDICATE) > 0);
                     characteristicItem.put("properties", properties);
@@ -195,8 +196,10 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
 
     }
 
-    public void setBLEMTU() {
-
+    public void setBLEMTU(String callbackId, JSONObject param, IWebview iWebview) {
+        BluetoothGattMessage bluetoothGattMessage = new BluetoothGattMessage(BluetoothGattMessage.SETMTU, callbackId, param, iWebview);
+        mGattEventQueue.add(bluetoothGattMessage);
+        handleBluetoothGattEvent();
     }
 
     public void writeBLECharacteristicValue(String callbackId, JSONObject param, IWebview iWebview) {
@@ -225,7 +228,7 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
     private void handleBluetoothGattEvent() {
         if (mCurrentGattMessage != null) {
             //正在处理msg
-            Log(Log.INFO,"当前正在处理 拦截>" ,mCurrentGattMessage.toString());
+            Log(Log.INFO, "当前正在处理 拦截>", mCurrentGattMessage.toString());
             return;
         }
         if (mGattEventQueue == null || mGattEventQueue.size() == 0) {
@@ -237,17 +240,46 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
         }
         removeBluetoothGattEventTimeout();
         mCurrentGattMessage = nextGattAction;
-        Log(Log.DEBUG,"处理Action >" , mCurrentGattMessage.toString());
+        Log(Log.DEBUG, "处理Action >", mCurrentGattMessage.toString());
         if (mCurrentGattMessage.getType() == BluetoothGattMessage.NOTIFY) {
             postNotifyBLECharacteristicValueChange(mCurrentGattMessage);
         } else if (mCurrentGattMessage.getType() == BluetoothGattMessage.WRITE) {
             postWriteBLECharacteristicValue(mCurrentGattMessage);
         } else if (mCurrentGattMessage.getType() == BluetoothGattMessage.READ) {
             postReadBLECharacteristicValue(mCurrentGattMessage);
+        } else if (mCurrentGattMessage.getType() == BluetoothGattMessage.SETMTU) {
+            postSetMtu(mCurrentGattMessage);
         }
 
 
     }
+
+    private void postSetMtu(BluetoothGattMessage bluetoothGattMessage) {
+        if (isConnectGatt()) {
+            JSONObject param = bluetoothGattMessage.getParam();
+            String deviceid = param.optString("deviceId");
+            int mtu = param.optInt("mtu");
+            if (mtu >= 23 && mtu <= 521) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    Log(Log.INFO, "requestMtu mtu:" + mtu);
+                    boolean isSucceed = mBluetoothGatt.requestMtu(mtu);
+                    if (!isSucceed) {
+                        callbackMessageFail(10006, "set fail");
+                    } else {
+                        initGattEventTimeout();
+                    }
+                } else {
+                    callbackMessageFail(10006, "set fail");
+                }
+            } else {
+                callbackMessageFail(10007, "invalid mtu:" + mtu);
+            }
+        } else {
+            callbackMessageFail(10006, "no connection");
+        }
+
+    }
+
 
     private void removeBluetoothGattEventTimeout() {
         mHandler.removeCallbacks(gattEventTimeoutRunnable);
@@ -255,7 +287,7 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
 
     private void callbackMessageFail(int code, String msg) {
         if (mCurrentGattMessage != null) {
-            Log(Log.ERROR,"cb fail " ,code , msg , mCurrentGattMessage);
+            Log(Log.ERROR, "cb fail ", code, msg, mCurrentGattMessage);
             removeBluetoothGattEventTimeout();
             if (!mCurrentGattMessage.isCallback) {
                 mCurrentGattMessage.setCallback(true);
@@ -393,7 +425,7 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
                     //以notify的方式打开特征通道
                     descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                     isSucceed = mBluetoothGatt.writeDescriptor(descriptor);
-                    Log( Log.INFO,"writeDescriptor NOTIFICATION characteristic" + characteristic.getUuid().toString());
+                    Log(Log.INFO, "writeDescriptor NOTIFICATION characteristic" + characteristic.getUuid().toString());
                 }
             } else {
                 descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
@@ -496,7 +528,7 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
     @Override
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicRead(gatt, characteristic, status);
-        Log(Log.INFO,"onCharacteristicRead" , characteristic.getUuid());
+        Log(Log.INFO, "onCharacteristicRead", characteristic.getUuid());
         if (mCurrentGattMessage != null
                 && mCurrentGattMessage.getType() == BluetoothGattMessage.READ) {
             callbackMessageSucceed();
@@ -557,6 +589,28 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
         }
     }
 
+    @Override
+    public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+        super.onMtuChanged(gatt, mtu, status);
+        if (BluetoothGatt.GATT_SUCCESS == status) {
+            Log(Log.INFO, " onMtuChanged>success MTU =", mtu + "");
+        } else {
+            Log(Log.INFO, " onMtuChanged>fail MTU =", mtu + "");
+        }
+        if (mCurrentGattMessage != null && mCurrentGattMessage.getType() == BluetoothGattMessage.SETMTU) {
+            if (mCurrentGattMessage != null) {
+                removeBluetoothGattEventTimeout();
+                mCurrentGattMessage.setCallback(true);
+                mGattEventQueue.remove(mCurrentGattMessage);
+                JSUtil.execCallback(mCurrentGattMessage.getPwebview(), mCurrentGattMessage.getCallbackId(),
+                        StringUtil.format("{code:%d,message:'%s',mtu:%d}", 0, "ok", mtu), JSUtil.OK, true, false);
+            }
+            mCurrentGattMessage = null;
+        }
+        handleBluetoothGattEvent();
+
+    }
+
     //蓝牙强度回调
     @Override
     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
@@ -568,6 +622,8 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
         public static final int WRITE = 1;
         public static final int READ = 2;
         public static final int NOTIFY = 3;
+
+        public static final int SETMTU = 4;
 
         private int type;
         private String callbackId;

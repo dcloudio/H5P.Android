@@ -10,6 +10,7 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Intent;
 import android.os.Build;
 import android.os.ParcelUuid;
+import android.text.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -162,6 +163,14 @@ public class BluetoothOver21 extends BluetoothBaseAdapter {
 
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
+            String name = result.getDevice().getName();
+            String leName = null;
+            if (result.getScanRecord() != null) {
+                leName = result.getScanRecord().getDeviceName();
+            }
+            if (TextUtils.isEmpty(name) && TextUtils.isEmpty(leName)) {
+                return;//过滤掉没有名称的设备
+            }
             DCBluetoothDevice device = new DCBluetoothDevice(result);
 
             if (allowDuplicatesDevice) { // 允许重复设备上报

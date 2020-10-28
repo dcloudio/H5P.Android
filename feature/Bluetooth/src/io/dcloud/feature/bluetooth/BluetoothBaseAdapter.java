@@ -302,6 +302,7 @@ public class BluetoothBaseAdapter {
 
     }
 
+
     public void getBLEDeviceServices(IWebview pwebview, JSONArray args) {
         String deviceid = args.optJSONObject(1).optString("deviceId");
         String callbackid = args.optString(0);
@@ -394,6 +395,19 @@ public class BluetoothBaseAdapter {
         return sb.toString();
     }
 
+    public void setBLEMTU(IWebview pwebview, JSONArray args) {
+        String callbackid = args.optString(0);
+        JSONObject param = args.optJSONObject(1);
+        String deviceid = param.optString("deviceId");
+
+        BLEConnectionWorker lastWorker = mWorkerHashMap.get(deviceid);
+        if (lastWorker != null) {
+            lastWorker.setBLEMTU(callbackid, param, pwebview);
+        } else {
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10006, "no connection"), JSUtil.ERROR, true, false);
+        }
+
+    }
     public void writeBLECharacteristicValue(IWebview pwebview, JSONArray args) {
         String callbackid = args.optString(0);
         JSONObject param = args.optJSONObject(1);
@@ -426,7 +440,7 @@ public class BluetoothBaseAdapter {
     protected void execJsCallback(String type, String msg) {
         if (callbacks == null) return;
         HashMap<String, IWebview> jscallback = callbacks.get(type);
-        Log.i("console", "[APP]execJsCallback:" + type + msg);
+//        Log.i("console", "[APP]execJsCallback:" + type + msg);
         if (jscallback != null) {
             for (String key : jscallback.keySet()) {
                 JSUtil.execCallback(jscallback.get(key), key, msg, JSUtil.OK, true, true);
