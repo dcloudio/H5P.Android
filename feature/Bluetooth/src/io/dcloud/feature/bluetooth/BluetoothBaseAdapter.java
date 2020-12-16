@@ -250,6 +250,8 @@ public class BluetoothBaseAdapter {
             if (lastWorker.isConnected()) {
                 JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, -1, "already connect"), JSUtil.ERROR, true, false);
                 return;
+            }else{
+                //
             }
         }
         if (isInit) {

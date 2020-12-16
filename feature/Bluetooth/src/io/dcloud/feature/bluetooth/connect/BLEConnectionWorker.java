@@ -482,7 +482,7 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
             return;
         }
         mBluetoothGatt = gatt;
-        removeConnectTimeout();
+        removeConnectTimeout();//移除超时监听器
         Log(Log.ERROR, mDeviceId + " status :" + status + "  newState:" + newState);
         if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
             if (isDispose) {
@@ -492,11 +492,19 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
                 return;
             }
             isConnected = true;
-            gatt.discoverServices(); //启动服务发现
-            if (createCallbackid != null) {
-                JSUtil.execCallback(mIWebview, createCallbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, true);
+            boolean isSucceed = gatt.discoverServices(); //启动服务发现
+            //TODO 在onDiscoverServices 回调 createCallbackid的连接成功，
+            if (!isSucceed) {
+                //discoverServices 失败了
+                closeGatt(gatt);
+                if (createCallbackid != null) {
+                    JSUtil.execCallback(mIWebview, createCallbackid, StringUtil.format(_JS_FUNCTION,
+                            10004, "discoverServices fail"), JSUtil.ERROR, true, false);
+                }
+                createCallbackid = null;
+                dispose(null);
             }
-            createCallbackid = null;
+
         } else {
             isConnected = false;
             if (newState == BluetoothProfile.STATE_DISCONNECTED) {
@@ -525,8 +533,11 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
         super.onServicesDiscovered(gatt, status);
         Log.i("console", "[APP]onServicesDiscovered:" + status);
         Log.i("console", "[APP]onServicesDiscovered:" + gatt.getServices());
-
         isServicesDiscovered = true;
+        if (createCallbackid != null) {
+            JSUtil.execCallback(mIWebview, createCallbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, true);
+        }
+        createCallbackid = null;
 
     }
 
