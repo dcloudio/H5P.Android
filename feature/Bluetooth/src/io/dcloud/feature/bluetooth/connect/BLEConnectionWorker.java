@@ -129,8 +129,10 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
     public void getBLEDeviceServices(final IWebview pwebview, final String callbackid) {
         if (isConnected && mBluetoothGatt != null) {
             if (isServicesDiscovered) {
+                Log.i("console", "[APP]getBLEDeviceServices 已回调Discovered");
                 postBLEDeviceServices(pwebview, callbackid);
             } else {
+                Log.i("console", "[APP]getBLEDeviceServices 未回调Discovered");
                 //先简单点，直接加延迟
                 mHandler.postDelayed(new Runnable() {
                     @Override
@@ -146,6 +148,11 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
 
     public void postBLEDeviceServices(IWebview pwebview, String callbackid) {
         List<BluetoothGattService> services = mBluetoothGatt.getServices();
+        if (services.size() == 0) {
+            Log.e("console", "[APP]getServices  is null");
+        } else {
+            Log.i("console", "[APP]getServices size" + services.size());
+        }
         JSONArray serviceArray = new JSONArray();
         for (BluetoothGattService service : services) {
             JSONObject serviceObject = new JSONObject();
@@ -261,7 +268,9 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
             int mtu = param.optInt("mtu");
             if (mtu >= 23 && mtu <= 521) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    Log(Log.INFO, "requestMtu mtu:" + mtu);
+//                    Log(Log.INFO, "requestMtu mtu:" + mtu);
+                    Log.i( "console", "[APP] requestMtu mtu:" + mtu);
+
                     boolean isSucceed = mBluetoothGatt.requestMtu(mtu);
                     if (!isSucceed) {
                         callbackMessageFail(10006, "set fail");
@@ -514,6 +523,9 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
         super.onServicesDiscovered(gatt, status);
+        Log.i("console", "[APP]onServicesDiscovered:" + status);
+        Log.i("console", "[APP]onServicesDiscovered:" + gatt.getServices());
+
         isServicesDiscovered = true;
 
     }
@@ -593,9 +605,9 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
     public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
         super.onMtuChanged(gatt, mtu, status);
         if (BluetoothGatt.GATT_SUCCESS == status) {
-            Log(Log.INFO, " onMtuChanged>success MTU =", mtu + "");
+            Log.i("console", "[APP] onMtuChanged>success MTU =" + mtu);
         } else {
-            Log(Log.INFO, " onMtuChanged>fail MTU =", mtu + "");
+            Log.i("console", "[APP] onMtuChanged>fail MTU =" + mtu);
         }
         if (mCurrentGattMessage != null && mCurrentGattMessage.getType() == BluetoothGattMessage.SETMTU) {
             if (mCurrentGattMessage != null) {
