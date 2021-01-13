@@ -122,6 +122,11 @@ public class BluetoothFeature extends StandardFeature {
         bluetoothF.setBLEMTU(pwebview,args);
 
     }
+    public void getBLEDeviceRSSI(IWebview pwebview, JSONArray args){
+        bluetoothF.getBLEDeviceRSSI(pwebview,args);
+
+    }
+
 
     public void openBleDebugMode(IWebview pwebview, JSONArray args) {
         isPrintLog = true;

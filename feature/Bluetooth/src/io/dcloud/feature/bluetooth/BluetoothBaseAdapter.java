@@ -396,6 +396,33 @@ public class BluetoothBaseAdapter {
         }
         return sb.toString();
     }
+//    public static interface ILogUploadNotify{
+//        void onLogUploadNotify();
+//    }
+//    public static ILogUploadNotify sILogUploadNotify;
+
+    public static final String LogUploadNotify_action = "com.lifesense.uploadlog";
+    public void getBLEDeviceRSSI(IWebview pwebview, JSONArray args) {
+        String callbackid = args.optString(0);
+        JSONObject param = args.optJSONObject(1);
+        String deviceid = param.optString("deviceId");
+        if (deviceid.equals("0000")) {
+            Intent intent = new Intent(LogUploadNotify_action);
+            // 将要广播的数据添加到Intent对象中
+            pwebview.getContext().sendBroadcast(intent);
+            Log.i("console", "[APP]发送日志上传广播");
+
+
+            //触发日志上传  临时方案
+
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "sILogUploadNotify 为空"), JSUtil.OK, true, false);
+
+        }else {
+            JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10009, "接口功能暂未实现"), JSUtil.ERROR, true, false);
+        }
+
+
+    }
 
     public void setBLEMTU(IWebview pwebview, JSONArray args) {
         String callbackid = args.optString(0);
