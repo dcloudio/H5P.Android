@@ -408,11 +408,10 @@ public class BluetoothBaseAdapter {
         String deviceid = param.optString("deviceId");
         if (deviceid.equals("0000")) {
             Intent intent = new Intent(LogUploadNotify_action);
+            intent.putExtra("param", param.toString());
             // 将要广播的数据添加到Intent对象中
             pwebview.getContext().sendBroadcast(intent);
-            Log.i("console", "[APP]发送日志上传广播");
-
-
+            Log.i("console", "[APP]发送日志上传广播:" + param.toString());
             //触发日志上传  临时方案
 
             JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "sILogUploadNotify 为空"), JSUtil.OK, true, false);

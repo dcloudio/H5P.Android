@@ -75,8 +75,8 @@ public class BLEConnectionWorker extends BluetoothGattCallback {
             timeoutInt = Integer.parseInt(timeout);
         } catch (Exception e) {
         }
-        timeoutInt = Math.min(10 * 1000, timeoutInt);
-        timeoutInt = Math.max(3 * 1000, timeoutInt);
+        timeoutInt = Math.min(60 * 1000, timeoutInt);//最大60秒
+        timeoutInt = Math.max(3 * 1000, timeoutInt);//最小3秒
         try {
             BluetoothDevice device = adapter.getRemoteDevice(deviceid);
             BluetoothGatt gatt = null;//设备出现的时候不自动连接
