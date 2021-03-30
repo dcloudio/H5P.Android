@@ -3,6 +3,7 @@ package io.dcloud.feature.bluetooth;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.text.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -38,7 +39,6 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
         JSONArray serviceIds = param.optJSONArray("services");
         allowDuplicatesDevice = param.optBoolean("allowDuplicatesKey", false);
         String interval = param.optString("interval");
-//        PermissionUtil.requestPermissions(pwebview.getActivity(), new String[]{"android.permission.ACCESS_FINE_LOCATION", "android.permission.ACCESS_COARSE_LOCATION"}, 10010);
         if (isInit) {
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
             if (adapter != null) {
@@ -46,16 +46,18 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
                 if (serviceIds != null) {
                     UUID[] uuids = new UUID[serviceIds.length()];
                 }
-                if (adapter.startLeScan(m21ScanCallback)) {
+                if (adapter.isEnabled() && adapter.startLeScan(m21ScanCallback)) {
                     Intent intent = new Intent();
                     intent.setAction(STATUS_ACTION);
                     intent.putExtra(BluetoothAdapter.EXTRA_STATE, 12);
                     pwebview.getContext().sendBroadcast(intent);
                     isSearchBTDevice = true;
                     JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
+                } else {
+                    JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not available\t"), JSUtil.ERROR, true, false);
                 }
             } else {
-                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
+                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10001, "not init"), JSUtil.ERROR, true, false);
             }
         }
     }
@@ -73,6 +75,9 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
                 intent.putExtra(BluetoothAdapter.EXTRA_STATE, 12);
                 pwebview.getContext().sendBroadcast(intent);
                 JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 0, "ok"), JSUtil.OK, true, false);
+            }else{
+                JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10008, "system error"), JSUtil.ERROR, true, false);
+
             }
         } else {
             JSUtil.execCallback(pwebview, callbackid, StringUtil.format(_JS_FUNCTION, 10000, "not init"), JSUtil.ERROR, true, false);
@@ -87,7 +92,7 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
             if (null != m21ScanCallback) {
                 Map<String, DCBluetoothDevice> scanresult = m21ScanCallback.getScanList();
                 for (String deviceid : scanresult.keySet()) {
-                    builder.append(scanresult.get(deviceid).toString() + ",");
+                    builder.append(scanresult.get(deviceid).toString()).append(",");
                 }
             }
             if (builder.lastIndexOf(",") > 5) {
@@ -119,7 +124,15 @@ public class BluetoothUnder21 extends BluetoothBaseAdapter {
 
         @Override
         public void onLeScan(BluetoothDevice device1, int rssi, byte[] scanRecord) {
-            DCBluetoothDevice dcDevice = new DCBluetoothDevice(device1,scanRecord);
+
+            DCBluetoothDevice dcDevice = new DCBluetoothDevice(device1, scanRecord);
+            String name = dcDevice.getName();
+            String leName = dcDevice.getLocalName();
+            if (TextUtils.isEmpty(name) && TextUtils.isEmpty(leName)) {
+                return;//过滤掉没有名称的设备
+            }
+
+
             dcDevice.setRSSI(rssi);
             if (allowDuplicatesDevice) { // 允许重复设备上报
                 execJsCallback(CALLBACK_DEVICE_FOUND,String.format(__JS__FUNCTION,dcDevice.toString()));

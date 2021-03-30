@@ -10,6 +10,7 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Intent;
 import android.os.Build;
 import android.os.ParcelUuid;
+import android.text.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -24,7 +25,7 @@ import io.dcloud.common.DHInterface.IWebview;
 import io.dcloud.common.util.JSUtil;
 import io.dcloud.common.util.PdrUtil;
 import io.dcloud.common.util.StringUtil;
-
+@Deprecated
 public class BluetoothOver21 extends BluetoothBaseAdapter {
 
     private BTScanCallback mScanCallback;
@@ -72,7 +73,6 @@ public class BluetoothOver21 extends BluetoothBaseAdapter {
         JSONArray serviceIds = param.optJSONArray("services");
         allowDuplicatesDevice = param.optBoolean("allowDuplicatesKey", false);
         String interval = param.optString("interval");
-//        PermissionUtil.requestPermissions(pwebview.getActivity(), new String[]{"android.permission.ACCESS_FINE_LOCATION", "android.permission.ACCESS_COARSE_LOCATION"}, 10010);
         if (isInit) {
             mScanCallback = new BTScanCallback();
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
@@ -163,6 +163,14 @@ public class BluetoothOver21 extends BluetoothBaseAdapter {
 
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
+            String name = result.getDevice().getName();
+            String leName = null;
+            if (result.getScanRecord() != null) {
+                leName = result.getScanRecord().getDeviceName();
+            }
+            if (TextUtils.isEmpty(name) && TextUtils.isEmpty(leName)) {
+                return;//过滤掉没有名称的设备
+            }
             DCBluetoothDevice device = new DCBluetoothDevice(result);
 
             if (allowDuplicatesDevice) { // 允许重复设备上报
